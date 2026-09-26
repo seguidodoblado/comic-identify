@@ -4,7 +4,15 @@ import time
 
 from PIL import Image
 
-from comic_identify.icons import RETRY_AFTER, _declared_icons, ensure_icons, fetch_icon, icon_file
+from comic_identify.icons import (
+    FALLBACK_URL,
+    MARKER,
+    RETRY_AFTER,
+    _declared_icons,
+    ensure_icons,
+    fetch_icon,
+    icon_file,
+)
 
 
 def _img(size: int, fmt: str, color="red") -> bytes:
@@ -56,13 +64,41 @@ def test_failed_hosts_are_not_retried_for_a_week(tmp_path):
     web = FakeWeb({"https://roto.es/favicon.ico": b"esto no es una imagen"})
     ready = []
     ensure_icons([("roto.es", False)], tmp_path, lambda h, p: ready.append(h), web)
-    assert ready == [] and icon_file("roto.es", tmp_path) is None and len(web.calls) == 1
+    assert ready == [] and icon_file("roto.es", tmp_path) is None
+    assert len(web.calls) == 2                          # su icono y el respaldo del servicio de favicons
 
     ensure_icons([("roto.es", False)], tmp_path, lambda h, p: ready.append(h), web)
-    assert len(web.calls) == 1                          # no reintenta
+    assert len(web.calls) == 2                          # no reintenta
 
     old = time.time() - RETRY_AFTER - 10
     os.utime(tmp_path / "roto.es.none", (old, old))
     web.files["https://roto.es/favicon.ico"] = _img(16, "PNG")
     ensure_icons([("roto.es", False)], tmp_path, lambda h, p: ready.append(h), web)
     assert ready == ["roto.es"] and not (tmp_path / "roto.es.none").exists()
+
+
+def test_a_site_that_blocks_bots_gets_its_icon_from_the_favicon_service(tmp_path):
+    web = FakeWeb({FALLBACK_URL.format(host="wiki.es"): _img(64, "PNG", "blue")})       # la propia web no responde
+    ready = []
+    ensure_icons([("wiki.es", False)], tmp_path, lambda h, p: ready.append(h), web)
+    assert ready == ["wiki.es"] and icon_file("wiki.es", tmp_path) is not None
+    assert web.calls == ["https://wiki.es/favicon.ico", "https://www.google.com/s2/favicons?domain=wiki.es&sz=64"]
+    assert not (tmp_path / "wiki.es.none").exists()
+
+
+def test_the_favicon_service_is_not_asked_when_the_site_gives_its_own_icon(tmp_path):
+    web = FakeWeb({"https://web.es/favicon.ico": _img(16, "ICO")})
+    ensure_icons([("web.es", False)], tmp_path, lambda h, p: None, web)
+    assert all("google" not in call for call in web.calls)
+
+
+def test_a_failure_before_the_fallback_existed_is_retried_but_a_new_one_is_not(tmp_path):
+    web = FakeWeb({FALLBACK_URL.format(host="wiki.es"): _img(64, "PNG")})
+    (tmp_path / "wiki.es.none").touch()                              # marcador antiguo, vacío: no vale
+    ensure_icons([("wiki.es", False)], tmp_path, lambda h, p: None, web)
+    assert icon_file("wiki.es", tmp_path) is not None
+    nothing = FakeWeb({})
+    ensure_icons([("nada.es", False)], tmp_path, lambda h, p: None, nothing)      # ni la web ni el servicio
+    assert (tmp_path / "nada.es.none").read_text() == MARKER and len(nothing.calls) == 2
+    ensure_icons([("nada.es", False)], tmp_path, lambda h, p: None, nothing)
+    assert len(nothing.calls) == 2                                    # no se insiste durante una semana

@@ -85,3 +85,46 @@ def test_settings_keep_the_naming_pattern(tmp_path):
     assert Settings.load(file).pattern == "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello}"
     Settings("k", [], "claude {prompt}", "{nombre} {numero}").save(file)
     assert Settings.load(file).pattern == "{nombre} {numero}"
+
+
+def test_prompt_is_configurable_and_falls_back_to_the_default():
+    from comic_identify.assistant import PROMPT, build_prompt
+    assert build_prompt("portada.png").count("@portada.png") == 1 and "{image}" not in build_prompt("portada.png")
+    assert build_prompt("p.jpg", "Mira @{image} y dime la editorial") == "Mira @p.jpg y dime la editorial"
+    assert build_prompt("p.jpg", "   ") == build_prompt("p.jpg", PROMPT)         # vacío: el de la aplicación
+
+
+def test_settings_store_a_custom_prompt_but_not_the_default(tmp_path):
+    import json
+
+    from comic_identify.assistant import PROMPT
+    file = tmp_path / "config.json"
+    assert Settings.load(file).prompt == PROMPT
+    Settings("k", [], "claude {prompt}", "{nombre}", PROMPT).save(file)
+    assert json.loads(file.read_text(encoding="utf-8"))["prompt"] == ""            # el de serie no se congela
+    Settings("k", [], "claude {prompt}", "{nombre}", "Solo dime la editorial de @{image}").save(file)
+    assert Settings.load(file).prompt == "Solo dime la editorial de @{image}"
+
+
+def test_assistant_command_is_found_through_the_users_shell(tmp_path, monkeypatch):
+    """Una CLI que solo está en el PATH del ~/.bashrc (opencode, codex bajo nvm) no la ve una app lanzada desde el
+    menú; pasando por la shell interactiva sí, y el mensaje llega intacto (comillas, $, saltos de línea)."""
+    import subprocess
+
+    from comic_identify.assistant import build_argv, shell_argv
+    home = tmp_path / "home"
+    (home / "bin").mkdir(parents=True)
+    fake = home / "bin" / "fakecli"
+    fake.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')          # el «asistente»: imprime sus argumentos
+    fake.chmod(0o755)
+    (home / ".bashrc").write_text('export PATH="$HOME/bin:$PATH"\n')
+    (home / ".sudo_as_admin_successful").touch()          # sin él, /etc/bash.bashrc de Ubuntu imprime un aviso de sudo
+    env = {"HOME": str(home), "PATH": "/usr/local/bin:/usr/bin:/bin", "SHELL": "/bin/bash"}
+    monkeypatch.setenv("SHELL", "/bin/bash")
+    prompt = "Dime qué es 'esto' $HOME `x`\nsegunda línea"
+    argv = build_argv("fakecli --prompt {prompt}", prompt)
+    with pytest.raises(FileNotFoundError):
+        subprocess.run(argv, env=env, capture_output=True, check=False)                # sin la shell: no la encuentra
+    done = subprocess.run(shell_argv(argv), env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL, check=False)
+    assert done.stdout.endswith(f"--prompt\n{prompt}\n") and done.returncode == 0    # el final: lo demás es la bienvenida de la shell
+    assert shell_argv(["a", "b c"])[1:] == ["-ic", "exec a 'b c'"]

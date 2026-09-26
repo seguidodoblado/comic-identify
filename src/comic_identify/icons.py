@@ -2,6 +2,9 @@
 
 Se descargan la primera vez, como haría un navegador, y se guardan en la caché del usuario. No se
 distribuyen con la aplicación: son marcas de sus respectivas webs.
+
+Si una web no entrega su icono (hay webs que solo sirven a navegadores), se pide al servicio público de favicons de
+Google, al que solo se le envía el nombre del dominio. No se finge ser un navegador ni se esquiva ninguna protección.
 """
 import io
 import re
@@ -17,6 +20,8 @@ USER_AGENT = "comic-identify (aplicación personal de escritorio)"
 MAX_BYTES = 512 * 1024
 ICON_SIZE = 64              # se guarda a este tamaño como máximo
 RETRY_AFTER = 7 * 24 * 3600  # si una web no da icono, no se vuelve a intentar durante una semana
+FALLBACK_URL = "https://www.google.com/s2/favicons?domain={host}&sz=64"
+MARKER = "probado con respaldo\n"   # un marcador de fallo sin esto es de antes del respaldo: se vuelve a intentar
 
 Fetch = Callable[[str], bytes | None]
 
@@ -70,6 +75,8 @@ def fetch_icon(host: str, cache_dir: Path, larger: bool = False, fetch: Fetch = 
     if larger:
         urls = _declared_icons(fetch(base), base)[:2] + urls
     images = [image for image in (_decode(fetch(url)) for url in urls) if image is not None]
+    if not images and (fallback := _decode(fetch(FALLBACK_URL.format(host=host)))) is not None:
+        images = [fallback]
     if not images:
         return None
     best = max(images, key=lambda image: image.width * image.height)
@@ -89,10 +96,10 @@ def ensure_icons(requests: Iterable[tuple[str, bool]], cache_dir: Path,
             on_ready(host, cached)
             continue
         failed = cache_dir / f"{host}.none"
-        if failed.exists() and time.time() - failed.stat().st_mtime < RETRY_AFTER:
+        if failed.exists() and failed.read_text() == MARKER and time.time() - failed.stat().st_mtime < RETRY_AFTER:
             continue
         if (path := fetch_icon(host, cache_dir, larger, fetch)) is not None:
             failed.unlink(missing_ok=True)
             on_ready(host, path)
         else:
-            failed.touch()
+            failed.write_text(MARKER)

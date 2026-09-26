@@ -4,7 +4,7 @@ from pathlib import Path
 from threading import Event, Thread
 
 from . import __version__
-from .assistant import build_argv, build_prompt, prepare_workspace
+from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
 from .collection import build_series, ranges
 from .comicinfo import CATEGORIES, MetadataError, build_xml, read_info
 from .comicvine import ComicVineClient, ComicVineError
@@ -248,21 +248,31 @@ def run_gui(initial_image: Path | None = None) -> None:
             scroll = Gtk.ScrolledWindow(vexpand=True, hexpand=True)
             scroll.set_child(self.results)
 
-            sources = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-            sources.append(Gtk.Label(label="Buscar el título en otras webs (se abre en tu navegador):", xalign=0))
             self.web_extra = Gtk.CheckButton(label="Incluir también la editorial y el año", active=True, tooltip_text=(
                 "Añade la editorial y el año a la búsqueda de las webs; si no salen resultados, desmárcalo"))
-            sources.append(self.web_extra)
-            flow = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=6,
-                               column_spacing=6, row_spacing=6, homogeneous=False)
+            menu_content = Gtk.Box(spacing=6)
+            menu_content.append(Gtk.Image(icon_name=pick_icon("web-browser-symbolic", FALLBACK_ICON)))
+            menu_content.append(Gtk.Label(label="Buscar en otras webs"))
+            menu_content.append(Gtk.Image(icon_name=pick_icon("pan-down-symbolic")))
+            popover = Gtk.Popover()
+            entries = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, margin_top=6, margin_bottom=6,
+                              margin_start=6, margin_end=6)
+            entries.append(Gtk.Label(label="Se abre en tu navegador", xalign=0, margin_start=6, margin_bottom=4,
+                                     css_classes=["dim-label"]))
             for source in SOURCES:
-                content = Gtk.Box(spacing=6)
+                content = Gtk.Box(spacing=8)
                 content.append(self._icon(source.host, 16))
-                content.append(Gtk.Label(label=source.name))
-                button = Gtk.Button(child=content, tooltip_text=f"Abre en tu navegador la búsqueda en {source.host}")
-                button.connect("clicked", lambda _b, n=source.name: self._open_source(n))
-                flow.append(button)
-            sources.append(flow)
+                content.append(Gtk.Label(label=source.name, xalign=0))
+                entry = Gtk.Button(child=content, has_frame=False, tooltip_text=f"Busca en {source.host}")
+                entry.connect("clicked", lambda _b, n=source.name: (popover.popdown(), self._open_source(n)))
+                entries.append(entry)
+            popover.set_child(entries)
+            web_menu = Gtk.MenuButton(child=menu_content, popover=popover, tooltip_text=(
+                "Abre en tu navegador la búsqueda del título en la web que elijas"))
+            self.web_menu = web_menu
+            sources = Gtk.Box(spacing=12)
+            sources.append(web_menu)
+            sources.append(self.web_extra)
             side = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
             side.append(refine)
             side.append(sources)
@@ -1466,7 +1476,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 prepare_workspace(self.image, work)
                 image_name = next(work.glob("portada.*")).name
-                argv = build_argv(self.settings.assistant, build_prompt(image_name))
+                argv = build_argv(self.settings.assistant, build_prompt(image_name, self.settings.prompt))
             except (OSError, ValueError) as error:
                 self.status.set_text(f"No se pudo preparar el asistente: {error}")
                 return
@@ -1490,7 +1500,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.assistant_box, self.assistant_terminal = box, terminal
             self._open_preview("Asistente de IA", "", "assistant", ASSISTANT_WIDTH)
             # child_setup y child_setup_data quedan a None; -1 = sin límite de tiempo; sin cancelable.
-            terminal.spawn_async(Vte.PtyFlags.DEFAULT, str(work), argv, None, GLib.SpawnFlags.SEARCH_PATH,
+            terminal.spawn_async(Vte.PtyFlags.DEFAULT, str(work), shell_argv(argv), None, GLib.SpawnFlags.SEARCH_PATH,
                                  None, None, -1, None, self._assistant_spawned)
             terminal.grab_focus()
 
@@ -1937,10 +1947,26 @@ def run_gui(initial_image: Path | None = None) -> None:
                 "sesión. {prompt} se sustituye por el mensaje. Ejemplos: «claude {prompt}», «codex {prompt}», "
                 "«opencode --prompt {prompt}».")))
             self.assistant_entry = Gtk.Entry(text=self.settings.assistant)
-            save_command = icon_button(("document-save-symbolic",), "Guardar comando", halign=Gtk.Align.START)
+            page.append(self.assistant_entry)
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Mensaje que sustituye a {prompt} ({image} es la portada que se le pasa). Se puede cambiar para "
+                "pedirle otras cosas o usar otras webs:")))
+            self.prompt_view = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD, top_margin=6, bottom_margin=6, left_margin=8,
+                                            right_margin=8)
+            self.prompt_view.get_buffer().set_text(self.settings.prompt)
+            prompt_scroll = Gtk.ScrolledWindow(min_content_height=130, max_content_height=220,
+                                               propagate_natural_height=True, has_frame=True)
+            prompt_scroll.set_child(self.prompt_view)
+            save_command = icon_button(("document-save-symbolic",), "Guardar comando y mensaje")
             save_command.connect("clicked", self._save_assistant)
-            self.assistant_info = Gtk.Label(xalign=0)
-            for widget in (self.assistant_entry, save_command, self.assistant_info):
+            reset_prompt = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), "Restablecer el mensaje",
+                                       tooltip_text="Vuelve al mensaje que trae la aplicación")
+            reset_prompt.connect("clicked", lambda _b: self.prompt_view.get_buffer().set_text(PROMPT))
+            buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
+            buttons.append(save_command)
+            buttons.append(reset_prompt)
+            self.assistant_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (prompt_scroll, buttons, self.assistant_info):
                 page.append(widget)
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
@@ -1973,9 +1999,12 @@ def run_gui(initial_image: Path | None = None) -> None:
             except ValueError as error:
                 self.assistant_info.set_text(f"Comando no válido: {error}")
                 return
-            self.settings.assistant = command
+            buffer = self.prompt_view.get_buffer()
+            prompt = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False).strip()
+            self.settings.assistant, self.settings.prompt = command, prompt or PROMPT
             self.settings.save()
-            self.assistant_info.set_text("Comando guardado.")
+            self.assistant_info.set_text("Comando y mensaje guardados." if prompt else
+                                         "Comando guardado; el mensaje estaba vacío y se usa el de la aplicación.")
 
         def _refresh_gcd(self):
             index = GcdIndex(GCD_DB)
