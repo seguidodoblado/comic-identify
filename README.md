@@ -24,7 +24,8 @@ Ningún método automático acierta al 100 %: el resultado es una lista de candi
 
 Los iconos de las webs (botones de búsqueda y créditos de Ajustes) se descargan la primera vez, como
 haría un navegador, y se guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque
-son marcas de sus webs. Se pueden borrar sin problema.
+son marcas de sus webs. Se pueden borrar sin problema. Si una web no entrega su icono, se pide al servicio de
+favicons de Google (solo se le envía el nombre del dominio); si tampoco lo tiene, se muestra uno genérico.
 
 Además del título y el número puedes acotar con **Editorial / distribuidor** (en GCD también casa con el
 sello: «Forum», «Panini»…) y **Año**. La búsqueda en GCD es al vuelo, mientras escribes; la de ComicVine, con
@@ -63,13 +64,15 @@ cambio se registra en `~/.local/share/comic-identify/renames.log` y se deshace d
 
 Órdenes de texto (no abren la interfaz): `comic-identify --help` y `comic-identify buscar "título" [número]`.
 
-Bajo el campo del título hay accesos directos a otras webs de cómic en español (Tebeosfera, Whakoom,
-Norma, Panini, Universo Marvel y Zona Negativa). Abren en tu navegador la búsqueda con el título, el número y, si
+Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español
+(Tebeosfera, Whakoom, Norma, Panini, ECC para DC, Universo Marvel, DC Database y Zona Negativa) y se repliega al
+elegir una. Abren en tu navegador la búsqueda con el título, el número y, si
 la casilla está marcada, la editorial y el año: la aplicación no
 rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt` (Whakoom, el buscador de Panini).
 
 Para los cómics que ninguna fuente reconoce, el botón **Preguntar a la IA** abre, en el panel derecho, un terminal embebido con
-tu propia CLI de IA (Claude Code por defecto, configurable en Ajustes) y un mensaje que le pide
+tu propia CLI de IA (Claude Code por defecto; el comando y el mensaje se configuran en Ajustes, y se lanza desde tu
+shell para que encuentre CLIs como opencode o codex aunque estén solo en el PATH de tu `~/.bashrc`) y un mensaje que le pide
 identificar la portada; puede buscar en la web y consultar el índice local con
 `comic-identify buscar "título" [número]`. La aplicación no maneja tus credenciales ni usa ninguna API:
 inicias sesión tú en la CLI. La primera vez, Claude Code pregunta si confías en la carpeta de trabajo

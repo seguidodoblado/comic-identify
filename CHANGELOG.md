@@ -5,6 +5,27 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-09-27
+
+### Added
+- **Mensaje del asistente configurable**: en Ajustes hay una caja con el texto que sustituye a `{prompt}` en el comando
+  (`{image}` es la portada), con botón para restablecer el de la aplicación. El mensaje de serie ahora también
+  menciona ECC y DC Database.
+- **Webs para DC**: «ECC (DC)» (la editorial de DC en España) y «DC Database» (wiki de DC en inglés, con número original y
+  fechas). Como las demás, abren la búsqueda en tu navegador con `site:` en Google; la app no lee esas webs.
+- **Iconos de respaldo**: si una web no entrega su icono (DC Database solo sirve a navegadores), se pide al servicio
+  público de favicons de Google, al que solo se le envía el nombre del dominio; no se finge ser un navegador. Los
+  fallos de iconos anteriores a este cambio se reintentan solos.
+
+### Changed
+- Las webs de búsqueda van en un desplegable «Buscar en otras webs» con sus iconos, que se repliega al elegir una,
+  en vez de una fila de botones.
+
+### Fixed
+- El asistente de IA no encontraba CLIs que solo están en el `PATH` de tu shell (`opencode` en `~/.opencode/bin`,
+  `codex` bajo nvm), porque una aplicación lanzada desde el menú no lo ve. Ahora se lanza a través de tu shell
+  interactiva, con el mensaje intacto (comillas, `$` y saltos de línea).
+
 ## [0.17.0] - 2026-09-27
 
 ### Added
