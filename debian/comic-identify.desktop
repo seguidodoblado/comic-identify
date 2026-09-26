@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Comic Identify
+Comment=Identificar un cómic a partir de su portada
+Exec=/usr/bin/comic-identify %f
+Icon=comic-identify
+StartupWMClass=comic-identify
+Type=Application
+Categories=Graphics;Utility;
+MimeType=image/jpeg;image/png;image/webp;application/vnd.comicbook+zip;application/vnd.comicbook-rar;
+Terminal=false
