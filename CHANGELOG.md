@@ -5,14 +5,180 @@ en este archivo.
 
 ## [Unreleased]
 
-### Added
+## [0.16.0] - 2026-09-27
 
-- 
+### Added
+- **Navegar por las páginas** del CBR/CBZ/CB7 abierto: bajo la portada, botones de primera, anterior, siguiente y
+  última página con «Página 3 de 24». Sirve para mirar la contraportada o la primera página, donde a veces salen los
+  datos que la portada no tiene. Solo cambia lo que ves: la búsqueda sigue usando la portada. Las páginas se leen en
+  segundo plano y se reducen a 1600 px para mostrarlas; al cambiar de cómic no se mezclan.
+- **Series de la colección** (pestaña «Mi colección»): lista de las series con lo que tienes y lo que falta
+  («12 de 36 · faltan 3, 7, 13-36 · metadatos 10/12 · Series»), con filtro (incompletas, todas, sin todos sus metadatos,
+  sin total indicado), búsqueda y botón para abrir la carpeta. Una serie es el conjunto de archivos de una carpeta con la
+  misma serie de ComicInfo; los archivos sin metadatos solo forman serie si su carpeta tiene el nombre normalizado
+  (bandera o años), no en carpetas sueltas como «Por colocar». El total esperado es el «Total de números» de los
+  metadatos; sin él solo se señalan los huecos entre los números que hay y desde cuál empieza. Un número muy alejado del
+  resto o mayor que el total se marca como «fuera de la serie» en vez de inventar decenas de huecos, los números
+  sueltos no cuentan como serie incompleta, y una carpeta sin metadatos con números repetidos se marca como mezcla de
+  varias series.
+- El índice de la colección guarda ahora el resumen del `ComicInfo.xml` de cada archivo (serie, volumen, número,
+  total, categoría). Un índice anterior se amplía solo y en la primera indexación se leen los metadatos de los archivos
+  ya indexados sin volver a calcular sus portadas; escribir o deshacer metadatos también lo mantiene al día.
+- **Metadatos…** (botones «Metadatos de la carpeta…» y «Metadatos del archivo…»): escribe el `ComicInfo.xml` (el
+  formato que entienden Kavita, Komga y ComicTagger) en CBZ, CBR y CB7, decidiendo el formato por el contenido y no
+  por la extensión (ZIP, RAR4, RAR5, 7-Zip). El diálogo tiene los campos de serie (serie, volumen, editorial, sello,
+  año, total de números, idioma, web, notas), la **categoría** que eliges tú (se guarda en las etiquetas como
+  `Categoría: …`) y una tabla por archivo con su número (el del nombre; los nombres normalizados ` #05` se leen sin
+  dudas) y su título. Se rellena, por orden, con lo que ya tienen los archivos, la serie de GCD elegida, el nombre
+  de la carpeta o archivo (leído al revés) y lo tecleado en la pantalla principal; un campo vacío no se toca y solo
+  se borra un valor si tú lo quitas y todos lo tenían. Se conservan los campos que no se tocan (autores, `Pages`…);
+  los números y fechas se validan antes de escribir.
+- Escritura segura: se trabaja en una copia junto al original, se verifica (integridad, mismas páginas, XML esperado)
+  y solo entonces se sustituye de forma atómica; se comprueba antes el espacio libre y un archivo que falla no
+  impide los demás. Los archivos que ya tienen esos valores no se reescriben, y el índice de la colección anota el
+  nuevo tamaño para no volver a leer las portadas. Para escribir en RAR hace falta el programa `rar` (sugerido en el
+  paquete); para leer, `unrar` o `7z`.
+- **Deshacer metadatos** (Ajustes): cada escritura queda registrada (`metadata.log`) con el ComicInfo.xml anterior
+  byte a byte; deshacer revierte el último lote entero (restaura el XML anterior o quita el `ComicInfo.xml` si no
+  tenía) sin pisar archivos que se hayan modificado o movido después.
+- Las carpetas se recorren también en busca de `.cb7` y `.7z`.
+
+- **Normalizar carpeta…**: la carpeta es la serie. Se elige una serie de GCD en los resultados (sin número) y,
+  al pulsar el botón y elegir la carpeta, el formulario propone del nivel de serie de GCD: nombre, bandera (por
+  país), años de la edición (`2000-2002`, `2006` o `2011-` si sigue publicándose) y el sello más frecuente de
+  sus números. Los años del contenido original se ponen a mano o con el botón de ComicVine (que ya recibe el
+  primer y el último número de la carpeta). Los archivos de dentro se llaman **como la carpeta
+  resultante más ` #01`, ` #02`…** (`Serie 🇪🇸 [1999-2001] (2000-2002) - Forum #01.cbz`), usando **el número que ya
+  trae cada nombre**, así que los huecos se respetan; los números llevan **como mínimo dos cifras** (`01`, `02`…)
+  y las del número más alto si tiene más (`001` a partir del 100). Avisa si el nombre supera el límite del sistema. Tabla de vista previa
+  «antiguo → nuevo» con el número editable y casilla para excluir cada archivo; avisa de archivos sin número,
+  números dudosos, repetidos o nombres que ya existen, y no deja aplicar mientras haya un problema.
+- El renombrado en lote se hace en **dos fases** (un nombre puede ser el destino de otro archivo del lote) y
+  todo o nada: se valida antes de tocar nada y, si la carpeta no se puede renombrar, los archivos vuelven a
+  su nombre. Actualiza el índice de la colección (rutas de archivos y de la carpeta) y se deshace **de una
+  vez como un lote** desde Ajustes.
+- Todos los botones llevan un icono simbólico del tema GTK del usuario junto a su texto (Abrir portada,
+  Pegar, Preguntar a la IA, Normalizar, Limpiar, Añadir carpeta, Indexar/Cancelar, Guardar, Deshacer…). Si
+  el tema no tiene un icono, el botón queda solo con el texto.
+- Botón verde **Limpiar**, junto a los campos: vuelve al estado inicial (quita título, número, editorial y
+  año, los resultados, la portada, el panel de la ficha y la sesión de IA). Una búsqueda que aún estaba en
+  marcha no vuelve a rellenar los resultados después.
+- Casilla «Incluir también la editorial y el año» (marcada por defecto) sobre los botones de búsqueda en
+  otras webs: si se marca, esas búsquedas usan también la editorial y el año; si una web se queda sin
+  resultados, se desmarca.
+- Botón **«Buscar en ComicVine…»** junto a «Contenido [años]» en el formulario de normalizar: con el título
+  original (en inglés) y el número inicial (y final, si la edición recoge varios), busca la serie en
+  ComicVine, dejas elegir la que corresponde y rellena los años con las fechas de portada de esos números
+  (`1999` o `1999-2001`). Necesita la clave de ComicVine y hace tres peticiones por consulta.
+- **Normalizar nombre…**: renombra el CBR/CBZ abierto (o el de una coincidencia de «Mi colección») según
+  `Estructura.md`: `Título Volumen X 🇺🇸/🇪🇸 [años del contenido] (años de la edición) - Sello`. Un formulario
+  modal con los valores propuestos desde la sugerencia elegida, todos editables, y la vista previa del nombre.
+  Variables del patrón, configurable en el propio formulario: `{nombre}`, `{volumen}`, `{bandera}`,
+  `{contenido}`, `{edicion}`, `{sello}` y `{numero}`. Un número suelto en volumen se escribe «Volumen N»;
+  si contenido y edición coinciden se omite el paréntesis; los grupos vacíos y el « - » sin sello se omiten.
+  Los años del contenido son opcionales (a veces coinciden o no se conocen): si faltan, el nombre lleva solo
+  (años de la edición) y un aviso lo indica. No renombra si el nombre ya existe (nunca sobrescribe) o si el
+  patrón no es válido. Actualiza el índice de la colección y registra cada cambio; Ajustes tiene «Deshacer
+  el último renombrado». Solo archivos, no directorios.
+- Campos **Editorial / distribuidor** y **Año** junto al título y el número, para acotar las búsquedas. En
+  GCD la editorial casa también con el sello (por ejemplo, «Forum» encuentra las ediciones de Forum
+  aunque figuren bajo Planeta DeAgostini), sin distinguir tildes; con número, el año es el del ejemplar y,
+  sin número, basta con que la serie se publicara ese año. En ComicVine se aplican a las series y, con
+  número, a la fecha de portada. Con filtros activos, si nada cumple no se muestra ruido.
+- Botón **«Buscar en ComicVine»**, con su icono, en lugar de tener que pulsar Enter (Enter sigue
+  funcionando en el título y la editorial).
+- La ficha de ComicVine del panel muestra **Nombre:**, **Año:** e **Issue:** en negrita y en grande, con
+  la portada debajo.
+- Ajustes muestra los créditos de Comic Vine y Grand Comics Database, con su icono, una breve explicación
+  de qué aportan y un enlace. La página de Ajustes ahora se puede desplazar.
+- Los botones de búsqueda en otras webs llevan el icono de cada web. Se descargan la primera vez (el
+  favicon de cada sitio, como haría un navegador) y se guardan en `~/.cache/comic-identify/icons`; no se
+  distribuyen con la aplicación. Si una web no lo da, se usa un icono genérico. Whakoom y comics.org
+  bloquean la descarga directa; el icono de GCD se recoge cuando el panel muestra una de sus fichas.
+- Fila «Buscar el título en otras webs» con accesos directos a Tebeosfera, Whakoom, Norma, Panini, Universo
+  Marvel (fichas de ediciones españolas de Marvel) y Zona Negativa: abren en tu navegador la búsqueda del
+  título y el número tecleados. No se rastrean esas webs desde la aplicación (varias lo prohíben en su
+  robots.txt o no tienen API). Panini y Zona Negativa usan su propio buscador; el resto, una búsqueda
+  `site:` en Google.
+- El mensaje del asistente de IA menciona esas fuentes, para que las consulte sin tener que descubrirlas.
+- Botón «Preguntar a la IA»: abre en el panel derecho un terminal embebido (VTE) donde se ejecuta la CLI
+  oficial del usuario (por defecto Claude Code) con su propia sesión y un mensaje que pide identificar la
+  portada. La aplicación no toca credenciales ni llama a ninguna API. El comando es configurable en
+  Ajustes (`claude {prompt}`, `codex {prompt}`, `opencode --prompt {prompt}`…).
+- Orden `comic-identify buscar "título" [número]`, que el asistente usa para consultar el índice local
+  de GCD.
+- Las sugerencias de ComicVine también abren su ficha en el panel derecho, en una vista nativa (portada
+  grande, título, editorial y fecha) en lugar de incrustar su web, que carga mucha publicidad. No
+  requiere WebKit.
+- Búsqueda mientras escribes el título en el índice local de GCD (con una pausa de 300 ms), sin
+  necesidad de subir antes una portada.
+- Panel de ficha a la derecha: al hacer clic en una sugerencia de GCD se carga su ficha de comics.org
+  (con su portada) en un WebView de WebKitGTK, una página por clic y solo si está instalado
+  `gir1.2-webkit-6.0`. Usa una sesión propia y persistente; sin WebKit, «Ver ficha» sigue abriendo
+  el navegador.
+- Las coincidencias de «Mi colección» muestran ahora la miniatura de su portada.
+- Fuente Grand Comics Database (GCD) para ediciones en español (España y Latinoamérica): se importa
+  una vez el volcado SQLite oficial desde Ajustes y se busca sin red ni límites. Funciona sin clave
+  de ComicVine.
+- Identificación de portadas: código de barras, GCD, ComicVine y comparación visual.
+- Índice local de la colección (CBZ/CBR) para reconocer portadas de cómics que ya tienes.
+- Interfaz GTK 4 con abrir, pegar y arrastrar imagen.
+- Paquete `.deb` mediante `build-deb.sh`.
 
 ### Changed
 
-- 
+- La ventana se abre a 1100 px de ancho (antes 1000) y la fila superior de botones pasa a otra línea si no
+  cabe: el ancho mínimo baja de 1062 a 845 px.
+- «Deshacer el último renombrado» deshace un lote entero cuando el último cambio fue una carpeta.
+- Abrir o arrastrar un CBR/CBZ lee su portada en un hilo, con el aviso «Leyendo la portada de…»: la
+  ventana ya no se congela (la lectura tarda una mediana de 119 ms y hasta ~1 s, más con escaneos enormes).
+  Si llega otra carga o se pulsa Limpiar mientras tanto, la lectura anterior se descarta.
+- Los botones de búsqueda en otras webs tenían en cuenta solo el título y el número; ahora también la
+  editorial y el año (ver la casilla anterior).
+- La descripción del paquete `.deb` y de `pyproject.toml` ya no dice «sin IA» (existe el asistente de IA
+  opcional), y el README lo explica.
+- El botón «Buscar de nuevo» pasa a ser «Buscar en ComicVine» (hace la misma búsqueda completa).
+- En la cabecera del panel, «Abrir en el navegador» queda a la izquierda de «Volver al asistente».
+- Abrir un archivo con la aplicación ya abierta (por ejemplo, «Abrir con» desde el gestor de archivos)
+  lo carga en la ventana existente; antes se ignoraba.
+- El asistente de IA vive en el panel derecho, no en una ventana aparte: el panel se ensancha para el
+  terminal y, si abres una ficha mientras la sesión sigue activa, aparece «Volver al asistente». La ×
+  cierra el panel y la sesión.
+- Se elimina el enlace «Ver ficha» de cada sugerencia: duplicaba «Abrir en el navegador» del panel.
+  Sin WebKit instalado, un clic en una sugerencia de GCD abre su ficha en el navegador.
+- Sin número, las sugerencias de GCD abren en el panel la galería de portadas de la serie (paginada
+  por GCD) en lugar de su ficha.
+- El título deja de detectarse automáticamente: el OCR no leía los logotipos de los cómics y rellenaba
+  el campo con texto sin sentido. Se elimina Tesseract de las dependencias.
+- Las fechas parciales de GCD se muestran sin ceros sobrantes (`1969` en lugar de `1969-00-00`).
+- Las sugerencias de GCD muestran el sello editorial («Forum; Marvel Comics», «Panini Comics»…),
+  que ayuda a distinguir ediciones. El índice de GCD cambia de esquema: hay que volver a importar el
+  volcado desde Ajustes (la app lo avisa y tarda unos segundos).
+- La ventana admite también archivos CBR/CBZ (arrastrar o abrir): se usa su primera imagen como portada.
 
 ### Fixed
 
-- 
+- Un «.cbr» que en realidad es un 7-Zip no se podía leer (solo se probaba con `unrar`) y quedaba como
+  ilegible en la indexación. Ahora, si `unrar` no lo lee, se prueba con `7z`.
+- Cualquier orden distinta de `buscar` (`--help`, una errata, `search`…) abría la interfaz, y con la
+  aplicación ya abierta creaba una ventana nueva. Ahora `--help` muestra el uso y las órdenes
+  desconocidas terminan con un error, sin abrir nada; la interfaz solo se abre sin argumentos o con un
+  archivo que exista. El asistente de IA prueba esas órdenes, y por eso se duplicaba la ventana.
+- Con la aplicación abierta, lanzarla de nuevo reutiliza la ventana en lugar de crear otra.
+- La línea de estado no se ajustaba a varias líneas y, con textos largos, obligaba a ensanchar la ventana
+  (hasta 1287 px de ancho mínimo); ahora el mínimo es de unos 650 px.
+- Un único archivo problemático (por ejemplo, un escaneo enorme que Pillow rechaza como «bomba de
+  descompresión») abortaba toda la indexación. Ahora se cuenta como ilegible y el lote continúa;
+  Ajustes muestra los nombres de los primeros ilegibles con su motivo («imagen enorme», «sin imágenes
+  o archivo dañado», «imagen no válida»).
+- Colecciones grandes: la limpieza de portadas de archivos que ya no existen era cuadrática (5 s con
+  8.000 cómics; horas con cientos de miles). Ahora es lineal.
+- Indexar con un disco desmontado (o una carpeta vacía o inexistente) borraba todo su índice. Ahora se
+  conserva y se avisa en Ajustes de qué carpetas no se ha podido acceder.
+- Quitar una carpeta de la lista olvida sus portadas al momento, en lugar de esperar a la siguiente
+  indexación. Las portadas de carpetas ya quitadas se limpian en la siguiente indexación.
+- Las sugerencias de GCD sin número (búsqueda solo por título) no tenían enlace y el panel de la ficha
+  no se abría al hacer clic; ahora enlazan a la ficha de la serie.
+- El número de ejemplar del código de barras se interpretaba igual para EAN-13 (europeo) y UPC-A
+  (americano); ahora se distingue según los datos reales de GCD.
+- El icono no aparecía en el panel: el `WM_CLASS` era `__main__.py` en lugar de `comic-identify`.

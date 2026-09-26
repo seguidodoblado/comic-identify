@@ -44,3 +44,7 @@ node_modules/
 .cache/
 __pycache__/
 *.py[cod]
+
+# Paquete .deb
+.deb-stage/
+*.deb
