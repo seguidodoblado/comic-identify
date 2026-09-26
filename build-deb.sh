@@ -23,7 +23,8 @@ Architecture: all
 Depends: python3, python3-gi, gir1.2-gtk-4.0, python3-pil, python3-numpy, zbar-tools
 Recommends: unrar | p7zip-full, gir1.2-webkit-6.0, gir1.2-vte-3.91
 Suggests: rar, p7zip-full
-Maintainer: Comic Identify <localhost>
+Maintainer: Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>
+Homepage: https://github.com/seguidodoblado/comic-identify
 Description: Identifica un cómic a partir de su portada
  Aplicación GTK que combina búsqueda local en Grand Comics Database, código de
  barras, ComicVine y comparación visual de portadas, reconoce portadas de tu

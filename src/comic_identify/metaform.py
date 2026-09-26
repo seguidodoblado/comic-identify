@@ -8,7 +8,8 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 
-from .comicinfo import category_of, with_category
+from .comicinfo import CATEGORY_PREFIX as CATEGORY_LABEL
+from .comicinfo import FIELD_ORDER, category_of, with_category
 from .naming import Values, looks_normalized
 
 SERIES_FIELDS = ("Series", "Volume", "Year", "Count", "Publisher", "Imprint", "LanguageISO", "Web", "Notes")
@@ -96,3 +97,39 @@ def file_changes(series: Mapping[str, str], category: str, number: str, title: s
         changes["Tags"] = with_category(current.get("Tags", ""), category)
     return changes
 
+
+
+LABELS = {"Title": "Título", "Series": "Serie", "Volume": "Volumen", "Number": "Nº", "Count": "Total",
+          "AlternateSeries": "Serie alternativa", "AlternateNumber": "Nº alternativo", "AlternateCount": "Total alternativo",
+          "Summary": "Resumen", "Notes": "Notas", "Writer": "Guion", "Penciller": "Lápiz", "Inker": "Tinta",
+          "Colorist": "Color", "Letterer": "Rotulación", "CoverArtist": "Portada", "Editor": "Edición",
+          "Translator": "Traducción", "Publisher": "Editorial", "Imprint": "Sello", "Genre": "Género", "Web": "Web",
+          "PageCount": "Páginas", "LanguageISO": "Idioma", "Format": "Formato", "BlackAndWhite": "Blanco y negro",
+          "Manga": "Manga", "Characters": "Personajes", "Teams": "Equipos", "Locations": "Lugares",
+          "ScanInformation": "Escaneo", "StoryArc": "Arco", "StoryArcNumber": "Nº del arco", "SeriesGroup": "Grupo",
+          "AgeRating": "Edad", "CommunityRating": "Valoración", "MainCharacterOrTeam": "Protagonista",
+          "Review": "Reseña", "GTIN": "Código de barras"}
+
+
+def describe_info(info: Mapping[str, str]) -> list[tuple[str, str]]:
+    """Filas (etiqueta, valor) para mostrar un ComicInfo.xml: en el orden del esquema, con la fecha en una sola fila y
+    la categoría aparte del resto de etiquetas. Los campos vacíos no salen."""
+    rows: list[tuple[str, str]] = []
+    year, month, day = (info.get(key, "").strip() for key in ("Year", "Month", "Day"))
+    date = "-".join([year.zfill(4), *([month.zfill(2)] + ([day.zfill(2)] if day else []) if month else [])]) if year else ""
+    for key in FIELD_ORDER:
+        value = info.get(key, "").strip()
+        if key in ("Year", "Month", "Day"):
+            if key == "Year" and date:
+                rows.append(("Fecha", date))
+        elif key == "Tags":
+            category = category_of(value)
+            rest = ", ".join(t for t in (t.strip() for t in value.split(",")) if t and not t.startswith(CATEGORY_LABEL))
+            if category:
+                rows.append(("Categoría", category))
+            if rest:
+                rows.append(("Etiquetas", rest))
+        elif value:
+            rows.append((LABELS.get(key, key), value))
+    rows.extend((key, value.strip()) for key, value in info.items() if key not in FIELD_ORDER and value.strip())
+    return rows

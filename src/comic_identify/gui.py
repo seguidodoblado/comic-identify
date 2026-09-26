@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from threading import Event, Thread
 
+from . import __version__
 from .assistant import build_argv, build_prompt, prepare_workspace
 from .collection import build_series, ranges
 from .comicinfo import CATEGORIES, MetadataError, build_xml, read_info
@@ -16,6 +17,7 @@ from .metadata import differs, write_batch
 from .metadata import undo_last as undo_metadata
 from .metaform import (
     common_value,
+    describe_info,
     file_changes,
     initial_category,
     initial_form,
@@ -53,10 +55,18 @@ SERIES_FILTERS = ["Incompletas", "Todas", "Sin todos sus metadatos", "Sin total 
 SERIES_SHOWN = 300
 PAGE_MAX_SIDE = 1600   # las páginas se reducen a esto para mostrarlas: un escaneo enorme no bloquea la ventana
 PAGES_CACHED = 8
+VIEWER_MAX_SIDE = 3200   # lado máximo de la página en la ventana grande (letra pequeña legible sin agotar la memoria)
+AUTHOR = "Jose Antonio Seguido Doblado"
+REPO_URL = "https://github.com/seguidodoblado/comic-identify"
+LICENSE_TEXT = ("Este programa es software libre: se distribuye bajo la GNU General Public License, versión 3. "
+                "El texto completo está en el archivo LICENSE del repositorio y en https://www.gnu.org/licenses/gpl-3.0.html.")
 INDEX_ICON = ("view-refresh-symbolic", "emblem-synchronizing-symbolic")
 STOP_ICON = ("process-stop-symbolic", "window-close-symbolic")
 DEFAULT_PATTERN = Settings.pattern
-WINDOW_WIDTH = 1100   # ancho por defecto: caben en una fila los cinco botones de arriba
+WINDOW_HEIGHT = 820
+COVER_WIDTH = 440
+META_MAX_HEIGHT = 260   # alto máximo del panel del ComicInfo.xml; si hay más campos, se desplaza
+WINDOW_WIDTH = 1100   # ancho por defecto
 PREVIEW_WIDTH = 520
 ASSISTANT_WIDTH = 760   # el terminal necesita ~80 columnas
 LIVE_DELAY_MS = 300   # pausa al teclear antes de buscar en GCD
@@ -114,7 +124,7 @@ def run_gui(initial_image: Path | None = None) -> None:
     class Window(Gtk.ApplicationWindow):
         def __init__(self, app):
             super().__init__(application=app, title="Comic Identify")
-            self.set_default_size(WINDOW_WIDTH, 640)
+            self.set_default_size(WINDOW_WIDTH, WINDOW_HEIGHT)
             self.settings = Settings.load()
             self.image: Path | None = None
             self.busy = False
@@ -205,8 +215,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                            self.metadata_button):
                 controls.append(widget)
             self.status = Gtk.Label(label=INITIAL_STATUS, xalign=0, wrap=True)   # sin ajuste, un estado largo obliga a ensanchar la ventana
-            self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN)
-            self.picture.set_size_request(300, 450)
+            self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
+            self.picture.set_size_request(300, 300)   # se encoge sola si falta altura: debajo van las flechas y los metadatos
 
             self.query = Gtk.Entry(placeholder_text="Título a buscar", hexpand=True)
             self.number = Gtk.Entry(placeholder_text="Nº", width_chars=6)
@@ -272,9 +282,22 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.page_nav = Gtk.Box(spacing=6, halign=Gtk.Align.CENTER, visible=False)
             for widget in (*self.page_buttons[:2], self.page_label, *self.page_buttons[2:]):
                 self.page_nav.append(widget)
+            click = Gtk.GestureClick()   # doble clic: la página a la vista, en una ventana grande
+            click.connect("pressed", lambda _g, presses, _x, _y: presses == 2 and self._open_viewer())
+            self.picture.add_controller(click)
+            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0)
+            self.meta_heading.add_css_class("heading")
+            self.meta_grid = Gtk.Grid(column_spacing=10, row_spacing=2, margin_end=8)
+            meta_scroll = Gtk.ScrolledWindow(min_content_height=70, max_content_height=META_MAX_HEIGHT,
+                                             propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+            meta_scroll.set_child(self.meta_grid)
+            self.meta_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4, visible=False, margin_top=4)
+            self.meta_box.append(self.meta_heading)
+            self.meta_box.append(meta_scroll)
             cover = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-            cover.append(self.picture)
-            cover.append(self.page_nav)
+            cover.set_size_request(COVER_WIDTH, -1)   # ancho fijo: una portada es vertical y solo gana con el alto
+            for widget in (self.picture, self.page_nav, self.meta_box):   # la portada se queda con el alto que sobra
+                cover.append(widget)
             body = Gtk.Box(spacing=12)
             body.append(cover)
             body.append(side)
@@ -372,9 +395,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.source_file = source
             self.image = image
             self._set_pages([])
+            self.meta_box.set_visible(False)
+            self.picture.set_tooltip_text("Doble clic para verla más grande")
             if source is not None:
-                Thread(target=lambda: later(self._pages_listed, source, list_pages(source), generation),
-                       daemon=True).start()
+                Thread(target=self._read_source, args=(source, generation), daemon=True).start()
             self.ask_button.set_sensitive(True)
             self._update_normalize()
             self.picture.set_filename(str(image))
@@ -387,6 +411,146 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.pages, self.page_index, self._page_cache = pages, 0, {}
             self._page_request += 1     # descarta lo que se estuviera leyendo del cómic anterior
             self._update_pages()
+
+        def _read_source(self, source: Path, generation: int):
+            """En otro hilo: las páginas del archivo y su ComicInfo.xml (leer un RAR lanza `unrar`)."""
+            later(self._pages_listed, source, list_pages(source), generation)
+            self._read_meta(source, generation)
+
+        def _read_meta(self, source: Path, generation: int):
+            try:
+                info, error = read_info(source), ""
+            except MetadataError as problem:
+                info, error = {}, str(problem)
+            later(self._show_meta, source, info, error, generation)
+
+        def _refresh_meta(self):
+            if self.source_file is not None:
+                Thread(target=self._read_meta, args=(self.source_file, self._generation), daemon=True).start()
+
+        def _show_meta(self, source: Path, info: dict, error: str, generation: int):
+            if generation != self._generation or source != self.source_file:
+                return
+            while (child := self.meta_grid.get_first_child()) is not None:
+                self.meta_grid.remove(child)
+            rows = describe_info(info)
+            if error or not rows:
+                text = f"No se pudo leer: {error}" if error else "Este archivo no tiene ComicInfo.xml."
+                self.meta_grid.attach(Gtk.Label(label=text, xalign=0, wrap=True, css_classes=["dim-label"]), 0, 0, 2, 1)
+            for row, (label, value) in enumerate(rows):
+                key = Gtk.Label(label=label, xalign=0, yalign=0, css_classes=["dim-label"])
+                shown = Gtk.Label(xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True,
+                                  width_chars=18, max_width_chars=40)
+                if value.startswith(("http://", "https://")):
+                    escaped = GLib.markup_escape_text(value)
+                    shown.set_markup(f'<a href="{escaped}">{escaped}</a>')
+                else:
+                    shown.set_text(value)
+                self.meta_grid.attach(key, 0, row, 1, 1)
+                self.meta_grid.attach(shown, 1, row, 1, 1)
+            self.meta_box.set_visible(True)
+
+        def _viewer_size(self) -> tuple[int, int]:
+            """Tamaño de la ventana grande: casi toda la altura de la pantalla y la proporción de una página."""
+            try:
+                area = self.get_display().get_monitor_at_surface(self.get_surface()).get_geometry()
+            except (AttributeError, TypeError, GLib.Error):
+                return 760, 960
+            height = int(area.height * 0.9)
+            return min(int(height * 0.8), int(area.width * 0.9)), height
+
+        def _open_viewer(self):
+            """La página que se está viendo, grande, con las mismas flechas y el teclado (←, →, Inicio, Fin, Esc)."""
+            if self.image is None:
+                return
+            comic, pages = self.source_file, list(self.pages)
+            loose = comic is None or not pages    # imagen suelta, o un archivo cuyas páginas no se pudieron listar
+            count, name = (1, self.image.name) if loose else (len(pages), comic.name)
+            state = {"index": 0 if loose else self.page_index, "request": 0}
+            cache: dict[int, bytes] = {}
+            width, height = self._viewer_size()
+            window = Gtk.Window(title=name, transient_for=self, default_width=width, default_height=height)
+            picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, hexpand=True, vexpand=True)
+            scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+            scroll.set_child(picture)
+            buttons = [Gtk.Button(icon_name=pick_icon(icon), tooltip_text=tip) for icon, tip in (
+                ("go-first-symbolic", "Primera página"), ("go-previous-symbolic", "Página anterior"),
+                ("go-next-symbolic", "Página siguiente"), ("go-last-symbolic", "Última página"))]
+            label = Gtk.Label(width_chars=17)
+            actual = Gtk.ToggleButton(label="Tamaño real", tooltip_text="Muestra la página sin reducirla (con barras de desplazamiento)")
+            close = icon_button(("window-close-symbolic",), "Cerrar")
+            bar = Gtk.Box(spacing=6, margin_top=6, margin_bottom=6, margin_start=8, margin_end=8)
+            for widget in (*buttons[:2], label, *buttons[2:], actual):
+                bar.append(widget)
+            close.set_halign(Gtk.Align.END)
+            close.set_hexpand(True)
+            bar.append(close)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            box.append(scroll)
+            box.append(bar)
+            window.set_child(box)
+
+            def refresh_bar(loading=False):
+                label.set_text(f"Página {state['index'] + 1} de {count}" + ("…" if loading else ""))
+                window.set_title(f"{name} — página {state['index'] + 1} de {count}" if count > 1 else name)
+                for button in buttons[:2]:
+                    button.set_sensitive(state["index"] > 0)
+                for button in buttons[2:]:
+                    button.set_sensitive(state["index"] < count - 1)
+
+            def ready(index, request, data):
+                if request != state["request"]:
+                    return
+                if data is None:
+                    refresh_bar()
+                    self.status.set_text(f"No se pudo leer la página {index + 1} para ampliarla.")
+                    return
+                cache[index] = data
+                try:
+                    picture.set_paintable(Gdk.Texture.new_from_bytes(GLib.Bytes.new(data)))
+                except GLib.Error:
+                    self.status.set_text("No se pudo mostrar esta página.")
+                refresh_bar()
+
+            def read(index, request):
+                try:
+                    data = self.image.read_bytes() if loose else read_page(comic, pages[index])
+                except OSError:
+                    data = None
+                later(ready, index, request, thumbnail_bytes(data, VIEWER_MAX_SIDE) if data else None)
+
+            def show(index):
+                state["index"] = max(0, min(index, count - 1))
+                state["request"] += 1
+                if state["index"] in cache:
+                    ready(state["index"], state["request"], cache[state["index"]])
+                    return
+                refresh_bar(loading=True)
+                Thread(target=read, args=(state["index"], state["request"]), daemon=True).start()
+
+            def key(_controller, keyval, _code, _mods):
+                target = {Gdk.KEY_Left: state["index"] - 1, Gdk.KEY_Page_Up: state["index"] - 1,
+                          Gdk.KEY_Right: state["index"] + 1, Gdk.KEY_Page_Down: state["index"] + 1,
+                          Gdk.KEY_Home: 0, Gdk.KEY_End: count - 1}.get(keyval)
+                if keyval == Gdk.KEY_Escape:
+                    window.close()
+                elif target is not None:
+                    show(target)
+                return target is not None or keyval == Gdk.KEY_Escape
+
+            for button, target in zip(buttons, (lambda: 0, lambda: state["index"] - 1, lambda: state["index"] + 1,
+                                                lambda: count - 1), strict=True):
+                button.connect("clicked", lambda _b, t=target: show(t()))
+            actual.connect("toggled", lambda b: picture.set_can_shrink(not b.get_active()))
+            close.connect("clicked", lambda _b: window.close())
+            controller = Gtk.EventControllerKey()
+            controller.connect("key-pressed", key)
+            window.add_controller(controller)
+            for widget in (*buttons, actual):
+                widget.set_focusable(False)   # que las flechas del teclado no muevan el foco entre botones
+            self.viewer = {"window": window, "picture": picture, "label": label, "actual": actual}   # para las pruebas
+            show(state["index"])
+            window.present()
 
         def _pages_listed(self, source: Path, pages: list[str], generation: int):
             if generation == self._generation and source == self.source_file:
@@ -450,6 +614,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._set_fields("", "", "", "")
             self.image = self.source_file = None
             self._set_pages([])
+            self.meta_box.set_visible(False)
+            self.picture.set_tooltip_text(None)
             self.picture.set_paintable(None)
             self.library_matches = []
             self._show_candidates([])
@@ -1207,6 +1373,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             def finished(result):
                 state["busy"] = False
                 self._refresh_series()
+                if self.source_file in result.written:
+                    self._refresh_meta()
                 self.status.set_text(
                     f"Metadatos escritos en {len(result.written)} archivo(s)"
                     + (f"; {len(result.unchanged)} ya estaban igual" if result.unchanged else "")
@@ -1262,6 +1430,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _metadata_undone(self, result, error):
             self.metadata_undo_button.set_sensitive(True)
             self._refresh_series()
+            self._refresh_meta()
             if error is not None:
                 self.metadata_undo_info.set_text(f"No se pudo deshacer: {error}")
                 return
@@ -1559,6 +1728,19 @@ def run_gui(initial_image: Path | None = None) -> None:
                 page.append(widget)
             return page
 
+        def _about(self, _button):
+            about = Gtk.AboutDialog(
+                transient_for=self, modal=True, program_name="Comic Identify", version=__version__,
+                logo_icon_name="comic-identify", authors=[AUTHOR], copyright=f"© 2026 {AUTHOR}",
+                comments=("Identifica un cómic a partir de su portada, normaliza los nombres de archivos y carpetas y "
+                          "escribe metadatos ComicInfo.xml."),
+                website=REPO_URL, website_label=REPO_URL.removeprefix("https://"),
+                license_type=Gtk.License.CUSTOM, license=LICENSE_TEXT, wrap_license=True)
+            about.add_credit_section("Datos de terceros", [
+                "Grand Comics Database (CC BY-SA 4.0) https://www.comics.org/",
+                "Comic Vine https://comicvine.gamespot.com/"])
+            about.present()
+
         def _refresh_series(self):
             """Recalcula las series con lo que hay en el índice y las muestra."""
             self.series_reports = build_series(Library(LIBRARY_DB).series_rows()) if LIBRARY_DB.exists() else []
@@ -1709,6 +1891,10 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _settings_page(self):
             page = self._box()
+            about = icon_button(("help-about-symbolic", "dialog-information-symbolic"), "Acerca de…",
+                                halign=Gtk.Align.END, tooltip_text="Versión, autor, licencia y datos de terceros")
+            about.connect("clicked", self._about)
+            page.append(about)   # arriba: la página es larga y así se ve al entrar
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
                 "Esta aplicación se apoya en el trabajo de dos comunidades de colaboradores, que son las que "
                 "han hecho el trabajo duro:")))

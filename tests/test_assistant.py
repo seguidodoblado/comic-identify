@@ -1,6 +1,6 @@
 import pytest
 
-from comic_identify import cli
+from comic_identify import __version__, cli
 from comic_identify.assistant import build_argv, build_prompt, prepare_workspace
 from comic_identify.settings import Settings
 
@@ -65,7 +65,12 @@ def test_dispatch_never_opens_the_gui_for_unknown_commands(tmp_path, capsys):
             cli.dispatch(args)
         assert exit_info.value.code == 0 and "comic-identify buscar" in capsys.readouterr().out
 
-    for args in (["search", "batman"], ["--version"], [str(tmp_path / "no_existe.png")], [str(cover), "otro"]):
+    for args in (["--version"], ["-V"], ["version"]):    # imprime la versión y sale, sin abrir la interfaz
+        with pytest.raises(SystemExit) as exit_info:
+            cli.dispatch(args)
+        assert exit_info.value.code == 0 and capsys.readouterr().out == f"comic-identify {__version__}\n"
+
+    for args in (["search", "batman"], ["--versión"], [str(tmp_path / "no_existe.png")], [str(cover), "otro"]):
         with pytest.raises(SystemExit) as exit_info:      # antes: abría la interfaz y duplicaba la ventana
             cli.dispatch(args)
         assert exit_info.value.code == 2 and "Orden no reconocida" in capsys.readouterr().err

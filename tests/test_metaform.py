@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from comic_identify.metaform import (
     SERIES_FIELDS,
+    describe_info,
     file_changes,
     initial_category,
     initial_form,
@@ -87,3 +88,17 @@ def test_merge_values_prefers_the_normalized_name_and_falls_back_to_gcd_then_typ
     assert merge_values(raw, None, "Capitán Marvel").nombre == "Capitán Marvel"                          # o lo tecleado
     assert merge_values(raw, None, "").nombre == "Capitan marvel 1-20"
     assert merge_values(parse_name("Batman - El regreso"), gcd).nombre == "Capitán Marvel"     # « - texto» no es un sello
+
+
+def test_describe_info_orders_translates_and_groups_the_date_and_category():
+    info = {"Notes": "Contenido original: 1999", "Series": "Capitán Marvel", "Number": "5", "Year": "2000", "Month": "3",
+            "Tags": "Superhéroes, Categoría: Series", "Publisher": "Planeta", "Imprint": "Forum", "Writer": "Autor",
+            "Extra": "x", "Title": "", "Web": " https://www.comics.org/series/1/ "}
+    assert describe_info(info) == [
+        ("Serie", "Capitán Marvel"), ("Nº", "5"), ("Notas", "Contenido original: 1999"), ("Fecha", "2000-03"),
+        ("Guion", "Autor"), ("Editorial", "Planeta"), ("Sello", "Forum"), ("Categoría", "Series"),
+        ("Etiquetas", "Superhéroes"), ("Web", "https://www.comics.org/series/1/"), ("Extra", "x")]
+    assert describe_info({}) == [] and describe_info({"Tags": "Categoría: OGN y OneShots"}) == [("Categoría", "OGN y OneShots")]
+    assert describe_info({"Year": "2000", "Day": "7"}) == [("Fecha", "2000")]        # un día suelto no significa nada
+    assert describe_info({"Year": "2000", "Month": "3", "Day": "7"}) == [("Fecha", "2000-03-07")]
+    assert describe_info({"Month": "3"}) == []
