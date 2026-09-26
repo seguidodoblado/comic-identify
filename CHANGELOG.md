@@ -5,6 +5,25 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-09-27
+
+### Added
+- **Doble clic en la página** a la vista: se abre en una ventana grande (casi toda la altura de la pantalla) con las
+  mismas flechas, el teclado (←, →, Re Pág, Av Pág, Inicio, Fin, Esc) y un botón «Tamaño real» que la muestra sin
+  reducir. Las páginas se leen hasta 3200 px de lado, para poder leer la letra pequeña de una contraportada. Funciona
+  también con imágenes sueltas.
+- **Panel del ComicInfo.xml** bajo la portada y sus flechas: muestra el `ComicInfo.xml` del archivo abierto (serie,
+  número, total, fecha, autores, editorial, sello, categoría, etiquetas, web, notas…) o avisa de que no lo tiene. Se
+  actualiza solo al escribir o deshacer metadatos. Ocupa lo que necesita (hasta 260 px, y se desplaza si hay más
+  campos) y la portada se queda con el resto del alto; la columna de la portada mide 440 px.
+- **Acerca de…**: botón arriba en Ajustes que abre un diálogo con el logo, la versión, el autor, la licencia (GPL v3),
+  el enlace al repositorio y la atribución de los datos de terceros (GCD, bajo CC BY-SA 4.0, y Comic Vine).
+- `comic-identify --version` muestra la versión sin abrir la aplicación.
+
+### Changed
+- La ventana principal arranca con 1100×820 px; la portada se ajusta al alto disponible (antes tenía un tamaño casi fijo).
+- El paquete DEB indica el mantenedor y la página del proyecto (antes `Comic Identify <localhost>`).
+
 ## [0.16.0] - 2026-09-27
 
 ### Added

@@ -36,6 +36,9 @@ edición, sello) y los archivos de dentro se llaman como la carpeta más ` #01`,
 inventar los que faltan. Vista previa completa antes de aplicar, todo o nada, y un solo deshacer para todo el
 lote.
 
+**Ampliar y metadatos:** doble clic en la página a la vista la abre en una ventana grande (flechas, teclado y «Tamaño real»);
+debajo de las flechas se muestra el `ComicInfo.xml` del archivo abierto.
+
 **Páginas:** con un CBR/CBZ abierto, las flechas bajo la portada (primera, anterior, siguiente, última) permiten mirar
 el resto de páginas, por ejemplo la contraportada. La búsqueda sigue usando la portada.
 
