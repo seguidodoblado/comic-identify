@@ -1,0 +1,98 @@
+"""Lógica (sin interfaz) del formulario de metadatos: qué se propone y qué se escribe en cada archivo.
+
+Cada campo de serie se rellena, por orden, con: lo que ya tienen todos los archivos → la serie de GCD elegida →
+el nombre de la carpeta o del archivo → lo tecleado en la pantalla principal. Un campo que los archivos ya tienen
+con el mismo valor en todos se muestra tal cual; si difieren, queda vacío y no se toca salvo que se escriba algo.
+"""
+import re
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
+
+from .comicinfo import category_of, with_category
+from .naming import Values, looks_normalized
+
+SERIES_FIELDS = ("Series", "Volume", "Year", "Count", "Publisher", "Imprint", "LanguageISO", "Web", "Notes")
+LANGUAGES = {"🇪🇸": "es", "🇺🇸": "en"}
+GCD_SERIES_URL = "https://www.comics.org/series/{}/"
+NO_CATEGORY = ""        # «no cambiar»
+
+
+def merge_values(parsed: Values, gcd: Values | None = None, title: str = "") -> Values:
+    """Valores de partida: el nombre normalizado de la carpeta o archivo manda y GCD rellena lo que falta; si el nombre
+    no está normalizado (sin bandera, años ni sello), manda GCD y, sin GCD, lo tecleado como título."""
+    normalized = looks_normalized(parsed)
+    if gcd is None:
+        return parsed if normalized or not title.strip() else replace(parsed, nombre=title.strip())
+    if not normalized:
+        return replace(gcd, contenido=parsed.contenido)
+    filled = {field: getattr(gcd, field) for field in ("nombre", "bandera", "edicion", "sello")
+              if not getattr(parsed, field)}
+    return replace(parsed, **filled)
+
+
+def suggest_fields(values: Values, publisher: str = "", info=None) -> dict[str, str]:
+    """Campos de ComicInfo a partir de los valores del nombre (y de la serie de GCD, si se eligió una)."""
+    volume = values.volumen.strip()
+    series = values.nombre.strip() if volume.isdigit() or not volume else f"{values.nombre.strip()} {volume}"
+    years = values.edicion.strip() or values.contenido.strip()
+    year = re.match(r"\d{4}", years.replace(" ", ""))
+    content = values.contenido.strip()
+    fields = {"Series": series, "Volume": volume if volume.isdigit() else "", "Year": year.group() if year else "",
+              "Publisher": publisher.strip(), "Imprint": values.sello.strip(),
+              "LanguageISO": LANGUAGES.get(values.bandera, ""),
+              "Notes": f"Contenido original: {content}" if content else ""}
+    if info is not None:
+        fields["Web"] = GCD_SERIES_URL.format(info.id)
+        fields["Publisher"] = fields["Publisher"] or info.publisher
+        if info.issue_count:
+            fields["Count"] = str(info.issue_count)
+    return {key: value for key, value in fields.items() if value}
+
+
+def common_value(infos: Sequence[Mapping[str, str]], key: str) -> tuple[str, bool]:
+    """(valor común, ninguno lo tiene): «» y False si difieren o solo algunos lo tienen."""
+    values = {info.get(key, "") for info in infos}
+    if values == {""}:
+        return "", True
+    return (values.pop(), False) if len(values) == 1 else ("", False)
+
+
+def initial_form(infos: Sequence[Mapping[str, str]], suggested: Mapping[str, str]) -> tuple[dict[str, str], dict[str, str]]:
+    """(textos iniciales, valor uniforme que ya tienen los archivos). Sirve para saber si el usuario vació un campo."""
+    texts, baseline = {}, {}
+    for key in SERIES_FIELDS:
+        value, absent = common_value(infos, key)
+        texts[key] = suggested.get(key, "") if absent else value
+        baseline[key] = value
+    return texts, baseline
+
+
+def series_changes(texts: Mapping[str, str], baseline: Mapping[str, str]) -> dict[str, str]:
+    """Campos de serie a escribir: lo tecleado, y «» (borrar) si el usuario vació un valor que todos tenían."""
+    changes = {}
+    for key in SERIES_FIELDS:
+        text = texts.get(key, "").strip()
+        if text:
+            changes[key] = text
+        elif baseline.get(key):
+            changes[key] = ""
+    return changes
+
+
+def initial_category(infos: Sequence[Mapping[str, str]]) -> str:
+    """La categoría que ya tienen todos los archivos (si coinciden); si no, «no cambiar»."""
+    found = {category_of(info.get("Tags", "")) for info in infos}
+    return found.pop() if len(found) == 1 else NO_CATEGORY
+
+
+def file_changes(series: Mapping[str, str], category: str, number: str, title: str,
+                 current: Mapping[str, str]) -> dict[str, str]:
+    """Todo lo que hay que dejar en un archivo: campos de serie + Nº + título + (si se eligió) categoría en `Tags`."""
+    changes = dict(series)
+    if number.strip():
+        changes["Number"] = str(int(number)) if number.strip().isdigit() else number.strip()
+    changes["Title"] = title.strip()
+    if category != NO_CATEGORY:
+        changes["Tags"] = with_category(current.get("Tags", ""), category)
+    return changes
+
