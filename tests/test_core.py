@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 from conftest import jpeg, make_cover
 from PIL import Image
+from test_comicinfo import PAGES, needs_rar, rar_fixture
 
 from comic_identify import identify as pipeline
 from comic_identify.barcode import Barcode, parse_barcode
 from comic_identify.comicvine import ComicVineClient, ComicVineError
-from comic_identify.covers import cover_to_png, read_cover, thumbnail_bytes
+from comic_identify.covers import cover_to_png, extract_cover, read_cover, thumbnail_bytes
 from comic_identify.hashing import dhash, dhash_variants, similarity
 from comic_identify.library import Library
 from comic_identify.settings import Settings
@@ -226,3 +227,32 @@ def test_list_and_read_pages_of_a_zip_in_natural_order(tmp_path):
     assert read_cover(comic) == b"p1.jpg"               # la portada sigue siendo la primera página
     (tmp_path / "roto.cbz").write_bytes(b"\x00" * 100)
     assert list_pages(tmp_path / "roto.cbz") == [] and read_page(tmp_path / "roto.cbz", "x.jpg") is None
+
+
+def test_extract_cover_saves_the_raw_bytes_with_the_original_extension(tmp_path):
+    import zipfile
+
+    comic = tmp_path / "a.cbz"
+    cover_bytes, other_bytes = b"\xff\xd8" + b"portada" * 20, b"\x89PNG" + b"pagina2" * 20
+    with zipfile.ZipFile(comic, "w") as archive:
+        archive.writestr("01.jpg", cover_bytes)
+        archive.writestr("02.png", other_bytes)
+    saved = extract_cover(comic, tmp_path / "Serie 01")
+    assert saved == tmp_path / "Serie 01.jpg" and saved.read_bytes() == cover_bytes   # tal cual, sin recodificar
+
+    with pytest.raises(FileExistsError, match="Serie 01.jpg"):
+        extract_cover(comic, tmp_path / "Serie 01")           # no se sobrescribe
+    assert saved.read_bytes() == cover_bytes
+
+    empty = tmp_path / "vacio.cbz"
+    with zipfile.ZipFile(empty, "w") as archive:
+        archive.writestr("notas.txt", "x")
+    with pytest.raises(ValueError, match="ninguna imagen"):
+        extract_cover(empty, tmp_path / "vacio")
+
+
+@needs_rar
+def test_extract_cover_from_a_real_rar(tmp_path):
+    comic = rar_fixture(tmp_path, "rar5")
+    saved = extract_cover(comic, tmp_path / "portada")
+    assert saved == tmp_path / "portada.jpg" and saved.read_bytes() == PAGES["01.jpg"]

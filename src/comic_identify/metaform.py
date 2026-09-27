@@ -12,7 +12,8 @@ from .comicinfo import CATEGORY_PREFIX as CATEGORY_LABEL
 from .comicinfo import FIELD_ORDER, category_of, with_category
 from .naming import Values, looks_normalized
 
-SERIES_FIELDS = ("Series", "Volume", "Year", "Count", "Publisher", "Imprint", "LanguageISO", "Web", "Notes")
+SERIES_FIELDS = ("Series", "Volume", "Year", "Count", "Publisher", "Imprint", "LanguageISO", "Web", "Notes",
+                 "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist")   # créditos: por lote, no por número
 LANGUAGES = {"🇪🇸": "es", "🇺🇸": "en"}
 GCD_SERIES_URL = "https://www.comics.org/series/{}/"
 NO_CATEGORY = ""        # «no cambiar»

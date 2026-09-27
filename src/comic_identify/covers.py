@@ -115,6 +115,31 @@ def cover_to_png(comic: Path, target: Path) -> None:
         image.convert("RGB").save(target, "PNG")
 
 
+def extract_page(comic: Path, name: str, target_stem: Path) -> Path:
+    """Guarda la página `name` (de `list_pages`) tal cual está —sin recodificarla, para no perder calidad—, con el
+    nombre de `target_stem` y la extensión que ya traía (normalmente .jpg). Útil para catalogadores externos
+    (GCstar, Calibre…) que piden la portada como un archivo de imagen aparte.
+
+    Lanza ValueError si no se pudo leer, y FileExistsError si el destino ya existe (no se sobrescribe).
+    """
+    data = read_page(comic, name)
+    if data is None:
+        raise ValueError(f"no se pudo leer la página «{name}»")
+    target = target_stem.with_suffix(Path(name).suffix.lower() or ".jpg")
+    if target.exists():
+        raise FileExistsError(f"ya existe un archivo llamado «{target.name}»")
+    target.write_bytes(data)
+    return target
+
+
+def extract_cover(comic: Path, target_stem: Path) -> Path:
+    """Guarda la portada (primera página) del cómic; ver `extract_page`. Lanza ValueError si no tiene páginas."""
+    pages = list_pages(comic)
+    if not pages:
+        raise ValueError("no se encontró ninguna imagen en el archivo")
+    return extract_page(comic, pages[0], target_stem)
+
+
 def thumbnail_bytes(data: bytes, max_side: int = 300) -> bytes | None:
     """Reduce una imagen a una miniatura JPEG para mostrarla; None si no es una imagen válida."""
     try:

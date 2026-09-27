@@ -12,11 +12,21 @@ from .covers import (
     COMIC_EXTENSIONS,
     IMAGE_EXTENSIONS,
     cover_to_png,
+    extract_cover,
     list_pages,
     read_page,
     thumbnail_bytes,
 )
 from .gcd import GcdIndex, build_index
+from .gcstar import (
+    VOCABULARY_FIELDS,
+    GCstarError,
+    format_name,
+    series_text,
+    vocabulary,
+)
+from .gcstar import transfer as gcstar_transfer
+from .gcstar import undo_last as undo_gcstar
 from .icons import ensure_icons, icon_file
 from .identify import Candidate, identify, search_gcd
 from .library import Library
@@ -50,7 +60,7 @@ from .naming import (
 )
 from .originals import content_years, find_volumes
 from .renamer import rename_file, rename_series, undo_last
-from .settings import GCD_DB, LIBRARY_DB, METADATA_LOG, RENAME_LOG, Settings
+from .settings import GCD_DB, GCSTAR_LOG, LIBRARY_DB, METADATA_LOG, RENAME_LOG, Settings
 from .sources import SOURCES, search_url
 
 COMICVINE_API_URL = "https://comicvine.gamespot.com/api/"
@@ -228,7 +238,15 @@ def run_gui(initial_image: Path | None = None) -> None:
                 controls.append(widget)
             self.status = Gtk.Label(label=INITIAL_STATUS, xalign=0, wrap=True)   # sin ajuste, un estado largo obliga a ensanchar la ventana
             self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
-            self.picture.set_size_request(300, 300)   # se encoge sola si falta altura: debajo van las flechas y los metadatos
+            self.picture.set_size_request(300, 190)   # se encoge sola si falta altura: debajo van los botones, las flechas y los metadatos
+            self.cover_placeholder = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6,
+                                             halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+            self.cover_placeholder.add_css_class("dim-label")
+            self.cover_placeholder.append(Gtk.Image(icon_name="comic-identify", pixel_size=96))
+            self.cover_placeholder.append(Gtk.Label(label="Ningún cómic abierto"))
+            self.cover_overlay = Gtk.Overlay(vexpand=True)   # muestra un icono genérico mientras no hay portada
+            self.cover_overlay.set_child(self.picture)
+            self.cover_overlay.add_overlay(self.cover_placeholder)
 
             self.query = Gtk.Entry(placeholder_text="Título a buscar", hexpand=True)
             self.number = Gtk.Entry(placeholder_text="Nº", width_chars=6)
@@ -304,6 +322,20 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.page_nav = Gtk.Box(spacing=6, halign=Gtk.Align.CENTER, visible=False)
             for widget in (*self.page_buttons[:2], self.page_label, *self.page_buttons[2:]):
                 self.page_nav.append(widget)
+            self.export_cover_button = icon_button(("image-x-generic-symbolic", "insert-image-symbolic"),
+                                                    "Extraer portada…", sensitive=False, halign=Gtk.Align.CENTER,
+                                                    tooltip_text=(
+                "Guarda la portada como imagen junto al archivo, con su mismo nombre (para usarla, por ejemplo, "
+                "de portada en GCstar); no la recodifica, así que conserva su calidad original"))
+            self.export_cover_button.connect("clicked", self._export_cover)
+            self.gcstar_button = icon_button(("send-to-symbolic", "document-send-symbolic"), "Transferir a GCstar…",
+                                             sensitive=False, halign=Gtk.Align.CENTER, tooltip_text=(
+                "Añade el cómic a tu colección de GCstar (créditos, editorial, año, páginas, portada y "
+                "contraportada) sin tocar el resto de su archivo .gcs; configúralo en Ajustes"))
+            self.gcstar_button.connect("clicked", self._open_gcstar_transfer)
+            cover_actions = Gtk.Box(spacing=6, halign=Gtk.Align.CENTER)
+            cover_actions.append(self.export_cover_button)
+            cover_actions.append(self.gcstar_button)
             click = Gtk.GestureClick()   # doble clic: la página a la vista, en una ventana grande
             click.connect("pressed", lambda _g, presses, _x, _y: presses == 2 and self._open_viewer())
             self.picture.add_controller(click)
@@ -318,7 +350,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.meta_box.append(meta_scroll)
             cover = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             cover.set_size_request(COVER_WIDTH, -1)   # ancho fijo: una portada es vertical y solo gana con el alto
-            for widget in (self.picture, self.page_nav, self.meta_box):   # la portada se queda con el alto que sobra
+            for widget in (self.cover_overlay, cover_actions, self.page_nav, self.meta_box):   # la portada se queda con el alto que sobra
                 cover.append(widget)
             body = Gtk.Box(spacing=12)
             body.append(cover)
@@ -447,6 +479,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.ask_button.set_sensitive(True)
             self._update_normalize()
             self.picture.set_filename(str(image))
+            self.cover_placeholder.set_visible(False)
             self._set_fields("", "", "", "")
             self.library_matches = []
             self._search("", "")
@@ -662,6 +695,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.meta_box.set_visible(False)
             self.picture.set_tooltip_text(None)
             self.picture.set_paintable(None)
+            self.cover_placeholder.set_visible(True)
             self.library_matches = []
             self._show_candidates([])
             self.selected = None
@@ -784,8 +818,173 @@ def run_gui(initial_image: Path | None = None) -> None:
             return None
 
         def _update_normalize(self):
-            self.normalize_button.set_sensitive(self._normalize_target() is not None)
-            self.metadata_button.set_sensitive(self._normalize_target() is not None)
+            target = self._normalize_target()
+            self.normalize_button.set_sensitive(target is not None)
+            self.metadata_button.set_sensitive(target is not None)
+            self.export_cover_button.set_sensitive(target is not None)
+            self.gcstar_button.set_sensitive(target is not None and bool(self.settings.gcstar_path.strip()))
+
+        # ---- Extraer la portada como imagen (para catalogadores externos como GCstar) -----------
+        def _export_cover(self, _button):
+            target = self._normalize_target()
+            if target is None:
+                return
+            self.status.set_text(f"Extrayendo la portada de {target.name}…")
+
+            def work():
+                try:
+                    saved = extract_cover(target, target.with_suffix(""))
+                except (OSError, ValueError) as error:
+                    later(self._export_cover_failed, error)
+                else:
+                    later(self._export_cover_done, saved)
+            Thread(target=work, daemon=True).start()
+
+        def _export_cover_done(self, saved: Path):
+            self.status.set_text(f"Portada guardada como «{saved.name}», junto al archivo.")
+
+        def _export_cover_failed(self, error):
+            self.status.set_text(f"No se pudo extraer la portada: {error}")
+
+        # ---- Transferir a GCstar ---------------------------------------------------------------------
+        def _open_gcstar_transfer(self, _button):
+            target = self._normalize_target()
+            gcs_path = Path(self.settings.gcstar_path.strip()) if self.settings.gcstar_path.strip() else None
+            if target is None or gcs_path is None:
+                return
+            self.status.set_text(f"Leyendo {target.name} y {gcs_path.name}…")
+
+            def work():
+                try:
+                    info = read_info(target)
+                    read_error = ""
+                except MetadataError as error:
+                    info, read_error = {}, str(error)
+                try:
+                    text = gcs_path.read_text(encoding="utf-8")
+                except OSError as error:
+                    later(self._gcstar_prep_failed, str(error))
+                    return
+                vocab = {field_name: vocabulary(text, field_name) for field_name in VOCABULARY_FIELDS}
+                pages = len(list_pages(target))
+                later(self._open_gcstar_dialog, target, info, read_error, gcs_path, vocab, pages)
+            Thread(target=work, daemon=True).start()
+
+        def _gcstar_prep_failed(self, message: str):
+            self.status.set_text(f"No se pudo preparar la transferencia a GCstar: {message}")
+
+        def _open_gcstar_dialog(self, target: Path, info: dict, read_error: str, gcs_path: Path, vocab: dict,
+                                page_count: int):
+            window = Gtk.Window(title="Transferir a GCstar", transient_for=self, modal=True, default_width=640)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=14, margin_bottom=14,
+                          margin_start=16, margin_end=16)
+            window.set_child(box)
+            head = Gtk.Label(xalign=0, wrap=True)
+            head.set_markup(f"<b>Archivo:</b> {GLib.markup_escape_text(target.name)}\n"
+                            f"<b>Colección:</b> {GLib.markup_escape_text(str(gcs_path))}")
+            box.append(head)
+            if read_error or not info:
+                warning = Gtk.Label(xalign=0, wrap=True, label=(
+                    f"No se pudo leer el ComicInfo.xml: {read_error}" if read_error else
+                    "Este archivo no tiene ComicInfo.xml todavía: se transferirá con muy pocos datos. Si quieres "
+                    "los créditos, la editorial, el año…, escribe antes los metadatos."))
+                warning.add_css_class("warning" if read_error else "dim-label")
+                box.append(warning)
+            series = series_text(info.get("Series", ""), info.get("Volume", ""))
+            preview = Gtk.Label(xalign=0, wrap=True, selectable=True)
+            preview.set_markup(f"<b>{GLib.markup_escape_text(format_name(series, info.get('Number', ''), info.get('Title', '')))}</b>")
+            box.append(preview)
+            details = ", ".join(part for part in (
+                info.get("Publisher", ""), info.get("Year", ""), f"{page_count} páginas" if page_count else "") if part)
+            if details:
+                box.append(Gtk.Label(label=details, xalign=0, wrap=True, css_classes=["dim-label"]))
+
+            box.append(Gtk.Label(label="Campos propios de GCstar (se sugiere lo que ya usas en tu colección):",
+                                 xalign=0))
+            grid = Gtk.Grid(column_spacing=10, row_spacing=6)
+            fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección"}
+            gcstar_entries: dict[str, Gtk.Entry] = {}
+            for row, (key, label) in enumerate(fields.items()):
+                entry = Gtk.Entry(hexpand=True)
+                store = Gtk.ListStore(str)
+                for value in vocab.get(key, []):
+                    store.append([value])
+                completion = Gtk.EntryCompletion(model=store, text_column=0, inline_completion=True)
+                entry.set_completion(completion)
+                gcstar_entries[key] = entry
+                grid.attach(Gtk.Label(label=label, xalign=0), (row % 2) * 2, row // 2, 1, 1)
+                grid.attach(entry, (row % 2) * 2 + 1, row // 2, 1, 1)
+            box.append(grid)
+            back_check = Gtk.CheckButton(label="Incluir también la contraportada (última página)", active=True,
+                                        sensitive=page_count > 1)
+            box.append(back_check)
+
+            problem = Gtk.Label(xalign=0, wrap=True, css_classes=["error"])
+            buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
+            cancel = icon_button(STOP_ICON, "Cancelar")
+            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Transferir")
+            apply.add_css_class("suggested-action")
+            for widget in (cancel, apply):
+                buttons.append(widget)
+            for widget in (problem, buttons):
+                box.append(widget)
+
+            def do_transfer(_button):
+                for widget in (cancel, apply):
+                    widget.set_sensitive(False)
+                problem.set_text("")
+                gcstar_fields = {key: entry.get_text().strip() for key, entry in gcstar_entries.items()}
+                folders = [Path(f) for f in self.settings.folders]
+                include_back = back_check.get_active()
+
+                def work():
+                    try:
+                        result = gcstar_transfer(target, info, gcstar_fields, gcs_path, folders, GCSTAR_LOG,
+                                                 include_back)
+                    except GCstarError as error:
+                        later(self._gcstar_transfer_failed, window, cancel, apply, problem, str(error))
+                    else:
+                        later(self._gcstar_transfer_done, window, result)
+                Thread(target=work, daemon=True).start()
+            cancel.connect("clicked", lambda _b: window.close())
+            apply.connect("clicked", do_transfer)
+            window.present()
+
+        def _gcstar_transfer_failed(self, window, cancel, apply, problem, message: str):
+            for widget in (cancel, apply):
+                widget.set_sensitive(True)
+            problem.set_text(message)
+
+        def _gcstar_transfer_done(self, window, result):
+            window.close()
+            where = (f" Portada en «{result.image.name}»" + (f" y contraportada en «{result.backpic.name}»."
+                    if result.backpic else ".") if result.image else " Sin portada (el archivo no está bajo "
+                    "ninguna carpeta de «Mi colección»).")
+            self.status.set_text(f"Transferido a GCstar (elemento nº {result.item_id}).{where}")
+
+        def _undo_gcstar(self, _button):
+            self.gcstar_undo_button.set_sensitive(False)
+            self.gcstar_info.set_text("Deshaciendo…")
+
+            def run():
+                try:
+                    later(self._gcstar_undone, undo_gcstar(GCSTAR_LOG), None)
+                except (OSError, LookupError, GCstarError) as error:
+                    later(self._gcstar_undone, None, error)
+            Thread(target=run, daemon=True).start()
+
+        def _gcstar_undone(self, result, error):
+            self.gcstar_undo_button.set_sensitive(True)
+            if error is not None:
+                self.gcstar_info.set_text(f"No se pudo deshacer: {error}")
+                return
+            text = ("Deshecha la última transferencia." if result.removed else
+                   "El elemento ya no estaba tal cual en el .gcs (se ha editado desde entonces): no se ha tocado.")
+            if result.images:
+                text += f" Se borraron {len(result.images)} imagen(es)."
+            if result.skipped_images:
+                text += f" {len(result.skipped_images)} imagen(es) habían cambiado desde entonces y no se tocaron."
+            self.gcstar_info.set_text(text)
 
         def _normalize(self, _button):
             target = self._normalize_target()
@@ -1297,10 +1496,14 @@ def run_gui(initial_image: Path | None = None) -> None:
                                   gcd_info):
             good = [i for i, _error in infos if i is not None]
             texts, baseline = initial_form(good, suggest_fields(values, publisher, gcd_info))
-            window = Gtk.Window(title="Metadatos", transient_for=self, modal=True, default_width=960, default_height=800)
-            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
-                          margin_start=14, margin_end=14)
-            window.set_child(box)
+            window = Gtk.Window(title="Metadatos", transient_for=self, modal=True, default_width=960, default_height=700)
+            outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
+                            margin_start=14, margin_end=14)
+            window.set_child(outer)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)   # todo lo que puede crecer va aquí dentro,
+            content = Gtk.ScrolledWindow(vexpand=True, margin_end=4)         # con desplazamiento propio: los botones de
+            content.set_child(box)                                          # abajo siempre quedan a la vista
+            outer.append(content)
             head = Gtk.Label(xalign=0, wrap=True)
             head.set_markup(f"<b>{'Carpeta' if where.is_dir() else 'Archivo'}:</b> {GLib.markup_escape_text(str(where))}"
                             f"  ({len(files)} archivo{'s' if len(files) != 1 else ''})")
@@ -1338,6 +1541,24 @@ def run_gui(initial_image: Path | None = None) -> None:
             note.add_css_class("dim-label")
             box.append(note)
 
+            box.append(Gtk.Label(label="Créditos (se aplican a todos los archivos del lote):", xalign=0))
+            credit_labels = {"Writer": ("Guion", "quien escribe"), "Penciller": ("Lápiz", "quien dibuja"),
+                             "Inker": ("Tinta", "quien entinta"), "Colorist": ("Color", "quien colorea"),
+                             "Letterer": ("Rotulación", "quien rotula"), "CoverArtist": ("Portada", "quien dibuja la portada")}
+            credit_layout = (("Writer", "Penciller"), ("Inker", "Colorist"), ("Letterer", "CoverArtist"))
+            credit_grid = Gtk.Grid(column_spacing=10, row_spacing=6)
+            for row, keys in enumerate(credit_layout):
+                for index, key in enumerate(keys):
+                    label, hint = credit_labels[key]
+                    value, absent = common_value(good, key)
+                    varied = not value and not absent
+                    entry = Gtk.Entry(text=texts[key], hexpand=True, placeholder_text=(
+                        "(distinto en cada archivo: se deja como está)" if varied else hint))
+                    entries[key] = entry
+                    credit_grid.attach(Gtk.Label(label=label, xalign=0), index * 2, row, 1, 1)
+                    credit_grid.attach(entry, index * 2 + 1, row, 1, 1)
+            box.append(credit_grid)
+
             box.append(Gtk.Label(label="Categoría (la eliges tú; se guarda en las etiquetas):", xalign=0))
             radios = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=4, column_spacing=12,
                                  row_spacing=4, homogeneous=False)
@@ -1372,7 +1593,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 listing.append(line)
                 rows.append({"path": path, "info": info, "error": error, "include": include, "number": number_entry,
                              "title": title_entry, "state": state_label, "changes": None})
-            scroll = Gtk.ScrolledWindow(vexpand=True, min_content_height=200)
+            scroll = Gtk.ScrolledWindow(min_content_height=140, max_content_height=320, propagate_natural_height=True)
             scroll.set_child(listing)
             box.append(scroll)
             summary = Gtk.Label(xalign=0, wrap=True)
@@ -1384,8 +1605,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             apply.add_css_class("suggested-action")
             for widget in (cancel, apply):
                 buttons.append(widget)
-            for widget in (summary, problem, buttons):
-                box.append(widget)
+            for widget in (summary, problem, buttons):   # fuera del área que se desplaza: siempre a la vista
+                outer.append(widget)
             state = {"busy": False}
 
             def chosen_category() -> str:
@@ -2037,6 +2258,28 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.metadata_undo_info = Gtk.Label(xalign=0, wrap=True)
             for widget in (self.metadata_undo_button, self.metadata_undo_info):
                 page.append(widget)
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Transferir a GCstar (botón «Transferir a GCstar…»): añade el cómic a una colección de GCstar sin "
+                "tocar el resto de su archivo .gcs, con su portada y contraportada junto a él, con la misma "
+                "convención de nombres que ya uses. Necesita que la carpeta del cómic esté en «Mi colección», "
+                "arriba, para saber dónde ponerlas.")))
+            self.gcstar_entry = Gtk.Entry(text=self.settings.gcstar_path, hexpand=True,
+                                          placeholder_text="Archivo .gcs de tu colección")
+            choose_gcstar = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Elegir archivo .gcs…")
+            choose_gcstar.connect("clicked", self._choose_gcstar)
+            gcstar_line = Gtk.Box(spacing=8)
+            gcstar_line.append(self.gcstar_entry)
+            gcstar_line.append(choose_gcstar)
+            save_gcstar = icon_button(("document-save-symbolic",), "Guardar", halign=Gtk.Align.START)
+            save_gcstar.connect("clicked", self._save_gcstar_path)
+            self.gcstar_undo_button = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"),
+                                                  "Deshacer la última transferencia a GCstar", halign=Gtk.Align.START)
+            self.gcstar_undo_button.connect("clicked", self._undo_gcstar)
+            self.gcstar_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (gcstar_line, save_gcstar, self.gcstar_undo_button, self.gcstar_info):
+                page.append(widget)
             scroll = Gtk.ScrolledWindow()   # la página es más alta que la ventana
             scroll.set_child(page)
             return scroll
@@ -2093,6 +2336,25 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.settings.api_key = self.key.get_text().strip()
             self.settings.save()
             self.key_info.set_text("Clave guardada.")
+
+        def _choose_gcstar(self, _button):
+            gcs_filter = Gtk.FileFilter(name="Colección de GCstar")
+            gcs_filter.add_pattern("*.gcs")
+            Gtk.FileDialog(title="Archivo .gcs de GCstar", default_filter=gcs_filter).open(self, None,
+                                                                                          self._gcstar_path_chosen)
+
+        def _gcstar_path_chosen(self, dialog, result):
+            try:
+                self.gcstar_entry.set_text(dialog.open_finish(result).get_path())
+            except GLib.Error:
+                pass  # Selección cancelada.
+
+        def _save_gcstar_path(self, _button):
+            self.settings.gcstar_path = self.gcstar_entry.get_text().strip()
+            self.settings.save()
+            self._update_normalize()
+            self.gcstar_info.set_text("Ruta guardada." if self.settings.gcstar_path else
+                                      "Ruta guardada (vacía): el botón «Transferir a GCstar…» queda desactivado.")
 
     class App(Gtk.Application):
         def __init__(self):

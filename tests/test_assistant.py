@@ -87,6 +87,14 @@ def test_settings_keep_the_naming_pattern(tmp_path):
     assert Settings.load(file).pattern == "{nombre} {numero}"
 
 
+def test_settings_keep_the_gcstar_path(tmp_path):
+    from comic_identify.assistant import PROMPT
+    file = tmp_path / "config.json"
+    assert Settings.load(file).gcstar_path == ""
+    Settings("k", [], "claude {prompt}", "{nombre}", PROMPT, "/media/x/comics.gcs").save(file)
+    assert Settings.load(file).gcstar_path == "/media/x/comics.gcs"
+
+
 def test_prompt_is_configurable_and_falls_back_to_the_default():
     from comic_identify.assistant import PROMPT, build_prompt
     assert build_prompt("portada.png").count("@portada.png") == 1 and "{image}" not in build_prompt("portada.png")
