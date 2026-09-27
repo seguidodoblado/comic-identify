@@ -292,6 +292,14 @@ def run_gui(initial_image: Path | None = None) -> None:
                               margin_start=6, margin_end=6)
             entries.append(Gtk.Label(label="Se abre en tu navegador", xalign=0, margin_start=6, margin_bottom=4,
                                      css_classes=["dim-label"]))
+            all_content = Gtk.Box(spacing=8)
+            all_content.append(Gtk.Image(icon_name=pick_icon("edit-select-all-symbolic", FALLBACK_ICON), pixel_size=16))
+            all_content.append(Gtk.Label(label="Todas", xalign=0))
+            all_button = Gtk.Button(child=all_content, has_frame=False,
+                                    tooltip_text=f"Busca en las {len(SOURCES)} webs, cada una en su pestaña")
+            all_button.connect("clicked", lambda _b: (popover.popdown(), self._open_all_sources()))
+            entries.append(all_button)
+            entries.append(Gtk.Separator(margin_top=2, margin_bottom=2))
             for source in SOURCES:
                 content = Gtk.Box(spacing=8)
                 content.append(self._icon(source.host, 16))
@@ -379,6 +387,18 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.status.set_text(f"Escribe un título para buscarlo en {name}.")
                 return
             Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+
+        def _open_all_sources(self, _button=None):
+            title, number, publisher, year = self._fields()
+            if not title.strip():
+                self.status.set_text("Escribe un título para buscarlo.")
+                return
+            if not self.web_extra.get_active():
+                publisher = year = ""
+            for source in SOURCES:
+                Gtk.UriLauncher.new(search_url(source.name, title, number, publisher, year)).launch(
+                    self, None, lambda *_: None)
+            self.status.set_text(f"Abriendo la búsqueda en {len(SOURCES)} webs, cada una en su pestaña…")
 
         def _choose_image(self, _button):
             images = Gtk.FileFilter(name="Cómics (CBR/CBZ/CB7) e imágenes")
