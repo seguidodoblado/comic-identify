@@ -35,7 +35,7 @@ el botón **Buscar en ComicVine** (o Enter), porque consume peticiones de su API
 
 ## Ver el cómic abierto
 
-- **Abrir cómic…** (o pegar con Ctrl+V, o arrastrar) abre un CBR/CBZ/CB7 (se usa su primera imagen como portada) o
+- **Abrir…** (o pegar con Ctrl+V un archivo copiado en el gestor de archivos, o arrastrarlo) abre un CBR/CBZ/CB7 (se usa su primera imagen como portada) o
   una imagen suelta.
 - **Páginas:** las flechas bajo la portada (primera, anterior, siguiente, última) permiten mirar el resto de
   páginas, por ejemplo la contraportada. La búsqueda sigue usando la portada.
@@ -61,6 +61,8 @@ sus nombres (mínimo dos cifras), sin inventar los que faltan. Vista previa comp
 un solo deshacer para todo el lote.
 
 Cada renombrado se registra en `~/.local/share/comic-identify/renames.log` y se deshace desde **Ajustes**.
+
+Normalizar y escribir metadatos actúan sobre el archivo original, no sobre una copia, aunque lo hayas abierto pegándolo.
 
 **Metadatos archivo… / Metadatos carpeta…** escriben el `ComicInfo.xml` del cómic abierto o de todos los de una
 carpeta: serie, volumen, editorial, sello, año, total, idioma, web, notas, la categoría que tú eliges y el número y

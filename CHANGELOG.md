@@ -5,6 +5,19 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-09-27
+
+### Changed
+- El botón «Abrir cómic…» se llama ahora **«Abrir…»** (el tooltip y el diálogo explican qué abre).
+- Se deja claro que **Normalizar nombre** y **Metadatos** actúan sobre el archivo original, no sobre una copia (también
+  al abrirlo por pegado o arrastre): una línea discreta en cada diálogo y en los tooltips de los botones, sin avisos
+  emergentes; todo sigue siendo reversible desde Ajustes.
+
+### Fixed
+- **Pegar un cómic copiado no funcionaba**: el botón «Pegar» (Ctrl+V) decía que admitía un cómic, pero solo leía
+  imágenes del portapapeles. Ahora también abre un archivo CBR, CBZ, CB7 o imagen copiado en el gestor de archivos.
+  Un archivo de otro tipo, ya sea pegado o arrastrado, se rechaza con un aviso en vez de intentar abrirlo.
+
 ## [0.18.3] - 2026-09-27
 
 ### Changed
