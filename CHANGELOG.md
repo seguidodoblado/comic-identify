@@ -5,6 +5,37 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-09-27
+
+### Fixed
+- La portada ya no empujaba la ventana más allá de su alto normal cuando un cómic tiene muchos campos de
+  metadatos, con los dos botones nuevos (Extraer portada, Transferir a GCstar) debajo: se ha reducido el alto
+  mínimo de la portada para que todo quepa sin recortarse. Con pocos metadatos, la portada sigue creciendo con
+  normalidad.
+- El diálogo de **Metadatos** (con los créditos nuevos, y con lotes de muchos archivos) podía crecer más que la
+  pantalla y dejar los botones «Cancelar»/«Escribir metadatos» fuera de la vista, tapados por la barra de tareas.
+  Ahora la ventana tiene un tamaño fijo y solo se desplaza el contenido (campos, créditos, categoría, la lista de
+  archivos); los botones y el resumen quedan siempre a la vista, fuera de esa zona.
+
+### Added
+- **Transferir a GCstar…**: añade el cómic abierto a una colección de GCstar (gcstar.gitlab.io) sin tocar el resto
+  de su archivo `.gcs`: solo inserta el `<item>` nuevo justo antes de `</collection>`, con los créditos, la
+  editorial, el año, el número de páginas y la ruta del archivo que ya tenemos, más los campos propios de GCstar
+  (tipo, categoría, formato, colección) con un desplegable que sugiere lo que ya usas en tu colección. Copia también
+  la portada y la contraportada junto al `.gcs`, con la misma estructura de carpetas y el mismo nombre que ya usas
+  (`<nombre> - Portada.jpg` / `- Trasera.jpg`); solo si el cómic está bajo una carpeta configurada en «Mi
+  colección» (si no, se transfiere sin portada, sin adivinar dónde ponerla). Se niega a escribir si detecta GCstar
+  abierto (por su `autosave`, podría sobrescribir esto al cerrarlo) y se puede deshacer por lotes desde Ajustes
+  (`~/.local/share/comic-identify/gcstar.log`); el deshacer no toca una portada que haya cambiado desde entonces.
+  La ruta al `.gcs` se configura una vez en Ajustes; todo lo demás (dónde van las imágenes, qué valores sugerir,
+  el siguiente número de elemento) se lee del propio archivo.
+- **Créditos** en el formulario de metadatos (archivo y carpeta): guion, lápiz, tinta, color, rotulación y portada,
+  como los demás campos de serie (se aplican a todos los archivos del lote; un campo vacío no se toca).
+- **Extraer portada…**: bajo la portada, guarda la primera página como imagen junto al archivo, con su mismo nombre
+  y la extensión que ya traía (sin recodificarla, para no perder calidad). Útil para catalogadores externos como
+  GCstar, que piden la portada como un archivo aparte. No sobrescribe una imagen que ya exista con ese nombre.
+- Un icono ocupa el hueco de la portada mientras no hay ningún cómic abierto.
+
 ## [0.18.4] - 2026-09-27
 
 ### Changed

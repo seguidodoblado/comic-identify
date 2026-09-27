@@ -43,6 +43,9 @@ el botón **Buscar en ComicVine** (o Enter), porque consume peticiones de su API
   «Tamaño real», para leer la letra pequeña).
 - **ComicInfo.xml:** debajo de las flechas se muestran los metadatos del archivo abierto (o que no tiene), y se
   actualizan solos al escribir o deshacer metadatos.
+- **Extraer portada…:** guarda la primera página como imagen junto al archivo, con su mismo nombre y sin
+  recodificarla. Sirve, por ejemplo, para tener la portada como archivo aparte al catalogar en GCstar u otro
+  programa. No sobrescribe una imagen que ya exista con ese nombre.
 
 ## Organizar la colección
 
@@ -65,15 +68,26 @@ Cada renombrado se registra en `~/.local/share/comic-identify/renames.log` y se 
 Normalizar y escribir metadatos actúan sobre el archivo original, no sobre una copia, aunque lo hayas abierto pegándolo.
 
 **Metadatos archivo… / Metadatos carpeta…** escriben el `ComicInfo.xml` del cómic abierto o de todos los de una
-carpeta: serie, volumen, editorial, sello, año, total, idioma, web, notas, la categoría que tú eliges y el número y
-título de cada archivo. Se rellena con lo que ya tienen los archivos, la serie de GCD y el nombre de la carpeta. Cada
-escritura se verifica en una copia antes de sustituir el original, se conservan los campos que no se tocan y se puede
-deshacer por lotes desde **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona en CBZ, RAR (4 y 5) y
-7-Zip; para escribir en RAR hace falta el programa `rar` (no libre).
+carpeta: serie, volumen, editorial, sello, año, total, idioma, web, notas, los créditos (guion, lápiz, tinta, color,
+rotulación, portada), la categoría que tú eliges y el número y título de cada archivo. Se rellena con lo que ya
+tienen los archivos, la serie de GCD y el nombre de la carpeta. Cada escritura se verifica en una copia antes de
+sustituir el original, se conservan los campos que no se tocan (los que no están en el formulario, como el resumen o
+las páginas) y se puede deshacer por lotes desde **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona
+en CBZ, RAR (4 y 5) y 7-Zip; para escribir en RAR hace falta el programa `rar` (no libre).
 
 **Series de la colección** (pestaña Mi colección): tras indexar, lista las series con los números que tienes y los que
 faltan. Necesita el «Total de números» en los metadatos para saber cuántos faltan al final; sin él solo detecta
 huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
+
+**Transferir a GCstar…** añade el cómic abierto a una colección de [GCstar](https://www.gcstar.org/) sin tocar el
+resto de su archivo `.gcs`: solo inserta el elemento nuevo, con los créditos, la editorial, el año, las páginas y la
+ruta del archivo, más los campos propios de GCstar (tipo, categoría, formato, colección), con un desplegable que
+sugiere lo que ya usas en esa colección. También copia la portada y la contraportada junto al `.gcs`, con la misma
+estructura de carpetas y el mismo nombre que ya uses (`<nombre> - Portada.jpg` / `- Trasera.jpg`), siempre que el
+cómic esté bajo una carpeta configurada en «Mi colección» (si no, se transfiere sin portada). Se niega a escribir si
+detecta GCstar abierto, y se puede deshacer por lotes desde **Ajustes**
+(`~/.local/share/comic-identify/gcstar.log`); el deshacer no toca una imagen que haya cambiado desde entonces. La
+ruta al `.gcs` se configura una vez en Ajustes.
 
 ## Webs, asistente de IA y órdenes
 
