@@ -31,7 +31,9 @@ Ningún método automático acierta al 100 %: el resultado es una lista de candi
 
 Además del título y el número puedes acotar con **Editorial / distribuidor** (en GCD también casa con el
 sello: «Forum», «Panini»…) y **Año**. La búsqueda en GCD es al vuelo, mientras escribes; la de ComicVine, con
-el botón **Buscar en ComicVine** (o Enter), porque consume peticiones de su API.
+el botón **Buscar en ComicVine** (o Enter), porque consume peticiones de su API. Con número de ejemplar puede
+tardar varios segundos (compara la portada de cada serie candidata); mientras tanto se ve una barra de progreso
+y el estado dice qué serie se está comparando.
 
 ## Ver el cómic abierto
 
@@ -50,9 +52,11 @@ el botón **Buscar en ComicVine** (o Enter), porque consume peticiones de su API
 ## Organizar la colección
 
 **Normalizar nombre…** renombra el cómic abierto según `Estructura.md`
-(`Título Volumen X 🇺🇸/🇪🇸 [años del contenido] (años de la edición) - Sello`). El formulario propone los
-valores desde la sugerencia elegida y tú los corriges; el patrón es configurable con `{nombre}`, `{volumen}`,
-`{bandera}`, `{contenido}`, `{edicion}`, `{sello}` y `{numero}`. El año real del contenido en ediciones
+(`Título Volumen X 🇺🇸/🇪🇸 [años del contenido] (años de la edición) - Sello - Editorial`). El formulario propone
+los valores desde la sugerencia elegida y tú los corriges; el patrón es configurable con `{nombre}`, `{volumen}`,
+`{bandera}`, `{contenido}`, `{edicion}`, `{sello}`, `{editorial}` y `{numero}`. Sello y editorial son cada uno un
+tramo independiente del patrón: si falta alguno de los dos, se omite entero sin dejar guiones sueltos. El año real
+del contenido en ediciones
 españolas hay que ponerlo a mano o buscarlo con el botón **Buscar en ComicVine…** del formulario (título original en inglés
 + números americanos que recoge la edición → fechas de portada); si no se conoce, se deja vacío y el nombre
 lleva solo los años de la edición.
@@ -69,11 +73,11 @@ Normalizar y escribir metadatos actúan sobre el archivo original, no sobre una 
 
 **Metadatos archivo… / Metadatos carpeta…** escriben el `ComicInfo.xml` del cómic abierto o de todos los de una
 carpeta: serie, volumen, editorial, sello, año, total, idioma, web, notas, los créditos (guion, lápiz, tinta, color,
-rotulación, portada), la categoría que tú eliges y el número y título de cada archivo. Se rellena con lo que ya
-tienen los archivos, la serie de GCD y el nombre de la carpeta. Cada escritura se verifica en una copia antes de
-sustituir el original, se conservan los campos que no se tocan (los que no están en el formulario, como el resumen o
-las páginas) y se puede deshacer por lotes desde **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona
-en CBZ, RAR (4 y 5) y 7-Zip; para escribir en RAR hace falta el programa `rar` (no libre).
+rotulación, portada), la categoría que tú eliges y, por archivo, el número, el título y el resumen del ejemplar. Se
+rellena con lo que ya tienen los archivos, la serie de GCD y el nombre de la carpeta. Cada escritura se verifica en
+una copia antes de sustituir el original, se conservan los campos que no están en el formulario (como las páginas) y
+se puede deshacer por lotes desde **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona en CBZ, RAR
+(4 y 5) y 7-Zip; para escribir en RAR hace falta el programa `rar` (no libre).
 
 **Series de la colección** (pestaña Mi colección): tras indexar, lista las series con los números que tienes y los que
 faltan. Necesita el «Total de números» en los metadatos para saber cuántos faltan al final; sin él solo detecta
@@ -82,11 +86,15 @@ huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
 **Transferir a GCstar…** añade el cómic abierto a una colección de [GCstar](https://www.gcstar.org/) sin tocar el
 resto de su archivo `.gcs`: solo inserta el elemento nuevo, con los créditos, la editorial, el año, las páginas y la
 ruta del archivo, más los campos propios de GCstar (tipo, categoría, formato, colección), con un desplegable que
-sugiere lo que ya usas en esa colección. También copia la portada y la contraportada junto al `.gcs`, con la misma
-estructura de carpetas y el mismo nombre que ya uses (`<nombre> - Portada.jpg` / `- Trasera.jpg`), siempre que el
-cómic esté bajo una carpeta configurada en «Mi colección» (si no, se transfiere sin portada). Se niega a escribir si
-detecta GCstar abierto, y se puede deshacer por lotes desde **Ajustes**
-(`~/.local/share/comic-identify/gcstar.log`); el deshacer no toca una imagen que haya cambiado desde entonces. La
+sugiere lo que ya usas en esa colección; «Categoría» se prerrellena sola con la que ya tenga el archivo, y «Tipo»
+con «Europeo», «Americano» o «Manga» según bajo cuál de tus carpetas de «Mi colección» (`EUROPA`, `USA`, `JAPÓN`)
+esté el cómic (solo mira el nombre de esas carpetas, no en qué disco estén). También copia la portada y la
+contraportada a una carpeta `comics` propia dentro de la del `.gcs` (para compartirla con otras colecciones de
+GCstar sin mezclar sus imágenes), con la misma estructura de subcarpetas y el mismo nombre que ya uses (`<nombre>
+- Portada.jpg` / `- Trasera.jpg`), siempre que el cómic esté bajo una carpeta configurada en «Mi colección» (si
+no, se transfiere sin portada). Se niega a escribir si detecta GCstar abierto, y se puede deshacer por lotes
+desde **Ajustes** (`~/.local/share/comic-identify/gcstar.log`); el deshacer no toca una imagen que haya cambiado
+desde entonces. La
 ruta al `.gcs` se configura una vez en Ajustes.
 
 ## Webs, asistente de IA y órdenes

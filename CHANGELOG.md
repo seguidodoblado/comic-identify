@@ -5,6 +5,34 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-09-27
+
+### Added
+- **Barra de progreso al consultar ComicVine**: buscar con número de ejemplar hace varias peticiones seguidas
+  (la serie, sus números, la portada de cada candidato) y puede tardar varios segundos; antes había un único
+  mensaje fijo todo ese rato. Ahora una barra (bajo los botones de arriba) pulsa mientras dura, y el mensaje de
+  estado dice qué serie se está comparando y cuántas quedan («Comparando con ComicVine (2/3): «Batman»…»). Buscar
+  solo en tu colección o en GCD (locales, casi instantáneos) no la muestra.
+- **`{editorial}`**, nueva variable para el patrón de nombres (Normalizar nombre y Normalizar carpeta), junto a
+  `{sello}`: quién publica el ejemplar (Planeta DeAgostini, Panini…), no el sello impreso en él. Se sugiere desde
+  GCD igual que el sello. **Ahora en el patrón por defecto**, como `- {sello} - {editorial}` al final del nombre.
+- **Resumen** por archivo en el diálogo de Metadatos (junto a Título): escribe el campo `Summary` de ComicInfo.xml,
+  sin límite de longitud propio (el único límite es el de 2 MiB del `ComicInfo.xml` entero).
+- **Transferir a GCstar** rellena solo «Categoría» con la que ya tenga el archivo (si la tiene), en vez de dejarla
+  en blanco, y **«Tipo»** con «Europeo», «Americano» o «Manga» según bajo cuál de tus carpetas de «Mi colección»
+  (`EUROPA`, `USA`, `JAPÓN`) esté el cómic; «Formato» y «Colección» siguen sin sugerencia propia, solo con el
+  autocompletado de lo que ya uses en tu `.gcs`. Ninguna de las dos sugerencias depende de en qué disco estén
+  montadas esas carpetas, solo de sus nombres, así que sobreviven a mover la colección a otro disco.
+- La portada y la contraportada se guardan bajo una carpeta **`comics`** propia, dentro de la carpeta de tu `.gcs`
+  (antes, directamente en ella), para poder compartir esa carpeta con otras colecciones de GCstar sin mezclar
+  las imágenes de cada una.
+
+### Fixed
+- `render()` solo quitaba el separador « - » sobrante al **final** del nombre si el último dato faltaba; con dos
+  datos opcionales encadenados (sello y editorial), si faltaba solo uno de los dos —el que no fuera el último—
+  quedaba un guion suelto («… - - Forum»). Ahora cada tramo del patrón separado por « - » se evalúa por separado y
+  se omite entero si queda vacío, sin más rastro, esté donde esté.
+
 ## [0.19.0] - 2026-09-27
 
 ### Fixed
