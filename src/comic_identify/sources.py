@@ -19,11 +19,12 @@ SOURCES = (
     Source("Tebeosfera", None, "tebeosfera.com", "www.tebeosfera.com"),
     Source("Whakoom", None, "whakoom.com", "www.whakoom.com"),
     Source("Norma", None, "normaeditorial.com", "www.normaeditorial.com"),
+    Source("Norma Comics", None, "normacomics.com", "www.normacomics.com"),   # la tienda de cómics de Norma
     Source("Panini", "https://www.panini.es/shp_esp_es/catalogsearch/result/?q={q}", None, "www.panini.es"),
-    # ECC Ediciones publica DC en España; su robots.txt veta su buscador, por eso va por «site:» en Google
-    Source("ECC (DC)", None, "ecccomics.com", "www.ecccomics.com"),
     # Catálogo de ediciones españolas de Marvel (Forum, Planeta, Panini)
     Source("Universo Marvel", None, "fichas.universomarvel.com", "fichas.universomarvel.com"),
+    # Web oficial de DC (en inglés); su robots.txt veta su buscador, por eso va por «site:» en Google
+    Source("DC Comics", None, "dc.com", "www.dc.com"),
     # Wiki de DC (en inglés): número original, fechas y contenido de cada ejemplar
     Source("DC Database", None, "dc.fandom.com", "dc.fandom.com"),
     Source("Zona Negativa", "https://www.zonanegativa.com/?s={q}", None, "www.zonanegativa.com"),

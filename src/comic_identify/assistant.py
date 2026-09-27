@@ -12,9 +12,10 @@ PROMPT = ("Identifica el cómic de la portada @{image} y dame título, número, 
           "(país e idioma) y autores si los conoces. Puedes buscar en la web y consultar mi índice local de "
           "Grand Comics Database con la orden `comic-identify buscar \"título\" número` "
           "(esa orden no abre ninguna ventana; `comic-identify --help` muestra el uso). "
-          "Para ediciones españolas son útiles Tebeosfera, Whakoom, Panini.es, Norma, ecccomics.com (ECC: DC) y "
-          "Zona Negativa; para Marvel, fichas.universomarvel.com (Forum, Planeta, Panini: trae fecha, precio y el "
-          "número original) y, para DC, dc.fandom.com (número original y fechas). "
+          "Para ediciones españolas son útiles Tebeosfera, Whakoom, Panini.es, Norma (normaeditorial.com y "
+          "normacomics.com) y Zona Negativa; para Marvel, fichas.universomarvel.com (Forum, Planeta, Panini: trae "
+          "fecha, precio y el número original) y, para DC, dc.com (web oficial, en inglés) y dc.fandom.com (número "
+          "original y fechas). "
           "Si no estás seguro, dilo y explica en qué te basas.")
 
 

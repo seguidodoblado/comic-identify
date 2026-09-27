@@ -18,8 +18,8 @@ def test_sites_with_their_own_search_use_it():
 
 def test_the_rest_use_a_site_restricted_google_search():
     for name, domain in (("Tebeosfera", "tebeosfera.com"), ("Whakoom", "whakoom.com"), ("Norma", "normaeditorial.com"),
-                         ("Universo Marvel", "fichas.universomarvel.com"), ("ECC (DC)", "ecccomics.com"),
-                         ("DC Database", "dc.fandom.com")):
+                         ("Universo Marvel", "fichas.universomarvel.com"), ("Norma Comics", "normacomics.com"),
+                         ("DC Comics", "dc.com"), ("DC Database", "dc.fandom.com")):
         url = search_url(name, "Capitán Marvel", "1")
         assert urlparse(url).netloc == "www.google.com"
         assert _query(url) == {"q": [f"site:{domain} Capitán Marvel 1"]}
@@ -35,7 +35,7 @@ def test_errors():
         search_url("Panini", "   ")
     with pytest.raises(ValueError):
         search_url("Inventada", "Batman")
-    assert len(NAMES) == 8
+    assert len(NAMES) == 9
 
 
 def test_every_source_has_a_host_for_its_icon():
