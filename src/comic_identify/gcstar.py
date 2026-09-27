@@ -21,7 +21,13 @@ from .covers import extract_page, list_pages
 
 COVER_SUFFIX = " - Portada"
 BACK_SUFFIX = " - Trasera"
+IMAGES_SUBFOLDER = "comics"   # carpeta propia bajo la de tu .gcs: ahí conviven las imágenes de varias colecciones
 VOCABULARY_FIELDS = ("type", "category", "format", "collection")   # texto libre del usuario: se sugiere, no se adivina
+
+# «Tipo» de GCstar: origen de la serie, según la primera carpeta de tu colección (tu propia convención en
+# «Mi colección»: …/comics/EUROPA/…, …/comics/USA/…, …/comics/JAPÓN/…). Solo mira el nombre de esa carpeta, nunca
+# la ruta absoluta, así que sobrevive a cambiar de disco.
+ORIGIN_BY_FOLDER = {"europa": "Europeo", "usa": "Americano", "japón": "Manga"}
 
 # Nuestros campos (del ComicInfo/formulario) -> atributos de un <item> de GCcomics. El «número» del cómic (Nº de
 # ComicInfo) se corresponde con el campo `volume` de GCstar, no con nuestro «Volumen»: así es como ya lo usas tú
@@ -168,21 +174,39 @@ def insert_item(text: str, item_xml: str) -> str:
 
 # ---- Dónde poner la portada y la contraportada -------------------------------------------------------------------
 
-def mirror_stems(comic: Path, library_folders: Sequence[Path], gcs_path: Path) -> tuple[Path, Path] | None:
-    """Los nombres (sin extensión) de la portada y la contraportada, con la misma estructura de carpetas que el
-    cómic tiene bajo la carpeta de «Mi colección» en la que esté, replicada bajo la carpeta del `.gcs`.
-
-    None si el cómic no está bajo ninguna carpeta configurada: no se adivina dónde ponerlas.
-    """
+def relative_path(comic: Path, library_folders: Sequence[Path]) -> Path | None:
+    """La ruta del cómic bajo la carpeta de «Mi colección» en la que esté (probadas en orden); None si no está bajo
+    ninguna de las configuradas. Solo se usa el nombre de las carpetas, nunca dónde esté montado el disco."""
     comic = comic.resolve()
     for folder in library_folders:
         try:
-            relative = comic.relative_to(Path(folder).resolve())
+            return comic.relative_to(Path(folder).resolve())
         except (ValueError, OSError):
             continue
-        target_dir = gcs_path.resolve().parent / relative.parent
-        return target_dir / f"{comic.stem}{COVER_SUFFIX}", target_dir / f"{comic.stem}{BACK_SUFFIX}"
     return None
+
+
+def mirror_stems(comic: Path, library_folders: Sequence[Path], gcs_path: Path) -> tuple[Path, Path] | None:
+    """Los nombres (sin extensión) de la portada y la contraportada, con la misma estructura de carpetas que el
+    cómic tiene bajo la carpeta de «Mi colección» en la que esté, replicada bajo `IMAGES_SUBFOLDER` en la carpeta
+    del `.gcs` (para poder compartir esa carpeta con otras colecciones de GCstar).
+
+    None si el cómic no está bajo ninguna carpeta configurada: no se adivina dónde ponerlas.
+    """
+    relative = relative_path(comic, library_folders)
+    if relative is None:
+        return None
+    target_dir = gcs_path.resolve().parent / IMAGES_SUBFOLDER / relative.parent
+    return target_dir / f"{comic.stem}{COVER_SUFFIX}", target_dir / f"{comic.stem}{BACK_SUFFIX}"
+
+
+def suggest_type(comic: Path, library_folders: Sequence[Path]) -> str:
+    """El «Tipo» de GCstar sugerido a partir de la primera carpeta bajo «Mi colección» (ver `ORIGIN_BY_FOLDER`);
+    «» si el cómic no está bajo ninguna carpeta configurada o su primer tramo no es de los conocidos."""
+    relative = relative_path(comic, library_folders)
+    if relative is None or not relative.parts:
+        return ""
+    return ORIGIN_BY_FOLDER.get(relative.parts[0].lower(), "")
 
 
 # ---- Leer y escribir el .gcs con seguridad ------------------------------------------------------------------------

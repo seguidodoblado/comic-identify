@@ -1,13 +1,13 @@
 """Nombres normalizados de archivo según `Estructura.md`.
 
-Formato: `Título Volumen X 🇺🇸/🇪🇸 [años del contenido] (años de la edición) - Sello`, y si contenido y edición
-coinciden se omite el paréntesis. El patrón es configurable con las variables de `VARIABLES`.
+Formato: `Título Volumen X 🇺🇸/🇪🇸 [años del contenido] (años de la edición) - Sello - Editorial`, y si contenido y
+edición coinciden se omite el paréntesis. El patrón es configurable con las variables de `VARIABLES`.
 """
 import re
 from dataclasses import dataclass
 
-VARIABLES = ("nombre", "volumen", "bandera", "contenido", "edicion", "sello", "numero")
-DEFAULT_PATTERN = "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello}"
+VARIABLES = ("nombre", "volumen", "bandera", "contenido", "edicion", "editorial", "sello", "numero")
+DEFAULT_PATTERN = "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello} - {editorial}"
 FLAGS = {"es": "🇪🇸", "us": "🇺🇸"}   # los demás países se dejan vacíos: los elige el usuario
 MAX_NAME_BYTES = 255                  # límite de nombre de archivo en ext4
 
@@ -19,8 +19,10 @@ class Values:
     bandera: str = ""      # 🇪🇸 o 🇺🇸: la edición concreta, no el idioma
     contenido: str = ""    # años del material original, [AAAA] o [AAAA-AAAA]
     edicion: str = ""      # años de la edición concreta, (AAAA) o (AAAA-AAAA)
-    sello: str = ""
+    sello: str = ""        # el sello impreso en el ejemplar (Forum, Vértice…), que es lo que distingue la edición
     numero: str = ""
+    editorial: str = ""    # quién la publica (Planeta DeAgostini, Panini…); al final, para no desplazar posicionalmente
+                           # los campos existentes (no va en el patrón por defecto)
 
 
 def check_pattern(pattern: str) -> None:
@@ -48,18 +50,28 @@ def sanitize(name: str) -> str:
 
 
 def render(pattern: str, values: Values) -> str:
-    """Nombre (sin extensión). Los grupos `[…]`/`(…)` vacíos y el « - » final sin sello se omiten."""
+    """Nombre (sin extensión). Los grupos `[…]`/`(…)` vacíos se omiten, y cada tramo del patrón separado por
+    « - » que quede vacío se omite entero (no solo el último): así se pueden encadenar varios datos opcionales,
+    como el sello y la editorial, sin dejar guiones sueltos si falta alguno de ellos.
+
+    Esto divide el propio texto del PATRÓN por « - » (no el resultado ya sustituido), así que un valor que
+    contenga esa misma secuencia (p. ej. un rango de años escrito «1990 - 1992») no se confunde con un separador.
+    """
     check_pattern(pattern)
     contenido, edicion = _years(values.contenido), _years(values.edicion)
     if edicion == contenido:   # regla de Estructura.md: si coinciden, solo los años del contenido
         edicion = ""
     parts = {"nombre": values.nombre.strip(), "volumen": _volume(values.volumen), "bandera": values.bandera.strip(),
-             "contenido": contenido, "edicion": edicion, "sello": values.sello.strip(),
-             "numero": values.numero.strip()}
-    text = re.sub(r"\{(\w+)\}", lambda match: parts[match.group(1)], pattern)
-    text = re.sub(r"\[\s*\]|\(\s*\)", "", text)
-    text = re.sub(r"\s+-\s*$", "", text)
-    return sanitize(re.sub(r"\s{2,}", " ", text))
+             "contenido": contenido, "edicion": edicion, "editorial": values.editorial.strip(),
+             "sello": values.sello.strip(), "numero": values.numero.strip()}
+
+    def substitute(chunk: str) -> str:
+        text = re.sub(r"\{(\w+)\}", lambda match: parts[match.group(1)], chunk)
+        text = re.sub(r"\[\s*\]|\(\s*\)", "", text)
+        return re.sub(r"\s{2,}", " ", text).strip()
+
+    chunks = [substitute(chunk) for chunk in pattern.split(" - ")]
+    return sanitize(" - ".join(chunk for chunk in chunks if chunk))
 
 
 def missing_content_years(pattern: str, values: Values) -> bool:
@@ -79,7 +91,8 @@ def suggest_values(candidate) -> Values:
         # El sello es lo que otro colaborador transcribió en GCD: el primer tramo («Forum; Marvel Comics»).
         return Values(nombre=candidate.series, bandera=flag, edicion=edition,
                       contenido=edition if flag == FLAGS["us"] else "",   # una edición 🇺🇸 es su propio original
-                      sello=candidate.brand.split(";")[0].strip(), numero=candidate.number)
+                      editorial=candidate.publisher.strip(), sello=candidate.brand.split(";")[0].strip(),
+                      numero=candidate.number)
     if candidate.source == "ComicVine":
         return Values(nombre=candidate.series, bandera=FLAGS["us"], contenido=candidate.year,
                       edicion=candidate.year, numero=candidate.number)
@@ -151,7 +164,7 @@ def years_text(began: int | None, ended: int | None) -> str:
 def series_values(info) -> Values:
     """Valores iniciales para el nombre de una carpeta a partir de los datos de la serie en GCD."""
     return Values(nombre=info.name, bandera=flag_for(info.country), edicion=years_text(info.year_began, info.year_ended),
-                  sello=info.brand.split(";")[0].strip())
+                  editorial=info.publisher.strip(), sello=info.brand.split(";")[0].strip())
 
 
 def natural_key(name: str) -> list:

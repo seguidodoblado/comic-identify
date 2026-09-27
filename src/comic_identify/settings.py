@@ -24,7 +24,7 @@ class Settings:
     api_key: str = ""
     folders: list[str] = field(default_factory=list)
     assistant: str = "claude {prompt}"   # comando del asistente de IA; {prompt} se sustituye por el mensaje
-    pattern: str = "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello}"   # ver naming.py
+    pattern: str = "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello} - {editorial}"   # ver naming.py
     prompt: str = PROMPT   # mensaje que sustituye a {prompt} en el comando del asistente; {image} es la portada
     gcstar_path: str = ""   # archivo .gcs de GCstar al que transferir cómics ya catalogados
 

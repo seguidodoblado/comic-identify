@@ -82,7 +82,7 @@ def test_dispatch_never_opens_the_gui_for_unknown_commands(tmp_path, capsys):
 
 def test_settings_keep_the_naming_pattern(tmp_path):
     file = tmp_path / "config.json"
-    assert Settings.load(file).pattern == "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello}"
+    assert Settings.load(file).pattern == "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello} - {editorial}"
     Settings("k", [], "claude {prompt}", "{nombre} {numero}").save(file)
     assert Settings.load(file).pattern == "{nombre} {numero}"
 

@@ -87,13 +87,15 @@ def initial_category(infos: Sequence[Mapping[str, str]]) -> str:
     return found.pop() if len(found) == 1 else NO_CATEGORY
 
 
-def file_changes(series: Mapping[str, str], category: str, number: str, title: str,
+def file_changes(series: Mapping[str, str], category: str, number: str, title: str, summary: str,
                  current: Mapping[str, str]) -> dict[str, str]:
-    """Todo lo que hay que dejar en un archivo: campos de serie + Nº + título + (si se eligió) categoría en `Tags`."""
+    """Todo lo que hay que dejar en un archivo: campos de serie + Nº + título + resumen + (si se eligió) categoría
+    en `Tags`."""
     changes = dict(series)
     if number.strip():
         changes["Number"] = str(int(number)) if number.strip().isdigit() else number.strip()
     changes["Title"] = title.strip()
+    changes["Summary"] = summary.strip()
     if category != NO_CATEGORY:
         changes["Tags"] = with_category(current.get("Tags", ""), category)
     return changes

@@ -59,6 +59,7 @@ def test_years_pad_and_series_values():
     values = series_values(info)
     assert render("{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello}", values) == \
         "Capitán Marvel 🇪🇸 (2000-2002) - Forum"
+    assert values.editorial == "Planeta DeAgostini"
     ongoing = series_values(SeriesInfo(2, "Los Vengadores", "Panini España", "es", 2011, None, 137))
     assert (ongoing.edicion, ongoing.sello) == ("2011-", "")
     assert series_values(SeriesInfo(3, "X", "Novaro", "mx", 1980, 1990, 5)).bandera == ""

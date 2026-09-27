@@ -17,7 +17,9 @@ from comic_identify.gcstar import (
     is_running,
     mirror_stems,
     next_id,
+    relative_path,
     series_text,
+    suggest_type,
     transfer,
     undo_last,
     vocabulary,
@@ -141,10 +143,31 @@ def test_mirror_stems_only_when_the_comic_is_under_a_configured_folder(tmp_path)
     comic.touch()
     gcs = tmp_path / "Colecciones" / "comics.gcs"
     cover, back = mirror_stems(comic, [library], gcs)
-    assert cover == tmp_path / "Colecciones" / "EUROPA" / "Serie" / "Serie #01 - Portada"
-    assert back == tmp_path / "Colecciones" / "EUROPA" / "Serie" / "Serie #01 - Trasera"
+    # bajo IMAGES_SUBFOLDER ("comics"): así conviven varias colecciones de GCstar bajo la misma carpeta de imágenes
+    assert cover == tmp_path / "Colecciones" / "comics" / "EUROPA" / "Serie" / "Serie #01 - Portada"
+    assert back == tmp_path / "Colecciones" / "comics" / "EUROPA" / "Serie" / "Serie #01 - Trasera"
     assert mirror_stems(comic, [tmp_path / "otra"], gcs) is None
-    assert mirror_stems(tmp_path / "suelto.cbz", [library], gcs) is None
+
+
+def test_relative_path_and_suggested_type_do_not_depend_on_the_absolute_disk(tmp_path):
+    for root_name in ("disco_A", "disco_B"):   # simula que la colección se muda a otro disco/punto de montaje
+        library = tmp_path / root_name / "comics"
+        comic = library / "EUROPA" / "Serie" / "Serie #01.cbz"
+        comic.parent.mkdir(parents=True)
+        comic.touch()
+        assert relative_path(comic, [library]) == Path("EUROPA/Serie/Serie #01.cbz")
+        assert suggest_type(comic, [library]) == "Europeo"
+    usa = tmp_path / "disco_A" / "comics" / "USA" / "Marvel" / "X #01.cbz"
+    usa.parent.mkdir(parents=True); usa.touch()
+    assert suggest_type(usa, [tmp_path / "disco_A" / "comics"]) == "Americano"
+    japon = tmp_path / "disco_A" / "comics" / "JAPÓN" / "Serie" / "X #01.cbz"
+    japon.parent.mkdir(parents=True); japon.touch()
+    assert suggest_type(japon, [tmp_path / "disco_A" / "comics"]) == "Manga"
+    assert relative_path(tmp_path / "suelto.cbz", [tmp_path / "disco_A" / "comics"]) is None
+    assert suggest_type(tmp_path / "suelto.cbz", [tmp_path / "disco_A" / "comics"]) == ""
+    otra_carpeta = tmp_path / "disco_A" / "comics" / "SIN_MAPEAR" / "X.cbz"
+    otra_carpeta.parent.mkdir(parents=True); otra_carpeta.touch()
+    assert suggest_type(otra_carpeta, [tmp_path / "disco_A" / "comics"]) == ""   # carpeta que no reconocemos: no se inventa
 
 
 def test_is_running_reads_proc_cmdline(tmp_path):
@@ -182,7 +205,7 @@ def test_transfer_adds_the_item_and_mirrors_the_cover_and_back_cover(scenario):
     fields = {"Series": "Serie", "Number": "1", "Title": "Uno", "Writer": "Autor", "Year": "2001"}
     result = transfer(comic, fields, {"category": "USA"}, gcs, folders, log)
     assert isinstance(result, TransferResult) and result.item_id == 4
-    assert result.image == gcs.parent / "USA" / "Serie" / "Serie #01 - Portada.jpg"
+    assert result.image == gcs.parent / "comics" / "USA" / "Serie" / "Serie #01 - Portada.jpg"
     assert result.image.read_bytes() == jpeg(make_cover(1))
     assert result.backpic.read_bytes() == jpeg(make_cover(2))
 
@@ -191,8 +214,8 @@ def test_transfer_adds_the_item_and_mirrors_the_cover_and_back_cover(scenario):
     added = root.findall("item")[-1]
     assert added.get("id") == "4" and added.get("series") == "Serie" and added.get("volume") == "1"
     assert added.get("category") == "USA" and added.get("file") == str(comic)
-    assert added.get("image") == "USA/Serie/Serie #01 - Portada.jpg"
-    assert added.get("backpic") == "USA/Serie/Serie #01 - Trasera.jpg"
+    assert added.get("image") == "comics/USA/Serie/Serie #01 - Portada.jpg"
+    assert added.get("backpic") == "comics/USA/Serie/Serie #01 - Trasera.jpg"
 
     log_entry = json.loads(log.read_text(encoding="utf-8").splitlines()[-1])
     assert log_entry["item_id"] == 4 and Path(log_entry["image"]) == result.image

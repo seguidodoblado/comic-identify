@@ -71,11 +71,13 @@ def test_series_changes_set_typed_values_and_delete_only_what_everyone_had():
 def test_category_is_only_written_when_chosen_and_keeps_other_tags():
     assert initial_category([{"Tags": "Categoría: Series, Otra"}, {"Tags": "Categoría: Series"}]) == "Series"
     assert initial_category([{"Tags": "Categoría: Series"}, {"Tags": ""}]) == ""
-    assert file_changes({"Series": "X"}, "", "3", "", {}) == {"Series": "X", "Number": "3", "Title": ""}
-    changes = file_changes({"Series": "X"}, "Recopilatorios y clásicos", "05", " Título ", {"Tags": "Superhéroes"})
-    assert changes == {"Series": "X", "Number": "5", "Title": "Título",
+    assert file_changes({"Series": "X"}, "", "3", "", "", {}) == {"Series": "X", "Number": "3", "Title": "",
+                                                                  "Summary": ""}
+    changes = file_changes({"Series": "X"}, "Recopilatorios y clásicos", "05", " Título ", " Resumen ",
+                           {"Tags": "Superhéroes"})
+    assert changes == {"Series": "X", "Number": "5", "Title": "Título", "Summary": "Resumen",
                        "Tags": "Superhéroes, Categoría: Recopilatorios y clásicos"}
-    assert "Number" not in file_changes({}, "", "  ", "", {})      # sin número: no se toca el existente
+    assert "Number" not in file_changes({}, "", "  ", "", "", {})      # sin número: no se toca el existente
 
 
 def test_merge_values_prefers_the_normalized_name_and_falls_back_to_gcd_then_typed_title():

@@ -145,7 +145,11 @@ def _add_comicvine(client, text: str, outcome: Outcome, variants, progress, publ
     progress(f"Consultando ComicVine: «{text}»…")
     wanted = int(year) if year.strip().isdigit() else None
     key = fold(publisher.strip())
-    for volume in _matching_volumes(client.search_volumes(text, limit=10), key, wanted)[:MAX_VOLUMES]:
+    volumes = _matching_volumes(client.search_volumes(text, limit=10), key, wanted)[:MAX_VOLUMES]
+    for index, volume in enumerate(volumes, 1):
+        # cada serie supone una consulta más (y, si hay número, otra por cada portada a comparar): esto es lo que
+        # tarda varios segundos, así que se informa serie a serie en vez de un único mensaje fijo todo el rato
+        progress(f"Comparando con ComicVine ({index}/{len(volumes)}): «{volume.get('name', '')}»…")
         records = client.issues(volume["id"], outcome.issue_number) if outcome.issue_number \
             else [{"volume": volume, "image": volume.get("image"),
                    "site_detail_url": volume.get("site_detail_url")}]

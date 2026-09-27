@@ -6,7 +6,7 @@ from threading import Event, Thread
 from . import __version__
 from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
 from .collection import build_series, ranges
-from .comicinfo import CATEGORIES, MetadataError, build_xml, read_info
+from .comicinfo import CATEGORIES, MetadataError, build_xml, category_of, read_info
 from .comicvine import ComicVineClient, ComicVineError
 from .covers import (
     COMIC_EXTENSIONS,
@@ -23,6 +23,7 @@ from .gcstar import (
     GCstarError,
     format_name,
     series_text,
+    suggest_type,
     vocabulary,
 )
 from .gcstar import transfer as gcstar_transfer
@@ -237,6 +238,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                            self.metadata_button, meta_folder):
                 controls.append(widget)
             self.status = Gtk.Label(label=INITIAL_STATUS, xalign=0, wrap=True)   # sin ajuste, un estado largo obliga a ensanchar la ventana
+            self.search_progress = Gtk.ProgressBar(show_text=False, visible=False)   # solo mientras se consulta a
+            self._search_pulse_id = 0                                              # ComicVine: tarda varios segundos
             self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
             self.picture.set_size_request(300, 190)   # se encoge sola si falta altura: debajo van los botones, las flechas y los metadatos
             self.cover_placeholder = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6,
@@ -359,7 +362,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                               shrink_end_child=False, resize_end_child=False)
             paned.set_start_child(body)
             paned.set_end_child(self._preview_panel())
-            for widget in (controls, self.status, paned):
+            for widget in (controls, self.status, self.search_progress, paned):
                 page.append(widget)
             drop = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
             drop.connect("drop", self._dropped)
@@ -686,6 +689,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             """Vuelve al estado inicial: sin campos, resultados, portada, ficha ni sesión de IA."""
             self._generation += 1
             self.busy = False
+            self._stop_search_progress()
             if self._live_timer:
                 GLib.source_remove(self._live_timer)
                 self._live_timer = 0
@@ -714,8 +718,21 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.busy = True
             key = self.settings.api_key.strip()
             client = ComicVineClient(key) if key else None
+            if client is not None:   # consultar ComicVine tarda varios segundos (varias peticiones seguidas);
+                self._start_search_progress()   # GCD y la propia colección son locales y no lo necesitan
             Thread(target=self._work, args=(self.image, client, query, number, publisher, year, self._generation),
                    daemon=True).start()
+
+        def _start_search_progress(self):
+            self.search_progress.set_visible(True)
+            self.search_progress.pulse()
+            self._search_pulse_id = GLib.timeout_add(150, lambda: (self.search_progress.pulse(), True)[1])
+
+        def _stop_search_progress(self):
+            if self._search_pulse_id:
+                GLib.source_remove(self._search_pulse_id)
+                self._search_pulse_id = 0
+            self.search_progress.set_visible(False)
 
         def _work(self, image, client, query, number, publisher, year, generation):
             library = Library(LIBRARY_DB) if LIBRARY_DB.exists() else None
@@ -737,12 +754,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             if generation is not None and generation != self._generation:
                 return   # se ha limpiado mientras tanto
             self.busy = False
+            self._stop_search_progress()
             self.status.set_text(f"No se pudo procesar la imagen: {error}")
 
         def _show(self, outcome, generation=None):
             if generation is not None and generation != self._generation:
                 return   # se ha limpiado mientras tanto
             self.busy = False
+            self._stop_search_progress()
             if outcome.issue_number and not self.number.get_text():   # p. ej. del código de barras
                 self._set_fields(number=outcome.issue_number)
             self.library_matches = [c for c in outcome.candidates if c.source == "Mi colección"]
@@ -867,14 +886,15 @@ def run_gui(initial_image: Path | None = None) -> None:
                     return
                 vocab = {field_name: vocabulary(text, field_name) for field_name in VOCABULARY_FIELDS}
                 pages = len(list_pages(target))
-                later(self._open_gcstar_dialog, target, info, read_error, gcs_path, vocab, pages)
+                origin = suggest_type(target, [Path(f) for f in self.settings.folders])
+                later(self._open_gcstar_dialog, target, info, read_error, gcs_path, vocab, pages, origin)
             Thread(target=work, daemon=True).start()
 
         def _gcstar_prep_failed(self, message: str):
             self.status.set_text(f"No se pudo preparar la transferencia a GCstar: {message}")
 
         def _open_gcstar_dialog(self, target: Path, info: dict, read_error: str, gcs_path: Path, vocab: dict,
-                                page_count: int):
+                                page_count: int, origin: str):
             window = Gtk.Window(title="Transferir a GCstar", transient_for=self, modal=True, default_width=640)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=14, margin_bottom=14,
                           margin_start=16, margin_end=16)
@@ -903,9 +923,11 @@ def run_gui(initial_image: Path | None = None) -> None:
                                  xalign=0))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección"}
+            prefill = {"category": category_of(info.get("Tags", "")),   # ya la conocemos por nuestra propia Categoría
+                      "type": origin}   # Europeo/Americano/Manga, según la carpeta de Mi colección (ver ORIGIN_BY_FOLDER)
             gcstar_entries: dict[str, Gtk.Entry] = {}
             for row, (key, label) in enumerate(fields.items()):
-                entry = Gtk.Entry(hexpand=True)
+                entry = Gtk.Entry(hexpand=True, text=prefill.get(key, ""))
                 store = Gtk.ListStore(str)
                 for value in vocab.get(key, []):
                     store.append([value])
@@ -1015,6 +1037,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             fields = (("nombre", "Nombre", "serie u OneShot"), ("volumen", "Volumen", "8 → «Volumen 8»"),
                       ("contenido", "Contenido [años]", "años del material original: 1991 o 1991-1993"),
                       ("edicion", "Edición (años)", "años de la edición que tienes"),
+                      ("editorial", "Editorial", "quién la publica: Planeta DeAgostini, Panini…"),
                       ("sello", "Sello", "solo el que ves impreso en el ejemplar"), ("numero", "Nº", "opcional"))
             flag = Gtk.DropDown.new_from_strings(["(ninguna)", *FLAGS.values()])
             flag.set_selected(([""] + list(FLAGS.values())).index(values.bandera) if values.bandera in FLAGS.values() else 0)
@@ -1280,6 +1303,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             fields = (("nombre", "Nombre (serie)", ""), ("volumen", "Volumen", "8 → «Volumen 8»"), ("bandera", "Bandera", ""),
                       ("contenido", "Contenido [años]", "años del material original: 1999-2001"),
                       ("edicion", "Edición (años)", "2000-2002; 2011- si sigue publicándose"),
+                      ("editorial", "Editorial", "quién la publica: Planeta DeAgostini, Panini…"),
                       ("sello", "Sello", "solo el que ves impreso en los ejemplares"))
             for row, (key, label, hint) in enumerate(fields):
                 grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
@@ -1581,18 +1605,20 @@ def run_gui(initial_image: Path | None = None) -> None:
                 line = Gtk.Box(spacing=8, margin_top=3, margin_bottom=3, margin_start=6, margin_end=6)
                 include = Gtk.CheckButton(active=info is not None, sensitive=info is not None,
                                           tooltip_text="Escribir los metadatos de este archivo")
-                name = Gtk.Label(label=path.name, xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.MIDDLE,
-                                 width_chars=26, max_width_chars=40, tooltip_text=error or str(path))
+                name = Gtk.Label(label=path.name, xalign=0, ellipsize=Pango.EllipsizeMode.MIDDLE,
+                                 width_chars=20, max_width_chars=28, tooltip_text=error or str(path))
                 number_entry = Gtk.Entry(text=number, width_chars=5, placeholder_text="Nº",
                                          tooltip_text="Número de ejemplar (se toma del nombre del archivo)")
-                title_entry = Gtk.Entry(text=(info or {}).get("Title", ""), width_chars=22, hexpand=True,
+                title_entry = Gtk.Entry(text=(info or {}).get("Title", ""), width_chars=16, hexpand=True,
                                         placeholder_text="Título del ejemplar (opcional)")
-                state_label = Gtk.Label(xalign=0, width_chars=18, ellipsize=Pango.EllipsizeMode.END, tooltip_text=error)
-                for widget in (include, name, number_entry, title_entry, state_label):
+                summary_entry = Gtk.Entry(text=(info or {}).get("Summary", ""), width_chars=16, hexpand=True,
+                                          placeholder_text="Resumen del ejemplar (opcional)")
+                state_label = Gtk.Label(xalign=0, width_chars=14, ellipsize=Pango.EllipsizeMode.END, tooltip_text=error)
+                for widget in (include, name, number_entry, title_entry, summary_entry, state_label):
                     line.append(widget)
                 listing.append(line)
                 rows.append({"path": path, "info": info, "error": error, "include": include, "number": number_entry,
-                             "title": title_entry, "state": state_label, "changes": None})
+                             "title": title_entry, "summary": summary_entry, "state": state_label, "changes": None})
             scroll = Gtk.ScrolledWindow(min_content_height=140, max_content_height=320, propagate_natural_height=True)
             scroll.set_child(listing)
             box.append(scroll)
@@ -1632,7 +1658,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                     elif blocking:
                         r["state"].set_text("—")
                     else:
-                        changes = file_changes(series, category, r["number"].get_text(), r["title"].get_text(), r["info"])
+                        changes = file_changes(series, category, r["number"].get_text(), r["title"].get_text(),
+                                               r["summary"].get_text(), r["info"])
                         if differs(r["info"], changes):
                             r["changes"] = changes
                             r["state"].set_text("se modifica" if r["info"] else "se crea")
@@ -1676,7 +1703,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                     later(finished, write_batch(items, METADATA_LOG, library, progress))
                 Thread(target=run, daemon=True).start()
 
-            for entry in (*entries.values(), *(r["number"] for r in rows), *(r["title"] for r in rows)):
+            for entry in (*entries.values(), *(r["number"] for r in rows), *(r["title"] for r in rows),
+                         *(r["summary"] for r in rows)):
                 entry.connect("changed", refresh)
             for radio in options.values():
                 radio.connect("toggled", refresh)

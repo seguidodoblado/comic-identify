@@ -1,8 +1,11 @@
+from dataclasses import replace
+
 import pytest
 
 from comic_identify.identify import Candidate
 from comic_identify.naming import (
     DEFAULT_PATTERN,
+    VARIABLES,
     Values,
     check_pattern,
     flag_for,
@@ -31,11 +34,31 @@ def test_empty_parts_leave_no_stray_separators():
     assert render(DEFAULT_PATTERN, Values("X", "", "", "1990–1992", "1990 - 1992", "Forum")) == "X [1990-1992] - Forum"   # guiones tipográficos y espacios
 
 
+def test_sello_and_editorial_are_each_dropped_independently_without_stray_dashes():
+    """Ambos son tramos « - {…}» opcionales del patrón por defecto: que falte uno no debe dejar un guion suelto
+    ni afectar al otro, esté en el orden que esté."""
+    values = Values("Capitán Marvel", "", "🇪🇸", "1999-2001", "2000-2002")
+    assert render(DEFAULT_PATTERN, values) == "Capitán Marvel 🇪🇸 [1999-2001] (2000-2002)"                 # ninguno de los dos
+    assert render(DEFAULT_PATTERN, replace(values, sello="Forum")) == \
+        "Capitán Marvel 🇪🇸 [1999-2001] (2000-2002) - Forum"                                                # solo sello
+    assert render(DEFAULT_PATTERN, replace(values, editorial="Planeta DeAgostini")) == \
+        "Capitán Marvel 🇪🇸 [1999-2001] (2000-2002) - Planeta DeAgostini"                                   # solo editorial (el hueco del sello no deja "- -")
+    assert render(DEFAULT_PATTERN, replace(values, sello="Forum", editorial="Planeta DeAgostini")) == \
+        "Capitán Marvel 🇪🇸 [1999-2001] (2000-2002) - Forum - Planeta DeAgostini"                           # los dos
+    # un valor que contenga literalmente " - " no se confunde con el separador de tramos del patrón (se divide
+    # el propio patrón, no el resultado ya sustituido)
+    assert render(DEFAULT_PATTERN, Values("Spider-Man - Blue", "", "🇪🇸", "2002", "2003", "Forum")) == \
+        "Spider-Man - Blue 🇪🇸 [2002] (2003) - Forum"
+
+
 def test_custom_pattern_with_the_issue_number():
-    values = Values("Capitán Marvel", "", "🇪🇸", "1999-2000", "2000-2002", "Forum", "001")
+    values = Values("Capitán Marvel", "", "🇪🇸", "1999-2000", "2000-2002", "Forum", "001",
+                    editorial="Planeta DeAgostini")
     assert render("{nombre} {numero} {bandera} [{contenido}] ({edicion}) - {sello}", values) == \
         "Capitán Marvel 001 🇪🇸 [1999-2000] (2000-2002) - Forum"
     assert render("{bandera} {nombre} #{numero}", values) == "🇪🇸 Capitán Marvel #001"
+    assert "editorial" in VARIABLES   # disponible para quien quiera incluirla en su propio patrón
+    assert render("{nombre} ({editorial} - {sello})", values) == "Capitán Marvel (Planeta DeAgostini - Forum)"
 
 
 def test_pattern_validation():
@@ -60,6 +83,7 @@ def test_suggestions_from_candidates():
     assert (suggested.nombre, suggested.bandera, suggested.edicion, suggested.sello, suggested.numero) == \
         ("Capitán Marvel", "🇪🇸", "2000", "Forum", "1")
     assert suggested.contenido == ""            # el año real del original no se sabe: lo pone el usuario
+    assert suggested.editorial == "Planeta DeAgostini"
 
     american = Candidate("X #1", "GCD", series="X", year="1990", country="us")
     assert (suggest_values(american).bandera, suggest_values(american).contenido) == ("🇺🇸", "1990")   # es su propio original
