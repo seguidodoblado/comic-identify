@@ -8,7 +8,14 @@ from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shel
 from .collection import build_series, ranges
 from .comicinfo import CATEGORIES, MetadataError, build_xml, read_info
 from .comicvine import ComicVineClient, ComicVineError
-from .covers import COMIC_EXTENSIONS, cover_to_png, list_pages, read_page, thumbnail_bytes
+from .covers import (
+    COMIC_EXTENSIONS,
+    IMAGE_EXTENSIONS,
+    cover_to_png,
+    list_pages,
+    read_page,
+    thumbnail_bytes,
+)
 from .gcd import GcdIndex, build_index
 from .icons import ensure_icons, icon_file
 from .identify import Candidate, identify, search_gcd
@@ -188,10 +195,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             page = self._box()
             controls = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=7, column_spacing=8,
                                    row_spacing=6, homogeneous=False)   # los botones pasan a otra línea si no caben
-            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Abrir cómic…", tooltip_text=(
+            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Abrir…", tooltip_text=(
                 "Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes pegarla o arrastrarla"))
             paste_button = icon_button(("edit-paste-symbolic",), "Pegar", tooltip_text=(
-                "Pega una imagen o un cómic copiados (Ctrl+V)"))
+                "Pega una imagen copiada, o un cómic (CBR, CBZ, CB7) o imagen copiados en el gestor de archivos (Ctrl+V)"))
             open_button.connect("clicked", self._choose_image)
             paste_button.connect("clicked", lambda _: self._paste())
             self.ask_button = icon_button(("utilities-terminal-symbolic", "dialog-question-symbolic"),
@@ -201,7 +208,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.normalize_button = icon_button(("document-edit-symbolic",), "Normalizar nombre…", sensitive=False,
                                                 tooltip_text=(
                 "Renombra el CBR/CBZ con el patrón de Estructura.md (abre un cómic o elige una coincidencia de "
-                "«Mi colección» para activarlo)"))
+                "«Mi colección» para activarlo). Actúa sobre el archivo original, no sobre una copia."))
             self.normalize_button.connect("clicked", self._normalize)
             folder_button = icon_button(("folder-symbolic", "folder-open-symbolic"), "Normalizar carpeta…",
                                         tooltip_text=("Renombra una carpeta-serie y numera los archivos de dentro "
@@ -213,7 +220,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             meta_folder.connect("clicked", self._choose_metadata_folder)
             self.metadata_button = icon_button(("document-properties-symbolic", "document-edit-symbolic"),
                                                "Metadatos archivo…", sensitive=False, tooltip_text=(
-                "Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi colección» elegida"))
+                "Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi colección» elegida, en el archivo "
+                "original"))
             self.metadata_button.connect("clicked", self._metadata_file)
             for widget in (open_button, paste_button, self.ask_button, self.normalize_button, folder_button,
                            self.metadata_button, meta_folder):
@@ -351,14 +359,37 @@ def run_gui(initial_image: Path | None = None) -> None:
             except GLib.Error:
                 pass  # Selección cancelada.
 
+        def _open_file(self, path: Path):
+            """Abre un cómic o una imagen (arrastrados o pegados); cualquier otro archivo se rechaza con un aviso."""
+            if path.suffix.lower() in (*COMIC_EXTENSIONS, *IMAGE_EXTENSIONS):
+                self._load(path)
+            else:
+                self.status.set_text(f"«{path.name}» no es un cómic (CBR, CBZ, CB7) ni una imagen.")
+
         def _dropped(self, _target, files, _x, _y):
             paths = [f.get_path() for f in files.get_files() if f.get_path()]
             if paths:
-                self._load(Path(paths[0]))
+                self._open_file(Path(paths[0]))
             return bool(paths)
 
         def _paste(self):
-            self.get_clipboard().read_texture_async(None, self._pasted)
+            """Pega lo que haya en el portapapeles: un archivo copiado en el gestor de archivos (un cómic o una
+            imagen) o una imagen copiada."""
+            clipboard = self.get_clipboard()
+            if clipboard.get_formats().contain_gtype(Gdk.FileList.__gtype__):
+                clipboard.read_value_async(Gdk.FileList, GLib.PRIORITY_DEFAULT, None, self._pasted_files)
+            else:
+                clipboard.read_texture_async(None, self._pasted)
+
+        def _pasted_files(self, clipboard, result):
+            try:
+                paths = [f.get_path() for f in clipboard.read_value_finish(result).get_files() if f.get_path()]
+            except GLib.Error:
+                paths = []
+            if paths:
+                self._open_file(Path(paths[0]))
+            else:
+                self.status.set_text("El portapapeles no contiene un archivo que se pueda abrir.")
 
         def _pasted(self, clipboard, result):
             try:
@@ -366,7 +397,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             except GLib.Error:
                 texture = None
             if texture is None:
-                self.status.set_text("El portapapeles no contiene una imagen.")
+                self.status.set_text("El portapapeles no contiene una imagen ni un cómic copiado.")
                 return
             target = Path(GLib.get_user_cache_dir()) / "comic-identify" / "pegada.png"
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -775,6 +806,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             current = Gtk.Label(xalign=0, wrap=True, selectable=False)
             current.set_markup(f"<b>Archivo:</b> {GLib.markup_escape_text(target.name)}")
             box.append(current)
+            where = Gtk.Label(xalign=0, wrap=True, label=(
+                f"En {target.parent}. Se renombra este mismo archivo, no una copia; se puede deshacer desde Ajustes."))
+            where.add_css_class("dim-label")
+            box.append(where)
 
             grid = Gtk.Grid(column_spacing=12, row_spacing=6)
             entries: dict[str, Gtk.Editable] = {}
@@ -1270,6 +1305,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             head.set_markup(f"<b>{'Carpeta' if where.is_dir() else 'Archivo'}:</b> {GLib.markup_escape_text(str(where))}"
                             f"  ({len(files)} archivo{'s' if len(files) != 1 else ''})")
             box.append(head)
+            original = Gtk.Label(xalign=0, wrap=True, label=(
+                "Los metadatos se escriben en los propios archivos, no en copias (antes se verifica una copia de cada "
+                "uno); cada lote se puede deshacer desde Ajustes."))
+            original.add_css_class("dim-label")
+            box.append(original)
 
             labels = {"Series": ("Serie", "nombre de la serie"), "Volume": ("Volumen", "8"),
                       "Publisher": ("Editorial", "Panini, Planeta…"), "Imprint": ("Sello", "el impreso en el ejemplar"),
