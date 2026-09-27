@@ -1540,11 +1540,12 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             labels = {"Series": ("Serie", "nombre de la serie"), "Volume": ("Volumen", "8"),
                       "Publisher": ("Editorial", "Panini, Planeta…"), "Imprint": ("Sello", "el impreso en el ejemplar"),
-                      "Year": ("Año", "2000"), "Count": ("Total de números", "los que tiene la serie"),
+                      "Year": ("Año", "2000"), "Month": ("Mes", "opcional, 01-12"), "Day": ("Día", "opcional, 01-31"),
+                      "Count": ("Total de números", "los que tiene la serie"),
                       "LanguageISO": ("Idioma", "es, en…"), "Web": ("Web", "ficha de GCD u otra"),
                       "Notes": ("Notas", "años del contenido original…")}
-            layout = (("Series", "Volume"), ("Publisher", "Imprint"), ("Year", "Count"), ("LanguageISO",), ("Web",),
-                      ("Notes",))
+            layout = (("Series", "Volume"), ("Publisher", "Imprint"), ("Year", "Month", "Day", "Count"),
+                      ("LanguageISO",), ("Web",), ("Notes",))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             entries: dict[str, Gtk.Entry] = {}
             for row, keys in enumerate(layout):
@@ -1552,7 +1553,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                     label, hint = labels[key]
                     value, absent = common_value(good, key)
                     varied = not value and not absent
-                    entry = Gtk.Entry(text=texts[key], hexpand=True, placeholder_text=(
+                    narrow = key in ("Month", "Day")
+                    entry = Gtk.Entry(text=texts[key], hexpand=not narrow, width_chars=4 if narrow else -1,
+                                      placeholder_text=(
                         "(distinto en cada archivo: se deja como está)" if varied else hint))
                     entries[key] = entry
                     grid.attach(Gtk.Label(label=label, xalign=0), index * 2, row, 1, 1)
