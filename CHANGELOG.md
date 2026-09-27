@@ -5,6 +5,14 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-09-27
+
+### Changed
+- Las webs de búsqueda: se **quita «ECC (DC)»** (no era la web que se buscaba) y se añaden **«DC Comics»** (`dc.com`,
+  la web oficial de DC) y **«Norma Comics»** (`normacomics.com`, la tienda de cómics de Norma, distinta de «Norma»,
+  que es `normaeditorial.com`). Como las demás, abren la búsqueda en tu navegador con `site:` en Google. El mensaje
+  del asistente las menciona.
+
 ## [0.18.2] - 2026-09-27
 
 ### Changed

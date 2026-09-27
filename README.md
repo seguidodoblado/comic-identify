@@ -76,10 +76,10 @@ huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
 ## Webs, asistente de IA y órdenes
 
 Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español
-(Tebeosfera, Whakoom, Norma, Panini, ECC para DC, Universo Marvel, DC Database y Zona Negativa) y se repliega al
+(Tebeosfera, Whakoom, Norma, Norma Comics, Panini, Universo Marvel, DC Comics, DC Database y Zona Negativa) y se repliega al
 elegir una. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está marcada, la editorial y
 el año: la aplicación no rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt` (Whakoom y los
-buscadores de Panini y ECC).
+buscadores de Panini y DC).
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
 guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque son marcas de sus webs. Se pueden
