@@ -55,6 +55,8 @@ SERIES_FILTERS = ["Incompletas", "Todas", "Sin todos sus metadatos", "Sin total 
 SERIES_SHOWN = 300
 PAGE_MAX_SIDE = 1600   # las páginas se reducen a esto para mostrarlas: un escaneo enorme no bloquea la ventana
 PAGES_CACHED = 8
+TERMINAL_FONT = "Ubuntu Sans Mono, Monospace"   # tipografía del terminal del asistente (Regular); la 2.ª es el respaldo
+TERMINAL_FONT_SIZE = 11
 VIEWER_MAX_SIDE = 3200   # lado máximo de la página en la ventana grande (letra pequeña legible sin agotar la memoria)
 AUTHOR = "Jose Antonio Seguido Doblado"
 REPO_URL = "https://github.com/seguidodoblado/comic-identify"
@@ -1493,6 +1495,11 @@ def run_gui(initial_image: Path | None = None) -> None:
                 f"Sesión de «{argv[0]}» con tu propia cuenta. Revisa cada permiso que te pida: "
                 "esta aplicación no ve tus credenciales."))
             terminal = Vte.Terminal(vexpand=True, hexpand=True)
+            font = Pango.FontDescription()
+            font.set_family(TERMINAL_FONT)
+            font.set_weight(Pango.Weight.NORMAL)
+            font.set_size(TERMINAL_FONT_SIZE * Pango.SCALE)
+            terminal.set_font(font)
             terminal.set_scrollback_lines(10000)
             terminal.connect("child-exited", lambda _t, _status: self.assistant_note.set_text(
                 "La sesión ha terminado. Pulsa × para cerrar el panel."))
