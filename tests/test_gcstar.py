@@ -103,12 +103,14 @@ def test_series_text_adds_volumen_only_when_it_is_a_real_restart():
 def test_build_attrs_maps_our_fields_to_gcstars_and_number_becomes_volume():
     fields = {"Series": "Blake y Mortimer", "Number": "1", "Title": "El secreto del espadón I",
               "Writer": "Edgar P. Jacobs", "Penciller": "Edgar P. Jacobs", "Publisher": "Norma Editorial",
-              "Year": "1946", "Summary": "Resumen", "Notes": "Nota personal", "Volume": ""}
+              "Year": "1946", "Summary": "Resumen", "Notes": "Nota personal", "Volume": "",
+              "Web": "https://www.comics.org/series/1234/"}
     attrs = build_attrs(fields, {"type": "Serie", "category": "Franco-Belga"}, Path("/c/01.cbr"), 64, None, None,
                         Path("/gcs"))
     assert attrs["series"] == "Blake y Mortimer" and attrs["volume"] == "1"           # el Nº, no nuestro Volumen
     assert attrs["writer"] == attrs["illustrator"] == "Edgar P. Jacobs"
     assert attrs["publisher"] == "Norma Editorial" and attrs["publishdate"] == "01/01/1946"
+    assert attrs["webPage"] == "https://www.comics.org/series/1234/"
     assert attrs["synopsis"] == "Resumen" and attrs["comment"] == "Nota personal"
     assert attrs["type"] == "Serie" and attrs["category"] == "Franco-Belga"
     assert attrs["numberboards"] == "64" and attrs["file"] == "/c/01.cbr" and attrs["borrower"] == "none"
