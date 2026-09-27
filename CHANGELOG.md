@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-09-27
+
+### Changed
+- El terminal del asistente de IA usa la tipografía **Ubuntu Sans Mono** (Regular, 11 pt), con «Monospace» de
+  respaldo si no está instalada; sigue cabiendo en 80 columnas.
+
 ## [0.18.1] - 2026-09-27
 
 ### Changed

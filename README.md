@@ -87,7 +87,7 @@ borrar sin problema. Si una web no entrega su icono, se pide al servicio de favi
 nombre del dominio); si tampoco lo tiene, se muestra uno genérico.
 
 Para los cómics que ninguna fuente reconoce, el botón **Preguntar a la IA** abre, en el panel derecho, un terminal
-embebido con tu propia CLI de IA y un mensaje que le pide identificar la portada; puede buscar en la web y consultar
+embebido (con la tipografía Ubuntu Sans Mono) con tu propia CLI de IA y un mensaje que le pide identificar la portada; puede buscar en la web y consultar
 el índice local con `comic-identify buscar "título" [número]`. En **Ajustes** se configuran el comando (Claude Code por
 defecto; `{prompt}` se sustituye por el mensaje) y el propio mensaje (`{image}` es la portada). Se lanza desde tu shell,
 así que encuentra CLIs como `opencode` o `codex` aunque solo estén en el `PATH` de tu `~/.bashrc`. La aplicación no
