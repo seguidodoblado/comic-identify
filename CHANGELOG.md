@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-09-27
+
+### Added
+- **«Todas»** en el menú «Buscar en otras webs»: abre la búsqueda en las 9 webs configuradas de una vez, cada una
+  en su propia pestaña del navegador.
+
 ## [0.20.2] - 2026-09-27
 
 ### Fixed
