@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-09-27
+
+### Fixed
+- **Transferir a GCStar** no llevaba el campo **Web** de ComicInfo.xml (la ficha de GCD, cuando se elige una serie):
+  faltaba en el mapeo de campos, ahora se traslada al campo `webPage` de GCstar.
+
 ## [0.20.1] - 2026-09-27
 
 ### Added
