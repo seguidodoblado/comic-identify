@@ -5,6 +5,16 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-09-27
+
+### Changed
+- **Botones superiores en una sola línea**: el contenedor limitaba a 6 por línea y son 7, así que el último saltaba
+  siempre a la segunda. Ahora admite 7, los textos son más cortos («Pegar», «Metadatos archivo…», «Metadatos
+  carpeta…») y la ventana arranca con 1500 px de ancho, que es lo que necesitan; en una ventana más estrecha, siguen
+  pasando a otra línea. El orden agrupa por función: normalizar nombre y carpeta, metadatos de archivo y carpeta.
+- El botón «Abrir portada…» se llama ahora **«Abrir cómic…»**, porque abre CBR, CBZ y CB7 además de imágenes; el
+  diálogo de archivos y el mensaje inicial lo reflejan.
+
 ## [0.18.0] - 2026-09-27
 
 ### Added
