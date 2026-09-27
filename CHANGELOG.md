@@ -5,6 +5,13 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-09-27
+
+### Added
+- **Mes y Día** (opcionales) junto a Año en el diálogo de Metadatos: para el caso poco frecuente en que se conozca
+  la fecha exacta de la edición y no solo el año. Al transferir a GCStar, la fecha de publicación llevará el día y
+  mes si se han rellenado.
+
 ## [0.20.0] - 2026-09-27
 
 ### Added
