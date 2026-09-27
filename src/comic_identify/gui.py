@@ -66,11 +66,11 @@ DEFAULT_PATTERN = Settings.pattern
 WINDOW_HEIGHT = 820
 COVER_WIDTH = 440
 META_MAX_HEIGHT = 260   # alto máximo del panel del ComicInfo.xml; si hay más campos, se desplaza
-WINDOW_WIDTH = 1100   # ancho por defecto
+WINDOW_WIDTH = 1500   # ancho por defecto: los siete botones de arriba caben en una línea
 PREVIEW_WIDTH = 520
 ASSISTANT_WIDTH = 760   # el terminal necesita ~80 columnas
 LIVE_DELAY_MS = 300   # pausa al teclear antes de buscar en GCD
-INITIAL_STATUS = "Escribe un título para buscar, o abre, pega o arrastra una portada (imagen o CBR/CBZ)."
+INITIAL_STATUS = "Escribe un título para buscar, o abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada."
 
 
 def run_gui(initial_image: Path | None = None) -> None:
@@ -184,10 +184,12 @@ def run_gui(initial_image: Path | None = None) -> None:
         # ---- Identificar -------------------------------------------------------------------
         def _identify_page(self):
             page = self._box()
-            controls = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=6, column_spacing=8,
+            controls = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=7, column_spacing=8,
                                    row_spacing=6, homogeneous=False)   # los botones pasan a otra línea si no caben
-            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Abrir portada…")
-            paste_button = icon_button(("edit-paste-symbolic",), "Pegar (Ctrl+V)")
+            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Abrir cómic…", tooltip_text=(
+                "Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes pegarla o arrastrarla"))
+            paste_button = icon_button(("edit-paste-symbolic",), "Pegar", tooltip_text=(
+                "Pega una imagen o un cómic copiados (Ctrl+V)"))
             open_button.connect("clicked", self._choose_image)
             paste_button.connect("clicked", lambda _: self._paste())
             self.ask_button = icon_button(("utilities-terminal-symbolic", "dialog-question-symbolic"),
@@ -203,16 +205,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                                         tooltip_text=("Renombra una carpeta-serie y numera los archivos de dentro "
                                                       "(elige antes una serie de GCD para rellenar sus datos)"))
             folder_button.connect("clicked", self._choose_series_folder)
-            meta_folder = icon_button(("document-properties-symbolic", "document-edit-symbolic"), "Metadatos de la carpeta…",
+            meta_folder = icon_button(("document-properties-symbolic", "document-edit-symbolic"), "Metadatos carpeta…",
                                       tooltip_text="Escribe el ComicInfo.xml (serie, editorial, categoría…) en todos los "
                                                    "cómics de una carpeta")
             meta_folder.connect("clicked", self._choose_metadata_folder)
             self.metadata_button = icon_button(("document-properties-symbolic", "document-edit-symbolic"),
-                                               "Metadatos del archivo…", sensitive=False, tooltip_text=(
+                                               "Metadatos archivo…", sensitive=False, tooltip_text=(
                 "Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi colección» elegida"))
             self.metadata_button.connect("clicked", self._metadata_file)
-            for widget in (open_button, paste_button, self.ask_button, self.normalize_button, folder_button, meta_folder,
-                           self.metadata_button):
+            for widget in (open_button, paste_button, self.ask_button, self.normalize_button, folder_button,
+                           self.metadata_button, meta_folder):
                 controls.append(widget)
             self.status = Gtk.Label(label=INITIAL_STATUS, xalign=0, wrap=True)   # sin ajuste, un estado largo obliga a ensanchar la ventana
             self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
@@ -334,11 +336,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
 
         def _choose_image(self, _button):
-            images = Gtk.FileFilter(name="Imágenes y cómics (CBR/CBZ)")
+            images = Gtk.FileFilter(name="Cómics (CBR/CBZ/CB7) e imágenes")
             images.add_mime_type("image/*")
             for extension in COMIC_EXTENSIONS:
                 images.add_suffix(extension.lstrip("."))
-            dialog = Gtk.FileDialog(title="Seleccionar portada o cómic", default_filter=images)
+            dialog = Gtk.FileDialog(title="Abrir cómic o imagen de portada", default_filter=images)
             dialog.open(self, None, self._image_chosen)
 
         def _image_chosen(self, dialog, result):
