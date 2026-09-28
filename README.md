@@ -104,6 +104,11 @@ original, se conservan los campos que no están en el formulario (como las pági
 **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona en CBZ, RAR (4 y 5) y 7-Zip; para escribir en RAR
 hace falta el programa `rar` (no libre).
 
+Junto a la etiqueta «ComicInfo.xml» (debajo de la portada), **Eliminar datos** quita el ComicInfo.xml entero del
+archivo abierto (no campo a campo: para empezar de cero, y sin tocar el resto del archivo); solo está activo si el
+archivo ya tiene uno. Es una escritura de metadatos más, así que se anota en el mismo registro y se deshace igual
+desde **Ajustes**.
+
 **Series de la colección** (pestaña Mi colección): tras indexar, lista las series con los números que tienes y los que
 faltan. Necesita el «Total de números» en los metadatos para saber cuántos faltan al final; sin él solo detecta
 huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
@@ -219,16 +224,17 @@ conserva el cómic abierto, lo escrito en los campos y la pestaña; no se puede 
 ## Webs, asistente de IA y órdenes
 
 Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español,
-agrupadas en *Generalistas* (Tebeosfera, Whakoom, Norma, Norma Comics, Panini, Zona Negativa), *Marvel* (Universo
-Marvel) y *DC* (DC Comics, DC Database), y se repliega al elegir una. **Todas**, arriba del todo, abre las nueve, cada
+agrupadas en *Generalistas* (Tebeosfera, Whakoom, Norma, Norma Comics, Panini), *Marvel* (Universo
+Marvel) y *DC* (DC Comics, DC Database), y se repliega al elegir una. **Todas**, arriba del todo, abre las ocho, cada
 una en su pestaña del navegador. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está
 marcada, la editorial y el año: la aplicación no rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt`
 (Whakoom y los buscadores de Panini y DC).
 
 El menú **Comprar**, a su lado, abre la búsqueda del ejemplar (con el resultado elegido, o lo escrito si no hay ninguno) en
-todas las tiendas a la vez con **Todas** (arriba del todo, cada una en su pestaña) o en una sola: Panini, en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios, Iberlibro) y en tiendas (Amazon.es, Casa
-del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo aparecen de segunda mano. Sin enlaces de
-afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
+todas las tiendas a la vez con **Todas** (arriba del todo, cada una en su pestaña) o en una sola: Panini y Editorial Ivrea
+(a través de su tienda oficial, La Comiquería), en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios,
+Iberlibro) y en tiendas (Amazon.es, Casa del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo
+aparecen de segunda mano. Sin enlaces de afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
 
 Los resultados de Universo Marvel, Tebeosfera y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum
 (por el sello), Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera; se descargan una vez de la web de fichas

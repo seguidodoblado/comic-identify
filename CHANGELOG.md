@@ -5,6 +5,18 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-09-28
+
+### Added
+- **Botón «Eliminar datos» en ComicInfo.xml**: quita el ComicInfo.xml entero del archivo abierto (no campo a campo, para
+  empezar de cero), junto a la etiqueta de esa sección; solo se activa si el archivo ya tiene uno. Es una escritura de
+  metadatos más: se anota en el mismo registro y se deshace igual con «Deshacer» en Ajustes.
+- **Editorial Ivrea** entre las webs de compra (grupo Editorial, junto a Panini): busca en La Comiquería, su tienda
+  oficial (su propia web no tiene precio ni ficha por tomo, así que no sirve como fuente de metadatos: ver más abajo).
+
+### Removed
+- **Zona Negativa** de «Buscar en otras webs»: nunca daba buenos resultados.
+
 ## [0.36.0] - 2026-09-28
 
 ### Added
