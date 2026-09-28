@@ -5,6 +5,31 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-09-28
+
+### Added
+- **Tema claro y oscuro**, con el mismo criterio que Telegraph Writer y Joseflix: en **Ajustes** los botones «Claro» y
+  «Oscuro» cambian al tema hermano del que tenga el sistema (conservando el acento: `Mint-Y-Aqua` <-> `Mint-Y-Dark-Aqua`); en
+  oscuro se usan los iconos simbólicos y en claro los de color de tu tema de iconos. Se guarda en `config.json`
+  (`dark_mode`) y se aplica al arrancar; mientras no elijas, sigue al sistema. Cambiarlo reinicia la aplicación (en
+  Cinnamon/Mint no se repinta una ventana ya presentada), conservando el cómic abierto, los campos y la pestaña.
+- **Marca de la editorial en todas las filas de GCD**: las que no tienen logotipo propio muestran una etiqueta con su nombre
+  (sin «S.A.» ni similares), así que ninguna queda sin marca. Para poner el logotipo de una editorial basta guardar un
+  archivo `<editorial>.png` (`.jpg` o `.svg`) en `~/.local/share/comic-identify/logos`; el nombre exacto se ve en la ayuda
+  de la etiqueta (p. ej. `ediciones-b.png`). También sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…).
+
+### Changed
+- **Etiquetas de fuente en color y con su icono** en cada resultado: GCD en morado, Universo Marvel en rojo y ComicVine
+  en verde, con el icono de su web a la izquierda de la etiqueta (las de «Mi colección» siguen como texto discreto).
+- **Margen** entre la zona central (campos, botón «Limpiar», lista de resultados y sus logotipos) y el panel de la
+  derecha: antes tocaban el borde del panel.
+
+### Added
+- **Logotipo de Planeta DeAgostini** en los resultados (GCD y Universo Marvel) cuya editorial es Planeta DeAgostini sin
+  sello Forum: sus números de DC, Vértigo o sin sello no llevaban logotipo. Si el sello es Forum sigue saliendo el de Forum.
+- **Logotipos de ECC Ediciones, Zinco, Norma Editorial y Bruguera** (las editoriales con más series de España en el índice de
+  GCD que aún no tenían logotipo), descargados de la misma web de fichas.
+
 ## [0.25.0] - 2026-09-28
 
 ### Changed

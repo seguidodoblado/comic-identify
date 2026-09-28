@@ -36,7 +36,8 @@ reales devolvía texto sin sentido).
    «Abrir en el navegador» está en la cabecera del panel.
 
 Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas. Cada uno lleva su
-fuente y, cuando la editorial es Forum, Panini o Vértice, su logotipo.
+fuente (GCD en morado, Universo Marvel en rojo y ComicVine en verde, con el icono de su web) y, cuando la editorial es una de las conocidas (Forum, Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera), su
+logotipo.
 
 Además del título y el número puedes acotar con **Editorial / distribuidor** (en GCD también casa con el
 sello: «Forum», «Panini»…) y **Año**. La búsqueda en GCD es al vuelo, mientras escribes; la de ComicVine, con
@@ -173,9 +174,14 @@ Panini, en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios,
 del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo aparecen de segunda mano. Sin enlaces de
 afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
 
-Los resultados de Universo Marvel y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum, Panini o
-Vértice; se descargan una vez de la web de fichas a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden
+Los resultados de Universo Marvel y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum (por el sello), Panini,
+Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera; se descargan una vez de la web de fichas a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden
 borrar sin problema.
+
+Las editoriales sin logotipo propio (la mayoría de las latinoamericanas y otras muchas españolas) llevan en su lugar una
+etiqueta con su nombre, así que ninguna fila de GCD queda sin marca. Para ponerles su logotipo, guarda un archivo `.png`,
+`.jpg` o `.svg` con el nombre que aparece en la ayuda de la etiqueta (p. ej. `ediciones-b.png`) en
+`~/.local/share/comic-identify/logos`; también sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…).
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
 guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque son marcas de sus webs. Se pueden
@@ -247,7 +253,7 @@ navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en 
   está, `7z`. El índice vive en `~/.local/share/comic-identify/library.db`. Si una carpeta configurada no está
   accesible (disco externo desmontado, carpeta vacía), su índice se conserva y se avisa; al quitarla de la lista, sus
   portadas se olvidan al momento. Debajo, la lista de series con sus huecos.
-- **Ajustes**: clave de ComicVine, volcado de GCD, índice de Universo Marvel, comando y mensaje del asistente de IA,
+- **Ajustes**: tema claro u oscuro (se recuerda; cambiarlo reinicia la aplicación con lo que tenías abierto), clave de ComicVine, volcado de GCD, índice de Universo Marvel, comando y mensaje del asistente de IA,
   deshacer renombrados, metadatos y transferencias a GCstar, ruta del `.gcs`, copias de seguridad y restauración, y el
   botón **Acerca de…**.
 
