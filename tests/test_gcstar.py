@@ -335,3 +335,24 @@ def test_format_from_comicinfo_reaches_the_gcstar_formato_field_via_the_dialog_v
                         Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
     assert attrs["format"] == "Tomo tapa blanda"
     assert "format" not in build_attrs({"Series": "X"}, {"format": ""}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+
+
+def test_translation_and_edition_go_at_the_end_of_the_comment_only_when_known():
+    def comment(**fields):
+        return build_attrs({"Series": "X", **fields}, {}, Path("/c/01.cbr"), 0, None, None, Path("/gcs")).get("comment")
+    assert comment(Notes="Nota", Translator="Ernest Riera", Editor="Mar\xeda Lopez") == (
+        "Nota\n\nTraducci\xf3n: Ernest Riera\nEdici\xf3n: Mar\xeda Lopez")
+    assert comment(Translator=" Ernest Riera ") == "Traducci\xf3n: Ernest Riera"      # sin notas: solo esas l\xedneas
+    assert comment(Notes="Nota") == "Nota" and comment() is None                     # sin dato, nada que a\xf1adir
+
+
+def test_black_and_white_becomes_a_colour_tag_written_as_gcstar_writes_its_lists():
+    import xml.etree.ElementTree as ET
+
+    def attrs(**fields):
+        return build_attrs({"Series": "X", **fields}, {}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert attrs(BlackAndWhite="No")["tags"] == "Color" and attrs(BlackAndWhite="Yes")["tags"] == "B&N"
+    assert "tags" not in attrs() and "tags" not in attrs(BlackAndWhite="Unknown")
+    item = ET.fromstring(build_item(attrs(BlackAndWhite="Yes"), 7))
+    assert "tags" not in item.attrib                                        # es un elemento hijo, no un atributo
+    assert [[col.text for col in line] for line in item.find("tags")] == [["B&N"]]   # <tags><line><col>B&N</col></line>

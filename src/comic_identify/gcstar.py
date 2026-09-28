@@ -37,6 +37,10 @@ ORIGIN_BY_FOLDER = {"europa": "Europeo", "usa": "Americano", "japón": "Manga"}
 FIELD_MAP = {"Writer": "writer", "Penciller": "illustrator", "Inker": "inker", "Colorist": "colourist",
             "Letterer": "letterer", "CoverArtist": "artist", "Web": "webPage"}   # «artist» es su «Cover Artist»
 
+# `BlackAndWhite` de ComicInfo -> etiqueta de GCstar (las palabras de la colección del usuario: «Color» y «B&N»)
+COLOR_TAGS = {"No": "Color", "Yes": "B&N"}
+COMMENT_CREDITS = (("Translator", "Traducción"), ("Editor", "Edición"))   # sin campo en GCstar: al final del comentario
+
 
 class GCstarError(Exception):
     """No se pudo transferir el cómic a GCstar; el .gcs y las imágenes quedan como estaban."""
@@ -159,6 +163,12 @@ def series_text(series: str, volume: str) -> str:
     return f"{series} Volumen {volume}" if volume and volume != "1" else series
 
 
+def comment_text(fields: Mapping[str, str]) -> str:
+    """El comentario de GCstar: las Notas y, al final, «Traducción» y «Edición» (que GCstar no tiene como campos), solo si hay dato."""
+    lines = [f"{label}: {fields[key].strip()}" for key, label in COMMENT_CREDITS if fields.get(key, "").strip()]
+    return "\n\n".join(part for part in (fields.get("Notes", "").strip(), "\n".join(lines)) if part)
+
+
 def build_attrs(fields: Mapping[str, str], gcstar_fields: Mapping[str, str], comic: Path, pages: int,
                 image: Path | None, backpic: Path | None, gcs_dir: Path) -> dict[str, str]:
     """Los atributos del `<item>`: `fields` son los del ComicInfo (Series, Number, Title, Writer…) y `gcstar_fields`
@@ -176,16 +186,21 @@ def build_attrs(fields: Mapping[str, str], gcstar_fields: Mapping[str, str], com
             "cost": cost_text(gcstar_fields.get("cost", "")),
             "type": gcstar_fields.get("type", "").strip(), "category": gcstar_fields.get("category", "").strip(),
             "format": gcstar_fields.get("format", "").strip(), "numberboards": str(pages) if pages else "",
-            "comment": fields.get("Notes", "").strip(), "file": str(comic), "borrower": "none"}
+            "comment": comment_text(fields), "tags": COLOR_TAGS.get(fields.get("BlackAndWhite", "").strip(), ""), "file": str(comic), "borrower": "none"}
     return {key: value for key, value in attrs.items() if value}
 
 
 def build_item(attrs: Mapping[str, str], item_id: int) -> str:
     """El bloque `<item id="…" …>…</item>`, indentado como una línea más del archivo (no como un documento aparte)."""
-    element = ET.Element("item", {"id": str(item_id), **{k: v for k, v in attrs.items() if k not in ("synopsis", "comment")}})
+    element = ET.Element("item", {"id": str(item_id), **{k: v for k, v in attrs.items()
+                                                         if k not in ("synopsis", "comment", "tags")}})
     for key in ("synopsis", "comment"):
         if attrs.get(key):
             ET.SubElement(element, key).text = attrs[key]
+    if attrs.get("tags"):   # una lista: <tags><line><col>etiqueta</col></line>…</tags>, como la escribe el propio GCstar
+        tags = ET.SubElement(element, "tags")
+        for tag in attrs["tags"].split("\n"):
+            ET.SubElement(ET.SubElement(tags, "line"), "col").text = tag
     ET.indent(element, space=" ")
     return " " + ET.tostring(element, encoding="unicode") + "\n"
 
