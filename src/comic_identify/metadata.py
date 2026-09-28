@@ -85,6 +85,19 @@ def write_batch(items: Iterable[tuple[Path, Mapping[str, str | None]]], log: Pat
     return result
 
 
+def delete_info(path: Path, log: Path, library: Library | None = None) -> bool:
+    """Quita el ComicInfo.xml entero del archivo (no campo a campo, para empezar de cero); False si no tenía ninguno.
+    Se anota en el mismo registro que escribir metadatos, así que se deshace igual (el botón «Deshacer» de Ajustes)."""
+    existing = read_xml(path)
+    if existing is None:
+        return False
+    write_xml(path, None)
+    _append(log, {"batch": uuid.uuid4().hex[:12], "path": str(path), "before": _encode(existing), "after": None})
+    if library is not None:
+        library.refresh_stat(path, {})
+    return True
+
+
 def undo_last(log: Path, library: Library | None = None) -> UndoResult:
     """Deshace el último lote. Un archivo que ya no está, o que se ha vuelto a modificar desde entonces, se deja como
     está (no se pisan cambios posteriores) y se cuenta en `skipped`; un fallo al escribir lo deja en el registro."""

@@ -31,7 +31,6 @@ SOURCES = (
     Source("DC Comics", None, "dc.com", "www.dc.com", DC),
     # Wiki de DC (en inglés): número original, fechas y contenido de cada ejemplar
     Source("DC Database", None, "dc.fandom.com", "dc.fandom.com", DC),
-    Source("Zona Negativa", "https://www.zonanegativa.com/?s={q}", None, "www.zonanegativa.com"),
 )
 NAMES = tuple(source.name for source in SOURCES)
 
@@ -42,6 +41,9 @@ EDITORIAL, USED, STORES = "Editorial", "Segunda mano", "Tiendas"
 SHOP_GROUPS = (EDITORIAL, USED, STORES)
 SHOPS = (
     Source("Panini", "https://www.panini.es/shp_esp_es/catalogsearch/result/?q={q}", None, "www.panini.es", EDITORIAL),
+    # Ivrea vende a través de La Comiquería (su tienda oficial); su propia web no tiene ficha ni precio por tomo
+    Source("Editorial Ivrea", "https://www.lacomiqueria.com/producto/listadobuscar?buscar={q}", None,
+          "www.lacomiqueria.com", EDITORIAL),
     Source("Todocolección", "https://www.todocoleccion.net/buscador?bu={q}", None, "www.todocoleccion.net", USED),
     Source("eBay.es", "https://www.ebay.es/sch/i.html?_nkw={q}", None, "www.ebay.es", USED),
     Source("Wallapop", "https://es.wallapop.com/search?keywords={q}", None, "es.wallapop.com", USED),

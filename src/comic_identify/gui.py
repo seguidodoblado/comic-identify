@@ -55,7 +55,7 @@ from .identify import (
 from .library import Library
 from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key, publisher_slug, short_name, user_logo
 from .logos import NAMES as LOGO_NAMES
-from .metadata import differs, write_batch
+from .metadata import delete_info, differs, write_batch
 from .metadata import undo_last as undo_metadata
 from .metaform import (
     append_block,
@@ -495,14 +495,23 @@ def run_gui(initial_image: Path | None = None) -> None:
             click = Gtk.GestureClick()   # doble clic: la página a la vista, en una ventana grande
             click.connect("pressed", lambda _g, presses, _x, _y: presses == 2 and self._open_viewer())
             self.picture.add_controller(click)
-            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0)
+            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0, hexpand=True)
             self.meta_heading.add_css_class("heading")
+            self.delete_meta_button = icon_button(("edit-delete-symbolic", "user-trash-symbolic"), "Eliminar datos",
+                                                  sensitive=False, tooltip_text=(
+                "Quita el ComicInfo.xml entero de este archivo (el propio archivo no se toca); se puede deshacer con "
+                "«Deshacer» en Ajustes, como cualquier otra escritura de metadatos"))
+            self.delete_meta_button.add_css_class("destructive-action")
+            self.delete_meta_button.connect("clicked", self._delete_meta)
+            meta_header = Gtk.Box(spacing=6)
+            meta_header.append(self.meta_heading)
+            meta_header.append(self.delete_meta_button)
             self.meta_grid = Gtk.Grid(column_spacing=10, row_spacing=2, margin_end=8)
             meta_scroll = Gtk.ScrolledWindow(min_content_height=70, max_content_height=META_MAX_HEIGHT,
                                              propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
             meta_scroll.set_child(self.meta_grid)
             self.meta_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4, visible=False, margin_top=4)
-            self.meta_box.append(self.meta_heading)
+            self.meta_box.append(meta_header)
             self.meta_box.append(meta_scroll)
             cover = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             cover.set_size_request(COVER_WIDTH, -1)   # ancho fijo: una portada es vertical y solo gana con el alto
@@ -673,6 +682,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.image = image
             self._set_pages([])
             self.meta_box.set_visible(False)
+            self.delete_meta_button.set_sensitive(False)
             self.picture.set_tooltip_text("Doble clic para verla más grande")
             if source is not None:
                 Thread(target=self._read_source, args=(source, generation), daemon=True).start()
@@ -706,12 +716,42 @@ def run_gui(initial_image: Path | None = None) -> None:
             if self.source_file is not None:
                 Thread(target=self._read_meta, args=(self.source_file, self._generation), daemon=True).start()
 
+        def _delete_meta(self, _button):
+            """Quita el ComicInfo.xml entero del archivo abierto (no campo a campo): para empezar de cero. Se puede
+            deshacer, como cualquier otra escritura de metadatos, con «Deshacer» en Ajustes."""
+            target = self.source_file
+            if target is None:
+                return
+            self.delete_meta_button.set_sensitive(False)
+
+            def run():
+                library = Library(LIBRARY_DB) if LIBRARY_DB.exists() else None
+                try:
+                    removed = delete_info(target, METADATA_LOG, library)
+                except MetadataError as error:
+                    later(self._meta_deleted, target, None, error)
+                else:
+                    later(self._meta_deleted, target, removed, None)
+            Thread(target=run, daemon=True).start()
+
+        def _meta_deleted(self, target: Path, removed: bool | None, error):
+            if error is not None:
+                self.status.set_text(f"No se pudo eliminar el ComicInfo.xml de {target.name}: {error}")
+            elif removed:
+                self.status.set_text(f"ComicInfo.xml de {target.name} eliminado. «Deshacer» en Ajustes lo recupera.")
+            else:
+                self.status.set_text(f"{target.name} ya no tenía ComicInfo.xml.")
+            self._refresh_series()
+            if target == self.source_file:
+                self._refresh_meta()
+
         def _show_meta(self, source: Path, info: dict, error: str, generation: int):
             if generation != self._generation or source != self.source_file:
                 return
             while (child := self.meta_grid.get_first_child()) is not None:
                 self.meta_grid.remove(child)
             rows = describe_info(info)
+            self.delete_meta_button.set_sensitive(bool(rows))
             if error or not rows:
                 text = f"No se pudo leer: {error}" if error else "Este archivo no tiene ComicInfo.xml."
                 self.meta_grid.attach(Gtk.Label(label=text, xalign=0, wrap=True, css_classes=["dim-label"]), 0, 0, 2, 1)
@@ -895,6 +935,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.image = self.source_file = None
             self._set_pages([])
             self.meta_box.set_visible(False)
+            self.delete_meta_button.set_sensitive(False)
             self.picture.set_tooltip_text(None)
             self.picture.set_paintable(None)
             self.cover_placeholder.set_visible(True)

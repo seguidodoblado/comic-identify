@@ -8,7 +8,7 @@ from test_comicinfo import needs_rar, rar_fixture
 from comic_identify import metadata
 from comic_identify.comicinfo import MetadataError, build_xml, read_info, read_xml, write_xml
 from comic_identify.library import Library
-from comic_identify.metadata import undo_last, write_batch
+from comic_identify.metadata import delete_info, undo_last, write_batch
 
 
 def make_zip(path: Path, info: dict[str, str] | None = None) -> Path:
@@ -69,6 +69,36 @@ def test_undo_restores_the_previous_metadata_or_removes_it(tmp_path):
     assert not log.read_text(encoding="utf-8")
     with pytest.raises(LookupError):
         undo_last(log)
+
+
+def test_delete_info_removes_the_whole_comicinfo_and_can_be_undone(tmp_path):
+    log = tmp_path / "metadata.log"
+    had = make_zip(tmp_path / "had.cbz", {"Series": "Antes", "Writer": "Moore"})
+    original = read_xml(had)
+    assert delete_info(had, log) is True
+    assert read_xml(had) is None and pages(had) == ["01.jpg", "02.jpg"]      # el resto del archivo, intacto
+    result = undo_last(log)
+    assert result.restored == [had] and read_xml(had) == original           # byte a byte
+
+
+def test_delete_info_on_a_file_with_no_comicinfo_does_nothing_and_is_not_logged(tmp_path):
+    log = tmp_path / "metadata.log"
+    fresh = make_zip(tmp_path / "fresh.cbz")
+    assert delete_info(fresh, log) is False
+    assert not log.exists()
+
+
+def test_delete_info_updates_the_library_index(tmp_path):
+    import sqlite3
+    log, library = tmp_path / "metadata.log", Library(tmp_path / "lib.db")
+    had = make_zip(tmp_path / "had.cbz", {"Series": "Antes"})
+    stat = had.stat()
+    with sqlite3.connect(tmp_path / "lib.db") as db:
+        db.execute("INSERT INTO covers (path, mtime, size, hash) VALUES (?, ?, ?, ?)",
+                   (str(had), stat.st_mtime, stat.st_size, b"\x00" * 32))
+    delete_info(had, log, library)
+    with sqlite3.connect(tmp_path / "lib.db") as db:
+        assert db.execute("SELECT size FROM covers WHERE path = ?", (str(had),)).fetchone() == (had.stat().st_size,)
 
 
 def test_undo_only_reverts_the_last_batch(tmp_path):

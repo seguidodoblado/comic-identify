@@ -12,8 +12,6 @@ def _query(url: str) -> dict:
 def test_sites_with_their_own_search_use_it():
     panini = search_url("Panini", "Capitán Marvel", "1")
     assert panini.startswith("https://www.panini.es/shp_esp_es/catalogsearch/result/") and _query(panini) == {"q": ["Capitán Marvel 1"]}
-    zona = search_url("Zona Negativa", "Los Vengadores")
-    assert urlparse(zona).netloc == "www.zonanegativa.com" and _query(zona) == {"s": ["Los Vengadores"]}
 
 
 def test_the_rest_use_a_site_restricted_google_search():
@@ -27,7 +25,6 @@ def test_the_rest_use_a_site_restricted_google_search():
 
 def test_query_is_url_encoded_and_the_number_is_optional():
     assert search_url("Panini", "Patrulla-X años").endswith("q=Patrulla-X+a%C3%B1os")   # ñ codificada
-    assert _query(search_url("Zona Negativa", "  Batman  ", "  "))["s"] == ["Batman"]
 
 
 def test_errors():
@@ -35,7 +32,7 @@ def test_errors():
         search_url("Panini", "   ")
     with pytest.raises(ValueError):
         search_url("Inventada", "Batman")
-    assert len(NAMES) == 9
+    assert len(NAMES) == 8
 
 
 def test_every_source_has_a_host_for_its_icon():
@@ -54,13 +51,13 @@ def test_every_source_belongs_to_a_known_category_and_none_is_left_empty():
 def test_publisher_and_year_narrow_the_search_when_given():
     google = search_url("Tebeosfera", "Capitán Marvel", "1", "Forum", "2000")
     assert _query(google) == {"q": ["site:tebeosfera.com Capitán Marvel 1 Forum 2000"]}
-    assert _query(search_url("Zona Negativa", "Batman", "", "Zinco", "1987"))["s"] == ["Batman Zinco 1987"]
     assert _query(search_url("Panini", "Batman", "5", "", "2012"))["q"] == ["Batman 5 2012"]      # los que faltan se omiten
     assert search_url("Panini", "Batman", "5") == search_url("Panini", "Batman", "5", "", "")     # y son opcionales
 
 
 def test_shops_build_search_urls_for_the_title_number_publisher_and_year():
     from comic_identify.sources import SHOP_GROUPS, SHOPS, shop_url
+    assert _query(shop_url("Editorial Ivrea", "Darwin's Game", "1"))["buscar"] == ["Darwin's Game 1"]
     assert _query(shop_url("Todocolección", "Spiderman", "34", "Panini", "2005")) == {"bu": ["Spiderman 34 Panini 2005"]}
     assert _query(shop_url("eBay.es", "Capitán Marvel", "1"))["_nkw"] == ["Capitán Marvel 1"]
     assert _query(shop_url("Wallapop", "Alpha Flight"))["keywords"] == ["Alpha Flight"]
@@ -69,7 +66,7 @@ def test_shops_build_search_urls_for_the_title_number_publisher_and_year():
     assert _query(shop_url("Amazon.es", "Conan"))["k"] == ["Conan"]
     assert _query(shop_url("Casa del Libro", "Conan"))["q"] == ["Conan"]
     assert _query(shop_url("Panini", "Batman", "5", "", "2012"))["q"] == ["Batman 5 2012"]   # los que faltan se omiten
-    assert {shop.category for shop in SHOPS} == set(SHOP_GROUPS) and len(SHOPS) == 8
+    assert {shop.category for shop in SHOPS} == set(SHOP_GROUPS) and len(SHOPS) == 9
     assert all(shop.host and "/" not in shop.host and "{q}" in shop.template for shop in SHOPS)
 
 
