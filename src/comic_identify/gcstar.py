@@ -34,7 +34,7 @@ ORIGIN_BY_FOLDER = {"europa": "Europeo", "usa": "Americano", "japón": "Manga"}
 # (Blake y Mortimer #1, #2… con volume="1", volume="2"); nuestro Volumen (reinicio de numeración) no tiene hueco
 # propio en GCstar, así que se incluye como texto dentro de `series`.
 FIELD_MAP = {"Writer": "writer", "Penciller": "illustrator", "Inker": "inker", "Colorist": "colourist",
-            "Letterer": "letterer", "Publisher": "publisher", "Web": "webPage"}
+            "Letterer": "letterer", "Web": "webPage"}
 
 
 class GCstarError(Exception):
@@ -128,6 +128,12 @@ def format_date(year: str, month: str, day: str, pattern: str = "%d/%m/%Y") -> s
         return ""
 
 
+def publisher_text(publisher: str, imprint: str) -> str:
+    """«Publicado por» de GCstar: «Editorial - Sello». GCstar no tiene campo de sello, así que va aquí para no
+    perderlo; si falta uno de los dos, se queda solo el otro."""
+    return " - ".join(part for part in (publisher.strip(), imprint.strip()) if part)
+
+
 def series_text(series: str, volume: str) -> str:
     """El nombre de serie que se manda a GCstar: el nuestro, más «Volumen N» si hay un reinicio de numeración."""
     series, volume = series.strip(), volume.strip()
@@ -142,6 +148,7 @@ def build_attrs(fields: Mapping[str, str], gcstar_fields: Mapping[str, str], com
     attrs = {"name": format_name(series, fields.get("Number", ""), fields.get("Title", "")), "series": series,
             "volume": fields.get("Number", "").strip(), "title": fields.get("Title", "").strip(),
             **{gcstar_key: fields.get(our_key, "").strip() for our_key, gcstar_key in FIELD_MAP.items()},
+            "publisher": publisher_text(fields.get("Publisher", ""), fields.get("Imprint", "")),
             "synopsis": fields.get("Summary", "").strip(), "collection": gcstar_fields.get("collection", "").strip(),
             "publishdate": format_date(fields.get("Year", ""), fields.get("Month", ""), fields.get("Day", "")),
             "image": str(image.relative_to(gcs_dir)) if image else "",

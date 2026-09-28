@@ -17,6 +17,7 @@ from comic_identify.gcstar import (
     is_running,
     mirror_stems,
     next_id,
+    publisher_text,
     relative_path,
     series_text,
     suggest_type,
@@ -98,6 +99,20 @@ def test_series_text_adds_volumen_only_when_it_is_a_real_restart():
     assert series_text("Capitán Marvel", "") == "Capitán Marvel"
     assert series_text("Capitán Marvel", "1") == "Capitán Marvel"
     assert series_text("Capitán Marvel", "3") == "Capitán Marvel Volumen 3"
+
+
+def test_publisher_text_combines_editorial_and_sello_without_stray_dashes():
+    assert publisher_text("Planeta DeAgostini", "Forum") == "Planeta DeAgostini - Forum"
+    assert publisher_text("Panini", "") == "Panini"
+    assert publisher_text("", "Forum") == "Forum"
+    assert publisher_text("  ", "  ") == ""
+
+
+def test_build_attrs_puts_editorial_and_sello_together_in_publicado_por():
+    fields = {"Series": "Alpha Flight", "Publisher": "Planeta DeAgostini", "Imprint": "Forum"}
+    attrs = build_attrs(fields, {}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert attrs["publisher"] == "Planeta DeAgostini - Forum"
+    assert "publisher" not in build_attrs({"Series": "X"}, {}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
 
 
 def test_build_attrs_maps_our_fields_to_gcstars_and_number_becomes_volume():
