@@ -1,5 +1,6 @@
 """Interfaz GTK4; coordina la selección de portada y presenta los candidatos."""
 import json
+import os
 import sys
 from pathlib import Path
 from threading import Event, Thread
@@ -42,7 +43,8 @@ from .identify import (
     search_marvel,
 )
 from .library import Library
-from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key
+from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key, publisher_slug, short_name, user_logo
+from .logos import NAMES as LOGO_NAMES
 from .metadata import differs, write_batch
 from .metadata import undo_last as undo_metadata
 from .metaform import (
@@ -78,12 +80,14 @@ from .settings import (
     GCD_DB,
     GCSTAR_LOG,
     LIBRARY_DB,
+    LOGO_DIR,
     METADATA_LOG,
     RENAME_LOG,
     UNIVERSOMARVEL_DB,
     Settings,
 )
 from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
+from .theming import icon_choice, is_dark_theme, theme_variant
 from .umficha import compose_notes
 from .universomarvel import Entry as MarvelEntry
 from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
@@ -114,6 +118,17 @@ META_MAX_HEIGHT = 260   # alto máximo del panel del ComicInfo.xml; si hay más 
 WINDOW_WIDTH = 1500   # ancho por defecto: los siete botones de arriba caben en una línea
 PREVIEW_WIDTH = 520
 ASSISTANT_WIDTH = 760   # el terminal necesita ~80 columnas
+# Fuente de cada resultado -> (web de la que se toma el icono, clase CSS de su color)
+SOURCE_STYLES = {"GCD": (GCD_HOST, "source-gcd"), "Universo Marvel": ("fichas.universomarvel.com", "source-marvel"),
+                 "ComicVine": (COMICVINE_HOST, "source-comicvine")}
+CSS = b"""
+.source-chip { color: white; font-weight: bold; font-size: 0.85em; border-radius: 9px; padding: 1px 9px; }
+.source-gcd { background-color: #7e57c2; }
+.source-marvel { background-color: #d32f2f; }
+.source-comicvine { background-color: #2e7d32; }
+.publisher-badge { background-color: alpha(currentColor, 0.12); border-radius: 9px; padding: 1px 9px; font-size: 0.85em; }
+"""
+RESTORE_VARIABLE = "COMIC_IDENTIFY_RESTORE"   # estado que pasa el proceso que se reinicia por el tema
 LIVE_DELAY_MS = 300   # pausa al teclear antes de buscar en GCD
 INITIAL_STATUS = "Escribe un título para buscar, o abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada."
 
@@ -139,10 +154,13 @@ def run_gui(initial_image: Path | None = None) -> None:
         """Terminal embebible para GTK4 (gir1.2-vte-3.91), comprobado sin cargarlo."""
         return "3.91" in gi.Repository.get_default().enumerate_versions("Vte")
 
+    theme_state = {"dark": False, "system": ""}   # modo elegido y tema GTK que tenía el sistema al arrancar
+
     def pick_icon(*names: str) -> str:
-        """El primer icono simbólico de la lista que exista en el tema del usuario ('' si ninguno)."""
+        """El primer icono de la lista que exista en el tema del usuario ('' si ninguno): simbólico en el modo oscuro y
+        de color en el claro (ver theming.icon_choice)."""
         theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-        return next((name for name in names if theme.has_icon(name)), "")
+        return icon_choice(names, theme_state["dark"], theme.has_icon)
 
     def icon_button(icons: tuple[str, ...], text: str, **properties):
         """Botón con un icono del tema y su texto; `set_icon_button` cambia ambos en caliente."""
@@ -198,6 +216,10 @@ def run_gui(initial_image: Path | None = None) -> None:
         def __init__(self, app):
             super().__init__(application=app, title="Comic Identify")
             self.set_default_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+            provider = Gtk.CssProvider()
+            provider.load_from_data(CSS)
+            Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider,
+                                                      Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             self.settings = Settings.load()
             self.image: Path | None = None
             self.busy = False
@@ -229,6 +251,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             notebook.append_page(self._settings_page(), Gtk.Label(label="Ajustes"))
             self.set_child(notebook)
             self.connect("close-request", self._auto_backup)
+            GLib.idle_add(lambda: (self._restore_session(), GLib.SOURCE_REMOVE)[1])
             self._refresh_library()
             Thread(target=self._load_icons, daemon=True).start()
             paste = Gtk.Shortcut(trigger=Gtk.ShortcutTrigger.parse_string("<Control>v"),
@@ -244,7 +267,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         # ---- Iconos de las webs ------------------------------------------------------------
         def _icon(self, host: str, size: int):
-            image = Gtk.Image(icon_name=FALLBACK_ICON, pixel_size=size)   # reserva si la web no da su icono
+            image = Gtk.Image(icon_name=pick_icon(FALLBACK_ICON), pixel_size=size)   # reserva si la web no da su icono
             self.icon_widgets.setdefault(host, []).append(image)
             if (cached := icon_file(host, self.icon_dir)) is not None:
                 image.set_from_file(str(cached))
@@ -452,7 +475,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             cover.set_size_request(COVER_WIDTH, -1)   # ancho fijo: una portada es vertical y solo gana con el alto
             for widget in (self.cover_overlay, cover_actions, self.page_nav, self.meta_box):   # la portada se queda con el alto que sobra
                 cover.append(widget)
-            body = Gtk.Box(spacing=12)
+            body = Gtk.Box(spacing=12, margin_end=12)   # aire entre esto y el panel de la derecha
             body.append(cover)
             body.append(side)
             paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL, vexpand=True, shrink_start_child=False,
@@ -2053,7 +2076,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.assistant_back.connect("clicked", lambda _b: self._open_preview(
                 "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
             self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label="Abrir en el navegador")
-            close = Gtk.Button(icon_name="window-close-symbolic", tooltip_text="Cerrar el panel")
+            close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text="Cerrar el panel")
             close.connect("clicked", self._close_preview)
             for widget in (self.preview_title, self.preview_link, self.assistant_back, close):
                 header.append(widget)
@@ -2262,18 +2285,34 @@ def run_gui(initial_image: Path | None = None) -> None:
             Thread(target=run, daemon=True).start()
 
         def _publisher_logo(self, candidate: Candidate):
-            """El logotipo de la editorial de la fila (Forum, Panini, Vértice), en un hueco fijo a la derecha; None si
-            la editorial no es una de las conocidas."""
-            key = logo_key(candidate.publisher, candidate.brand, candidate.extra.get("index_publisher", ""))
-            if key is None:
+            """La marca de la editorial de la fila, en un hueco fijo a la derecha: su logotipo (los de la web de fichas o
+            uno que haya puesto el usuario) o, si no hay ninguno, una etiqueta con su nombre. Solo en las filas de GCD
+            y Universo Marvel; las demás no tienen editorial."""
+            if candidate.source not in ("GCD", "Universo Marvel"):
                 return None
-            slot = Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.CENTER,
-                           tooltip_text={"forum": "Forum", "panini": "Panini", "vertice": "Vértice"}[key])
+            name = candidate.publisher.strip()
+            key = logo_key(candidate.publisher, candidate.brand, candidate.extra.get("index_publisher", ""))
+            if key is None and not name:
+                return None
+            slot = Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
             slot.set_size_request(*LOGO_BOX)
-            # sin can_shrink y con el archivo ya reducido: se ve del tamaño exacto (GTK no lo reescala a su gusto)
-            logo = Gtk.Picture(can_shrink=False, hexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
+            path = (logo_file(key, self.logo_dir, LOGO_DIR) if key is not None
+                    else user_logo((publisher_slug(name),), LOGO_DIR))
+            if key is None and path is None:   # editorial sin logotipo: su nombre, para que ninguna fila quede sin marca
+                slug = publisher_slug(name)
+                slot.append(Gtk.Label(label=short_name(name), hexpand=True, halign=Gtk.Align.END, ellipsize=Pango.EllipsizeMode.END,
+                                      max_width_chars=16, css_classes=["publisher-badge"], tooltip_text=(
+                    f"{name}\nPara poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}")))
+                return slot
+            slot.set_tooltip_text(LOGO_NAMES.get(key, name))
+            custom = path is not None and path.parent == LOGO_DIR   # el del usuario puede ser de cualquier tamaño: se ajusta
+            # los descargados van ya reducidos: sin can_shrink se ven del tamaño exacto (GTK no los reescala a su gusto)
+            logo = Gtk.Picture(can_shrink=custom, hexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
+            if custom:
+                logo.set_content_fit(Gtk.ContentFit.CONTAIN)
+                logo.set_size_request(*LOGO_BOX)
             slot.append(logo)
-            if (path := logo_file(key, self.logo_dir)) is not None:
+            if path is not None:
                 logo.set_filename(str(path))
             else:
                 self.logo_widgets.setdefault(key, []).append(logo)
@@ -2292,9 +2331,17 @@ def run_gui(initial_image: Path | None = None) -> None:
                     pass
             text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, hexpand=True, valign=Gtk.Align.CENTER)
             title = Gtk.Label(xalign=0, wrap=True)
-            title.set_markup(f"<b>{GLib.markup_escape_text(candidate.title)}</b>  "
-                             f"<small>{candidate.source}</small>")
-            text.append(title)
+            title.set_markup(f"<b>{GLib.markup_escape_text(candidate.title)}</b>")
+            head = Gtk.Box(spacing=8)
+            head.append(title)
+            if (style := SOURCE_STYLES.get(candidate.source)) is not None:   # icono de la web y etiqueta de su color
+                host, css_class = style
+                head.append(self._icon(host, 16))
+                head.append(Gtk.Label(label=candidate.source, valign=Gtk.Align.CENTER,
+                                      css_classes=["source-chip", css_class]))
+            else:
+                head.append(Gtk.Label(label=candidate.source, valign=Gtk.Align.CENTER, css_classes=["dim-label"]))
+            text.append(head)
             if candidate.subtitle:
                 text.append(Gtk.Label(label=candidate.subtitle, xalign=0, wrap=True))
             if candidate.similarity is not None:
@@ -2568,6 +2615,22 @@ def run_gui(initial_image: Path | None = None) -> None:
                                           halign=Gtk.Align.START), self.gcd_button, self.gcd_info, attribution):
                 page.append(widget)
             self._refresh_gcd()
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Tema: claro (iconos de color de tu tema) u oscuro (iconos simbólicos). Se recuerda al reiniciar; cambiarlo "
+                "reinicia la aplicación conservando el cómic abierto y los campos.")))
+            theme_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
+            self.theme_buttons = {}
+            for dark, text, icons in ((False, "Claro", ("weather-clear",)), (True, "Oscuro", ("weather-clear-night",))):
+                button = icon_button(icons, text)
+                button.connect("clicked", lambda _b, d=dark: self._set_theme(d))
+                self.theme_buttons[dark] = button
+                theme_buttons.append(button)
+            self.theme_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (theme_buttons, self.theme_info):
+                page.append(widget)
+            self._refresh_theme_info()
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
@@ -2882,6 +2945,40 @@ def run_gui(initial_image: Path | None = None) -> None:
             else:
                 self.gcd_info.set_text("Todavía no has importado el volcado de GCD.")
 
+        def _refresh_theme_info(self):
+            mode = "oscuro" if theme_state["dark"] else "claro"
+            origin = "elegido" if self.settings.dark_mode is not None else "el del sistema"
+            self.theme_info.set_text(f"Tema actual: {mode} ({origin}).")
+            for dark, button in self.theme_buttons.items():
+                button.set_sensitive(dark != theme_state["dark"])
+
+        def _set_theme(self, dark: bool):
+            """Guarda el tema y reinicia el proceso para aplicarlo (Cinnamon/Mint no repinta una ventana ya presentada),
+            con el mismo cómic abierto y los mismos campos."""
+            if self.indexing:
+                self.theme_info.set_text("Hay una indexación en marcha: espera a que termine para cambiar el tema.")
+                return
+            self.settings.dark_mode = dark
+            self.settings.save()
+            state = {"fields": list(self._fields()), "file": str(self.source_file) if self.source_file else "",
+                     "page": self.notebook.get_current_page()}
+            os.execve("/proc/self/exe", sys.orig_argv, {**os.environ, RESTORE_VARIABLE: json.dumps(state)})
+
+        def _restore_session(self):
+            """Tras reiniciar por un cambio de tema: el cómic y los campos que había."""
+            raw = os.environ.pop(RESTORE_VARIABLE, "")
+            if not raw:
+                return
+            try:
+                state = json.loads(raw)
+            except ValueError:
+                return
+            title, number, publisher, year = (list(state.get("fields", [])) + ["", "", "", ""])[:4]
+            self._set_fields(str(title), str(number), str(publisher), str(year))
+            if state.get("file") and Path(state["file"]).exists():
+                self._load(Path(state["file"]))
+            self.notebook.set_current_page(int(state.get("page", 0)))
+
         def _refresh_marvel(self):
             index = UniversoMarvelIndex(UNIVERSOMARVEL_DB)
             if index.is_ready():
@@ -2965,6 +3062,15 @@ def run_gui(initial_image: Path | None = None) -> None:
         def __init__(self):
             # HANDLES_OPEN: un archivo pasado a una segunda ejecución llega a la ventana ya abierta.
             super().__init__(application_id="com.example.ComicIdentify", flags=Gio.ApplicationFlags.HANDLES_OPEN)
+
+        def do_startup(self):
+            Gtk.Application.do_startup(self)
+            gtk_settings = Gtk.Settings.get_default()
+            theme_state["system"] = gtk_settings.get_property("gtk-theme-name")
+            chosen = Settings.load().dark_mode
+            theme_state["dark"] = is_dark_theme(theme_state["system"]) if chosen is None else chosen
+            if chosen is not None:   # antes de presentar la ventana: en caliente Cinnamon no repinta
+                gtk_settings.set_property("gtk-theme-name", theme_variant(theme_state["system"], chosen))
 
         def _window(self):
             windows = self.get_windows()
