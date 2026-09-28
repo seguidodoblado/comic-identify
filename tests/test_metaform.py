@@ -104,3 +104,25 @@ def test_describe_info_orders_translates_and_groups_the_date_and_category():
     assert describe_info({"Year": "2000", "Day": "7"}) == [("Fecha", "2000")]        # un día suelto no significa nada
     assert describe_info({"Year": "2000", "Month": "3", "Day": "7"}) == [("Fecha", "2000-03-07")]
     assert describe_info({"Month": "3"}) == []
+
+
+def test_file_changes_adds_the_counted_pages_and_one_issue_extras_without_overriding_anything():
+    from comic_identify.metaform import file_changes
+    changes = file_changes({"Series": "X"}, "", "3", "T", "", {}, pages=24, extra={"GTIN": " 977000559000400001 ",
+                                                                                     "Title": "otro", "Empty": ""})
+    assert changes["PageCount"] == "24" and changes["GTIN"] == "977000559000400001"
+    assert changes["Title"] == "T"                               # lo que ya hay en el formulario manda sobre `extra`
+    assert "Empty" not in changes
+    assert "PageCount" not in file_changes({}, "", "", "", "", {}, pages=0)   # un archivo sin páginas legibles: no se inventa
+    assert "GTIN" not in file_changes({}, "", "", "", "", {})
+
+
+def test_append_block_goes_below_existing_notes_once():
+    from comic_identify.metaform import append_block
+    block = "Contenido USA:\n- A #1: https://x/usa/a.html\nComentarios de la edici\xf3n:\n- Algo"
+    once = append_block("Contenido original: 1985-1986", block)
+    assert once == "Contenido original: 1985-1986\n" + block                   # debajo, en l\xednea aparte
+    assert append_block(once, block) == once                                  # elegir la misma ficha otra vez no duplica
+    assert append_block("", block) == block and append_block("  ", block) == block
+    assert append_block("Mi nota", "") == "Mi nota" and append_block("", "") == ""
+    assert append_block("Mi nota\n" + block + "\nY otra cosa mía", block).count("Contenido USA:") == 1

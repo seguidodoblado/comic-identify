@@ -93,6 +93,10 @@ def suggest_values(candidate) -> Values:
                       contenido=edition if flag == FLAGS["us"] else "",   # una edición 🇺🇸 es su propio original
                       editorial=candidate.publisher.strip(), sello=candidate.brand.split(";")[0].strip(),
                       numero=candidate.number)
+    if candidate.source == "Universo Marvel":   # una edición española: el año es el de la edición
+        return Values(nombre=candidate.series, volumen=candidate.extra.get("Volume", ""), bandera=FLAGS["es"],
+                      edicion=candidate.year, editorial=candidate.publisher, sello=candidate.brand,
+                      numero=candidate.number)
     if candidate.source == "ComicVine":
         return Values(nombre=candidate.series, bandera=FLAGS["us"], contenido=candidate.year,
                       edicion=candidate.year, numero=candidate.number)

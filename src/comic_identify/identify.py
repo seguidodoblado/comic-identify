@@ -10,12 +10,24 @@ from .covers import read_cover, thumbnail_bytes
 from .gcd import GcdHit, GcdIndex, fold
 from .hashing import dhash_bytes, dhash_file, similarity
 from .library import Library
+from .umficha import Ficha, SeriesIssue, edition_notes
+from .universomarvel import (
+    BASE,
+    EDITION_BY_PUBLISHER,
+    Entry,
+    UniversoMarvelIndex,
+    split_ficha_title,
+    split_volume,
+)
 
 # Similitud del dHash a partir de la cual se considera la misma portada. Sin calibrar
 # con portadas reales todavía: ajustar tras probar con la colección.
 MATCH_THRESHOLD = 0.80
 MAX_VOLUMES = 3
 MAX_GCD = 12
+MAX_MARVEL = 8
+MARVEL_METADATA = ("Volume", "Year", "Month", "Web", "Translator", "Letterer", "CoverArtist")   # por serie o lote
+MARVEL_PER_ISSUE = ("GTIN", "Title", "NotesBlock")   # de un solo ejemplar: solo al etiquetar un archivo suelto
 
 Progress = Callable[[str], None]
 
@@ -23,7 +35,7 @@ Progress = Callable[[str], None]
 @dataclass
 class Candidate:
     title: str
-    source: str                     # "Mi colección" | "ComicVine" | "GCD"
+    source: str                     # "Mi colección" | "ComicVine" | "GCD" | "Universo Marvel"
     similarity: float | None = None
     subtitle: str = ""
     url: str = ""                   # ficha en ComicVine
@@ -40,6 +52,7 @@ class Candidate:
     country: str = ""
     years: str = ""
     series_id: int | None = None    # serie en GCD (para el nombre de la carpeta)
+    extra: dict[str, str] = field(default_factory=dict)   # Universo Marvel: campos de ComicInfo de la ficha (añadido al final)
 
     @property
     def is_match(self) -> bool:
@@ -48,7 +61,7 @@ class Candidate:
     @property
     def rank(self) -> tuple[int, float]:
         """Orden: código de barras exacto, portada parecida, texto de GCD y el resto."""
-        tier = 0 if self.exact else 1 if self.is_match else 2 if self.source == "GCD" else 3
+        tier = 0 if self.exact else 1 if self.is_match else 2 if self.source in ("GCD", "Universo Marvel") else 3
         return tier, -(self.similarity or 0)
 
 
@@ -89,9 +102,46 @@ def search_gcd(gcd: GcdIndex, text: str, number: str = "", publisher: str = "",
     return [_gcd_candidate(hit) for hit in gcd.search(text, number, publisher=publisher, year=year)][:MAX_GCD]
 
 
+def _marvel_candidate(entry: Entry) -> Candidate:
+    """Una serie del catálogo (aún sin número): al elegirla con un número escrito se consulta su ficha."""
+    editorial, brand = EDITION_BY_PUBLISHER.get(entry.publisher, (entry.publisher, ""))
+    name, volume = split_volume(entry.title)
+    where = " · ".join(part for part in (entry.publisher, entry.section) if part)
+    return Candidate(entry.title, "Universo Marvel", subtitle=where, url=entry.url, series=name, publisher=editorial,
+                     brand=brand, country="es", extra={"level": "series", "Volume": volume,
+                                                       "page": entry.page, "index_publisher": entry.publisher,
+                                                       "section": entry.section})
+
+
+def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Candidate:
+    """El número concreto de una serie, a partir de su ficha: con lo que un ejemplar lleva de verdad (fecha, páginas,
+    precio, créditos de la edición) y los campos de ComicInfo que de ahí salen."""
+    series_title, number = split_ficha_title(ficha.title)
+    name, volume = split_volume(series_title if number else entry.title)
+    number = number or issue.label
+    editorial, brand = EDITION_BY_PUBLISHER.get(entry.publisher, (entry.publisher, ""))
+    amount, currency = ficha.price
+    details = [ficha.date_text, f"{ficha.pages} págs." if ficha.pages else "", f"{amount} {currency}" if amount else "",
+               ficha.format, ficha.comic_title]
+    extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": entry.url,
+             "Translator": ficha.credit("Traducción"), "Letterer": ficha.credit("Rotulación"),
+             "CoverArtist": ficha.cover_credits, "GTIN": ficha.isbn or ficha.barcode, "Title": ficha.comic_title,
+             "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE), "level": "issue", "page": issue.page,
+             "index_publisher": entry.publisher}
+    return Candidate(f"{name} #{number}" if number else name, "Universo Marvel", subtitle=" · ".join(d for d in details if d),
+                     url=BASE + issue.page, series=name, issue_name=ficha.comic_title, number=number,
+                     year=str(ficha.year or ""), publisher=editorial, brand=brand, country="es", extra=extra)
+
+
+def search_marvel(index: UniversoMarvelIndex, text: str, publisher: str = "") -> list[Candidate]:
+    """Series del catálogo de Universo Marvel (índice local) cuyo título encaja; sin números ni portadas."""
+    return [_marvel_candidate(entry) for entry in index.search(text, limit=MAX_MARVEL, publisher=publisher)]
+
+
 def identify(image: Path, library: Library | None, client: ComicVineClient | None,
              query: str = "", issue_number: str = "", progress: Progress = lambda _: None,
-             gcd: GcdIndex | None = None, publisher: str = "", year: str = "") -> Outcome:
+             gcd: GcdIndex | None = None, publisher: str = "", year: str = "",
+             marvel: UniversoMarvelIndex | None = None) -> Outcome:
     """Identifica una portada. El título lo escribe el usuario: el OCR no lee los logotipos de cómic."""
     outcome = Outcome(query=query)
     variants = dhash_file(image)
@@ -114,7 +164,9 @@ def identify(image: Path, library: Library | None, client: ComicVineClient | Non
     if gcd is not None:
         progress("Consultando Grand Comics Database…")
         _add_gcd(gcd, query, barcode, outcome, publisher, year)
-    if client is None and gcd is None:
+    if marvel is not None and query:
+        outcome.candidates += search_marvel(marvel, query, publisher)
+    if client is None and gcd is None and marvel is None:
         outcome.notes.append("Configura la clave de ComicVine o importa el volcado de GCD (pestaña Ajustes).")
     elif not query:
         outcome.notes.append("Escribe el título del cómic para buscarlo.")

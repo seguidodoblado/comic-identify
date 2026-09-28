@@ -30,11 +30,20 @@ from .gcstar import (
 from .gcstar import transfer as gcstar_transfer
 from .gcstar import undo_last as undo_gcstar
 from .icons import ensure_icons, icon_file
-from .identify import Candidate, identify, search_gcd
+from .identify import (
+    MARVEL_METADATA,
+    MARVEL_PER_ISSUE,
+    Candidate,
+    identify,
+    marvel_issue_candidate,
+    search_gcd,
+    search_marvel,
+)
 from .library import Library
 from .metadata import differs, write_batch
 from .metadata import undo_last as undo_metadata
 from .metaform import (
+    append_block,
     common_value,
     describe_info,
     file_changes,
@@ -62,8 +71,19 @@ from .naming import (
 )
 from .originals import content_years, find_volumes
 from .renamer import rename_file, rename_series, undo_last
-from .settings import GCD_DB, GCSTAR_LOG, LIBRARY_DB, METADATA_LOG, RENAME_LOG, Settings
+from .settings import (
+    GCD_DB,
+    GCSTAR_LOG,
+    LIBRARY_DB,
+    METADATA_LOG,
+    RENAME_LOG,
+    UNIVERSOMARVEL_DB,
+    Settings,
+)
 from .sources import GROUPS, SOURCES, search_url
+from .universomarvel import Entry as MarvelEntry
+from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
+from .universomarvel import build_index as build_marvel_index
 
 COMICVINE_API_URL = "https://comicvine.gamespot.com/api/"
 GCD_DOWNLOAD_URL = "https://www.comics.org/download/"
@@ -142,6 +162,34 @@ def run_gui(initial_image: Path | None = None) -> None:
             return GLib.SOURCE_REMOVE
         GLib.idle_add(call)
 
+    class NotesBox(Gtk.ScrolledWindow):
+        """Texto de varias líneas con la interfaz mínima de un Gtk.Entry (get_text, set_text y la señal «changed»)."""
+
+        def __init__(self, text: str = "", tooltip: str = ""):
+            super().__init__(hexpand=True, has_frame=True, min_content_height=88, max_content_height=200,
+                             propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+            if tooltip:
+                self.set_tooltip_text(tooltip)
+            self.view = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR, top_margin=4, bottom_margin=4, left_margin=6,
+                                     right_margin=6)
+            self.buffer = self.view.get_buffer()
+            self.buffer.set_text(text)
+            self.set_child(self.view)
+
+        def get_text(self) -> str:
+            return self.buffer.get_text(self.buffer.get_start_iter(), self.buffer.get_end_iter(), False)
+
+        def set_text(self, text: str):
+            self.buffer.set_text(text)
+
+        def connect(self, signal, callback, *args):
+            if signal == "changed":
+                return self.buffer.connect("changed", lambda _buffer: callback(self, *args))
+            return super().connect(signal, callback, *args)
+
+        def grab_focus(self):
+            return self.view.grab_focus()
+
     class Window(Gtk.ApplicationWindow):
         def __init__(self, app):
             super().__init__(application=app, title="Comic Identify")
@@ -163,6 +211,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.icon_dir = self.cache_dir / "icons"
             self.source_file: Path | None = None   # CBR/CBZ abierto: el que se puede normalizar
             self.selected: Candidate | None = None
+            self._marvel_request = 0   # descarta la respuesta de una ficha si ya se eligió otra cosa
             self._generation = 0   # sube al limpiar: descarta los resultados de una búsqueda ya en marcha
             self.assistant_box = None   # página del panel con el terminal, mientras hay sesión
             self.assistant_terminal = None
@@ -765,7 +814,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 outcome = identify(image, library, client, query, number,
                                    progress=lambda message: later(self._progress, message, generation), gcd=gcd,
-                                   publisher=publisher, year=year)
+                                   publisher=publisher, year=year, marvel=self._marvel())
             except Exception as error:  # noqa: BLE001 - se muestra al usuario, no debe cerrar la app
                 later(self._failed, error, generation)
             else:
@@ -801,7 +850,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.status.set_text(" · ".join(summary))
 
         def _add_panel_hint(self, summary, candidates):
-            if any(c.source == "ComicVine" or (c.source == "GCD" and webkit_available()) for c in candidates):
+            if any(c.source == "ComicVine" or (c.source in ("GCD", "Universo Marvel") and webkit_available())
+                   for c in candidates):
                 summary.append("Haz clic en una sugerencia para ver su ficha a la derecha.")
 
         def _show_candidates(self, candidates):
@@ -816,6 +866,11 @@ def run_gui(initial_image: Path | None = None) -> None:
         @staticmethod
         def _gcd():
             index = GcdIndex(GCD_DB)
+            return index if index.is_ready() else None
+
+        @staticmethod
+        def _marvel():
+            index = UniversoMarvelIndex(UNIVERSOMARVEL_DB)
             return index if index.is_ready() else None
 
         def _set_fields(self, query=None, number=None, publisher=None, year=None):
@@ -836,19 +891,22 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _live_search(self):
             self._live_timer = 0
             query, number, publisher, year = self._fields()
-            gcd = self._gcd()
-            if gcd is None:
-                self.status.set_text("Importa el volcado de GCD (pestaña Ajustes) para buscar mientras escribes; "
-                                     "«Buscar en ComicVine» consulta ComicVine.")
+            gcd, marvel = self._gcd(), self._marvel()
+            if gcd is None and marvel is None:
+                self.status.set_text("Importa el volcado de GCD o descarga el índice de Universo Marvel (pestaña "
+                                     "Ajustes) para buscar mientras escribes; «Buscar en ComicVine» consulta ComicVine.")
             elif len(query) < 2:
                 self._show_candidates(self.library_matches)
             else:
-                hits = search_gcd(gcd, query, number, publisher, year)
-                self._show_candidates(self.library_matches + hits)
-                summary = [f"{len(hits)} sugerencia(s) de GCD para «{query}»" if hits
-                           else f"Sin resultados en GCD para «{query}»"]
+                hits = search_gcd(gcd, query, number, publisher, year) if gcd is not None else []
+                marvel_hits = search_marvel(marvel, query, publisher) if marvel is not None else []
+                self._show_candidates(self.library_matches + hits + marvel_hits)
+                found = ([f"{len(hits)} de GCD"] if gcd is not None else []) + (
+                    [f"{len(marvel_hits)} de Universo Marvel"] if marvel is not None else [])
+                summary = [f"Sugerencias para «{query}»: {', '.join(found)}" if hits or marvel_hits
+                           else f"Sin resultados para «{query}»"]
                 summary.append("«Buscar en ComicVine» lo consulta también.")
-                self._add_panel_hint(summary, hits)
+                self._add_panel_hint(summary, hits + marvel_hits)
                 self.status.set_text(" · ".join(summary))
             return GLib.SOURCE_REMOVE
 
@@ -947,9 +1005,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             box.append(Gtk.Label(label="Campos propios de GCstar (se sugiere lo que ya usas en tu colección):",
                                  xalign=0))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
-            fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección"}
+            fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección",
+                      "cost": "Coste", "isbn": "ISBN"}
             prefill = {"category": category_of(info.get("Tags", "")),   # ya la conocemos por nuestra propia Categoría
                       "type": origin}   # Europeo/Americano/Manga, según la carpeta de Mi colección (ver ORIGIN_BY_FOLDER)
+            if self.selected is not None and self.selected.source == "Universo Marvel":
+                # el precio no existe en ComicInfo.xml: solo se conoce por la ficha elegida (y se puede corregir aquí)
+                prefill["cost"] = self.selected.extra.get("Cost", "")
+                prefill["isbn"] = self.selected.extra.get("ISBN", "")
             gcstar_entries: dict[str, Gtk.Entry] = {}
             for row, (key, label) in enumerate(fields.items()):
                 entry = Gtk.Entry(hexpand=True, text=prefill.get(key, ""))
@@ -995,6 +1058,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 Thread(target=work, daemon=True).start()
             cancel.connect("clicked", lambda _b: window.close())
             apply.connect("clicked", do_transfer)
+            self.gcstar_dialog = {"window": window, "entries": gcstar_entries, "apply": apply,
+                                  "problem": problem}   # para las pruebas
             window.present()
 
         def _gcstar_transfer_failed(self, window, cancel, apply, problem, message: str):
@@ -1521,31 +1586,48 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.status.set_text(f"Leyendo los metadatos de {len(files)} archivo(s)…")
 
             def read():   # en otro hilo: un RAR se lee lanzando `unrar`
-                infos = []
+                infos, counts = [], {}
                 for path in files:
                     try:
                         infos.append((read_info(path), ""))
                     except MetadataError as error:
                         infos.append((None, str(error)))
-                later(self._metadata_loaded, where, files, infos)
+                    counts[path] = len(list_pages(path))   # las páginas del archivo real, no las de ninguna ficha
+                later(self._metadata_loaded, where, files, infos, counts)
             Thread(target=read, daemon=True).start()
 
-        def _metadata_loaded(self, where: Path, files: list[Path], infos: list):
+        def _metadata_loaded(self, where: Path, files: list[Path], infos: list, counts: dict):
             self.status.set_text(f"Metadatos leídos de {len(files)} archivo(s).")
             gcd = self._gcd()
             info = None
             if gcd is not None and self.selected is not None and self.selected.series_id:
                 info = gcd.series_info(self.selected.series_id)
             title, _number, publisher, _year = self._fields()
+            catalog = self.selected is not None and self.selected.source == "Universo Marvel"
             values = merge_values(parse_name(where.stem if where.is_file() else where.name),
+                                  suggest_values(self.selected) if catalog else
                                   series_values(info) if info is not None else None, title)
-            self._open_metadata_dialog(where, files, infos, values, publisher, info)
+            extra, per_issue = {}, {}
+            if catalog:
+                publisher = publisher or self.selected.publisher
+                # Mes, traducción, rotulación… son de UN ejemplar: solo se ofrecen si se etiqueta un único archivo
+                extra = {key: self.selected.extra[key] for key in MARVEL_METADATA
+                         if len(files) == 1 and self.selected.extra.get(key)}
+                per_issue = {key: self.selected.extra[key] for key in MARVEL_PER_ISSUE
+                             if len(files) == 1 and self.selected.extra.get(key)}
+                if self.selected.brand:
+                    extra["Imprint"] = self.selected.brand
+            self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue)
 
         def _open_metadata_dialog(self, where: Path, files: list[Path], infos: list, values: Values, publisher: str,
-                                  gcd_info):
+                                  gcd_info, extra=None, counts=None, per_issue=None):
             good = [i for i, _error in infos if i is not None]
-            texts, baseline = initial_form(good, suggest_fields(values, publisher, gcd_info))
-            window = Gtk.Window(title="Metadatos", transient_for=self, modal=True, default_width=960, default_height=700)
+            suggested = suggest_fields(values, publisher, gcd_info)
+            suggested.update({key: value for key, value in (extra or {}).items() if value})   # la ficha manda
+            texts, baseline = initial_form(good, suggested)
+            if (per_issue or {}).get("NotesBlock"):   # ejemplares USA y comentarios de la ficha, bajo lo que ya haya
+                texts["Notes"] = append_block(texts.get("Notes", ""), per_issue["NotesBlock"])
+            window = Gtk.Window(title="Metadatos", transient_for=self, modal=True, default_width=960, default_height=780)
             outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
                             margin_start=14, margin_end=14)
             window.set_child(outer)
@@ -1579,12 +1661,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                     value, absent = common_value(good, key)
                     varied = not value and not absent
                     narrow = key in ("Month", "Day")
-                    entry = Gtk.Entry(text=texts[key], hexpand=not narrow, width_chars=4 if narrow else -1,
-                                      placeholder_text=(
-                        "(distinto en cada archivo: se deja como está)" if varied else hint))
+                    shown = "(distinto en cada archivo: se deja como está)" if varied else hint
+                    if key == "Notes":   # varias líneas: contenido original, ejemplares USA y comentarios de la edición
+                        entry = NotesBox(texts[key], shown)
+                    else:
+                        entry = Gtk.Entry(text=texts[key], hexpand=not narrow, width_chars=4 if narrow else -1,
+                                          placeholder_text=shown)
                     entries[key] = entry
-                    grid.attach(Gtk.Label(label=label, xalign=0), index * 2, row, 1, 1)
-                    span = 3 if len(keys) == 1 and key in ("Web", "Notes") else 1
+                    grid.attach(Gtk.Label(label=label, xalign=0, yalign=0 if key == "Notes" else 0.5),
+                                index * 2, row, 1, 1)
+                    span = 7 if key == "Notes" else 3 if len(keys) == 1 and key == "Web" else 1
                     grid.attach(entry, index * 2 + 1, row, span, 1)
             box.append(grid)
             note = Gtk.Label(xalign=0, wrap=True, label=(
@@ -1596,8 +1682,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             box.append(Gtk.Label(label="Créditos (se aplican a todos los archivos del lote):", xalign=0))
             credit_labels = {"Writer": ("Guion", "quien escribe"), "Penciller": ("Lápiz", "quien dibuja"),
                              "Inker": ("Tinta", "quien entinta"), "Colorist": ("Color", "quien colorea"),
-                             "Letterer": ("Rotulación", "quien rotula"), "CoverArtist": ("Portada", "quien dibuja la portada")}
-            credit_layout = (("Writer", "Penciller"), ("Inker", "Colorist"), ("Letterer", "CoverArtist"))
+                             "Letterer": ("Rotulación", "quien rotula"), "CoverArtist": ("Portada", "quien dibuja la portada"),
+                             "Translator": ("Traducción", "quien traduce")}
+            credit_layout = (("Writer", "Penciller", "Inker"), ("Colorist", "Letterer", "CoverArtist"),
+                             ("Translator",))
             credit_grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             for row, keys in enumerate(credit_layout):
                 for index, key in enumerate(keys):
@@ -1637,7 +1725,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                                  width_chars=20, max_width_chars=28, tooltip_text=error or str(path))
                 number_entry = Gtk.Entry(text=number, width_chars=5, placeholder_text="Nº",
                                          tooltip_text="Número de ejemplar (se toma del nombre del archivo)")
-                title_entry = Gtk.Entry(text=(info or {}).get("Title", ""), width_chars=16, hexpand=True,
+                title_entry = Gtk.Entry(text=(info or {}).get("Title", "") or (per_issue or {}).get("Title", ""),
+                                        width_chars=16, hexpand=True,
                                         placeholder_text="Título del ejemplar (opcional)")
                 summary_entry = Gtk.Entry(text=(info or {}).get("Summary", ""), width_chars=16, hexpand=True,
                                           placeholder_text="Resumen del ejemplar (opcional)")
@@ -1646,7 +1735,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                     line.append(widget)
                 listing.append(line)
                 rows.append({"path": path, "info": info, "error": error, "include": include, "number": number_entry,
-                             "title": title_entry, "summary": summary_entry, "state": state_label, "changes": None})
+                             "title": title_entry, "summary": summary_entry, "state": state_label, "changes": None,
+                             "pages": (counts or {}).get(path, 0)})
             scroll = Gtk.ScrolledWindow(min_content_height=140, max_content_height=320, propagate_natural_height=True)
             scroll.set_child(listing)
             box.append(scroll)
@@ -1687,7 +1777,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                         r["state"].set_text("—")
                     else:
                         changes = file_changes(series, category, r["number"].get_text(), r["title"].get_text(),
-                                               r["summary"].get_text(), r["info"])
+                                               r["summary"].get_text(), r["info"], r["pages"],
+                                               {"GTIN": (per_issue or {}).get("GTIN", "")})
                         if differs(r["info"], changes):
                             r["changes"] = changes
                             r["state"].set_text("se modifica" if r["info"] else "se crea")
@@ -1891,11 +1982,55 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._update_normalize()
             if candidate.source == "ComicVine":
                 self._show_native(candidate)
-            elif candidate.source == "GCD" and candidate.url.startswith(GCD_SITE):
+            elif candidate.source == "Universo Marvel" and candidate.extra.get("level") == "series" and (
+                    candidate.extra["page"].startswith("esp/") or self.number.get_text().strip()):
+                self._resolve_marvel(candidate)
+            elif (candidate.source == "GCD" and candidate.url.startswith(GCD_SITE)) or (
+                    candidate.source == "Universo Marvel" and candidate.url):
                 if webkit_available():
-                    self._show_web(candidate.url)
-                else:   # sin WebKit no hay panel para la web de GCD: se abre en el navegador
+                    self._show_web(candidate.url, "Ficha de Universo Marvel" if candidate.source == "Universo Marvel"
+                                   else "Ficha de Grand Comics Database")
+                else:   # sin WebKit no hay panel para esas webs: se abre en el navegador
                     Gtk.UriLauncher.new(candidate.url).launch(self, None, lambda *_: None)
+
+        def _resolve_marvel(self, series: Candidate):
+            """Consulta (una sola vez: luego queda en la base local) la ficha del número escrito de una serie de
+            Universo Marvel, y la pone entre los resultados como un candidato con sus datos."""
+            number = self.number.get_text().strip()
+            entry = MarvelEntry(series.extra.get("index_publisher", ""), series.extra.get("section", ""), series.title,
+                                series.extra["page"])
+            self._marvel_request += 1
+            request = self._marvel_request
+            if webkit_available():   # mientras tanto, la propia web de la serie
+                self._show_web(series.url, "Serie en Universo Marvel")
+            self.status.set_text("Consultando la ficha en Universo Marvel…" if entry.is_single_issue else
+                                 f"Buscando el nº {number} de «{series.title}» en Universo Marvel…")
+
+            def run():
+                try:
+                    client = UniversoMarvelClient(UniversoMarvelIndex(UNIVERSOMARVEL_DB))
+                    issue = client.find_issue(entry, number)
+                    if issue is None:
+                        later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} "
+                              "en Universo Marvel (o no está catalogado todavía).")
+                        return
+                    candidate = marvel_issue_candidate(entry, issue, client.ficha(issue.page))
+                except (UniversoMarvelError, OSError) as error:
+                    later(self._marvel_resolved, request, series, None, f"No se pudo consultar Universo Marvel: {error}")
+                else:
+                    later(self._marvel_resolved, request, series, candidate, "")
+            Thread(target=run, daemon=True).start()
+
+        def _marvel_resolved(self, request: int, series: Candidate, candidate: Candidate | None, problem: str):
+            if request != self._marvel_request or self.selected is not series:
+                return   # se ha elegido otra cosa mientras tanto
+            if candidate is None:
+                self.status.set_text(problem)
+                return
+            rest = [c for c in self.candidates if c is not series]
+            self._show_candidates([candidate, *rest])
+            self.results.select_row(self.results.get_row_at_index(0))
+            self.status.set_text(f"Ficha de Universo Marvel: {candidate.title} · {candidate.subtitle}")
 
         def _open_preview(self, title: str, url: str, page: str, width: int = PREVIEW_WIDTH):
             if not self.preview.get_visible():   # la ventana crece para no aplastar la lista
@@ -1911,7 +2046,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.preview_stack.set_visible_child_name(page)
             self.assistant_back.set_visible(self.assistant_box is not None and page != "assistant")
 
-        def _show_web(self, url: str):
+        def _show_web(self, url: str, title: str = "Ficha de Grand Comics Database"):
             if self.webview is None:
                 gi.require_version("WebKit", "6.0")
                 from gi.repository import WebKit
@@ -1926,7 +2061,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.webview = WebKit.WebView(network_session=session, vexpand=True)
                 self.webview.connect("notify::favicon", self._favicon_changed)
                 self.preview_stack.add_named(self.webview, "web")
-            self._open_preview("Ficha de Grand Comics Database", url, "web")
+            self._open_preview(title, url, "web")
             self.webview.load_uri(url)
 
         def _favicon_changed(self, webview, _param):
@@ -2011,6 +2146,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                 verdict = "Coincidencia probable" if candidate.is_match else "Poco parecida"
                 score = Gtk.Label(label=f"{verdict} · {candidate.similarity:.0%} de parecido", xalign=0)
                 score.add_css_class("success" if candidate.is_match else "dim-label")
+                text.append(score)
+            elif candidate.source == "Universo Marvel":
+                if candidate.extra.get("level") != "series":
+                    how = "Datos de la ficha de Universo Marvel"
+                elif candidate.extra.get("page", "").startswith("esp/"):
+                    how = "Número suelto del catálogo: elígelo para ver su ficha"
+                else:
+                    how = "Serie del catálogo: escribe el número y elígela para consultar su ficha"
+                score = Gtk.Label(label=how, xalign=0, wrap=True)
+                score.add_css_class("dim-label")
                 text.append(score)
             elif candidate.source == "GCD":
                 how = "Coincide el código de barras" if candidate.exact else "Por título; portada sin comparar"
@@ -2266,6 +2411,20 @@ def run_gui(initial_image: Path | None = None) -> None:
                                           halign=Gtk.Align.START), self.gcd_button, self.gcd_info, attribution):
                 page.append(widget)
             self._refresh_gcd()
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones españolas de Marvel (Forum/"
+                "Planeta, Panini, Vértice). Es una web personal, así que no se rastrea: se descarga el índice de "
+                "series (tres peticiones espaciadas) para buscar al escribir y, al elegir una serie con su número "
+                "escrito, solo la ficha de ese ejemplar, una vez; queda guardada en la base local.")))
+            self.marvel_button = icon_button(("folder-download-symbolic", "document-save-symbolic"),
+                                             "Descargar el índice de Universo Marvel", halign=Gtk.Align.START)
+            self.marvel_button.connect("clicked", self._download_marvel)
+            self.marvel_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (self.marvel_button, self.marvel_info):
+                page.append(widget)
+            self._refresh_marvel()
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
@@ -2529,6 +2688,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     window.close()
                     self._reload_settings()
                     self._refresh_gcd()
+                    self._refresh_marvel()
                     self._refresh_library()
                     self._refresh_backup_info()
                     self.backup_info.set_text(
@@ -2562,6 +2722,28 @@ def run_gui(initial_image: Path | None = None) -> None:
                                        "volcado para actualizarlo (tarda unos segundos).")
             else:
                 self.gcd_info.set_text("Todavía no has importado el volcado de GCD.")
+
+        def _refresh_marvel(self):
+            index = UniversoMarvelIndex(UNIVERSOMARVEL_DB)
+            if index.is_ready():
+                counts = index.counts()
+                self.marvel_info.set_text(f"Índice de Universo Marvel: {sum(counts.values())} series ("
+                                          + ", ".join(f"{name}: {number}" for name, number in counts.items()) + ").")
+            else:
+                self.marvel_info.set_text("Todavía no has descargado el índice de Universo Marvel.")
+
+        def _download_marvel(self, _button):
+            self.marvel_button.set_sensitive(False)
+
+            def run():
+                try:
+                    build_marvel_index(UNIVERSOMARVEL_DB, progress=lambda message: later(self.marvel_info.set_text, message))
+                except (UniversoMarvelError, OSError) as error:
+                    later(self.marvel_info.set_text, f"No se pudo descargar: {error}")
+                else:
+                    later(self._refresh_marvel)
+                later(self.marvel_button.set_sensitive, True)
+            Thread(target=run, daemon=True).start()
 
         def _choose_gcd(self, _button):
             dump = Gtk.FileFilter(name="Volcado SQLite de GCD")

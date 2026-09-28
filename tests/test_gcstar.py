@@ -11,10 +11,13 @@ from comic_identify.gcstar import (
     TransferResult,
     build_attrs,
     build_item,
+    cost_text,
     format_date,
     format_name,
     insert_item,
+    is_isbn,
     is_running,
+    isbn_text,
     mirror_stems,
     next_id,
     publisher_text,
@@ -303,3 +306,24 @@ def test_undo_does_not_touch_an_image_that_changed_since_or_an_item_edited_by_ha
     assert undo.skipped_images == [result.image]
     assert result.backpic in undo.images and not result.backpic.exists()     # esta sí seguía intacta
     assert gcs.read_text(encoding="utf-8") == edited
+
+
+def test_is_isbn_accepts_isbns_and_rejects_magazine_barcodes():
+    assert is_isbn("9788413346120") and is_isbn("978-84-1334-612-0") and is_isbn("8413346126") and is_isbn("843346120X")
+    assert not is_isbn("977000559000400001")       # código de barras de una revista (ISSN), no un ISBN
+    assert not is_isbn("") and not is_isbn("1234") and not is_isbn("9770005590004")
+
+
+def test_isbn_and_cost_go_to_their_gcstar_fields_and_a_barcode_is_not_taken_for_an_isbn():
+    base = {"Series": "X", "GTIN": "978-84-1334-612-0"}
+    attrs = build_attrs(base, {"cost": "3,90 \u20ac"}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert attrs["isbn"] == "9788413346120" and attrs["cost"] == "3.90"
+    magazine = build_attrs({"Series": "X", "GTIN": "977000559000400001"}, {}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert "isbn" not in magazine and "cost" not in magazine        # nada de meter ahí un código que no es un ISBN
+    typed = build_attrs(base, {"isbn": " 1234567890 "}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert typed["isbn"] == "1234567890"                             # lo escrito a mano manda
+
+
+def test_cost_text_keeps_only_a_real_number():
+    assert cost_text("0.60") == "0.60" and cost_text("8") == "8" and cost_text(" 275,5 ptas ") == "275.5"
+    assert cost_text("") == "" and cost_text("gratis") == "" and cost_text("1.2.3") == "" and isbn_text("", "") == ""

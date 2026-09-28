@@ -9,6 +9,7 @@ falta acertarlos con precisión.
 """
 import json
 import os
+import re
 import uuid
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
@@ -134,6 +135,24 @@ def publisher_text(publisher: str, imprint: str) -> str:
     return " - ".join(part for part in (publisher.strip(), imprint.strip()) if part)
 
 
+def is_isbn(code: str) -> bool:
+    """¿Parece un ISBN (13 cifras que empiezan por 978/979, o 10 con dígito de control opcional X)? El código de barras
+    de una revista (977…) o cualquier otro no lo es: no debe ir en el campo ISBN."""
+    digits = re.sub(r"[\s-]", "", code).upper()
+    return bool(re.fullmatch(r"97[89]\d{10}", digits) or re.fullmatch(r"\d{9}[\dX]", digits))
+
+
+def isbn_text(explicit: str, gtin: str) -> str:
+    """Lo escrito a mano en el diálogo, si hay algo; si no, el GTIN del archivo solo si es de verdad un ISBN."""
+    return explicit.strip() or (re.sub(r"[\s-]", "", gtin) if is_isbn(gtin) else "")
+
+
+def cost_text(value: str) -> str:
+    """El «Coste» de GCstar es un número: «3,90 €» -> «3.90»; algo que no lo sea se descarta en vez de romper el campo."""
+    cleaned = re.sub(r"[^\d.,]", "", value.replace(",", "."))
+    return cleaned if re.fullmatch(r"\d+(\.\d+)?", cleaned) else ""
+
+
 def series_text(series: str, volume: str) -> str:
     """El nombre de serie que se manda a GCstar: el nuestro, más «Volumen N» si hay un reinicio de numeración."""
     series, volume = series.strip(), volume.strip()
@@ -143,7 +162,7 @@ def series_text(series: str, volume: str) -> str:
 def build_attrs(fields: Mapping[str, str], gcstar_fields: Mapping[str, str], comic: Path, pages: int,
                 image: Path | None, backpic: Path | None, gcs_dir: Path) -> dict[str, str]:
     """Los atributos del `<item>`: `fields` son los del ComicInfo (Series, Number, Title, Writer…) y `gcstar_fields`
-    los propios de GCstar que no salen de ahí (type, category, format, collection, isbn)."""
+    los propios de GCstar que no salen de ahí (type, category, format, collection, cost, isbn)."""
     series = series_text(fields.get("Series", ""), fields.get("Volume", ""))
     attrs = {"name": format_name(series, fields.get("Number", ""), fields.get("Title", "")), "series": series,
             "volume": fields.get("Number", "").strip(), "title": fields.get("Title", "").strip(),
@@ -153,7 +172,8 @@ def build_attrs(fields: Mapping[str, str], gcstar_fields: Mapping[str, str], com
             "publishdate": format_date(fields.get("Year", ""), fields.get("Month", ""), fields.get("Day", "")),
             "image": str(image.relative_to(gcs_dir)) if image else "",
             "backpic": str(backpic.relative_to(gcs_dir)) if backpic else "",
-            "added": datetime.now().astimezone().strftime("%d/%m/%Y"), "isbn": fields.get("GTIN", "").strip(),
+            "added": datetime.now().astimezone().strftime("%d/%m/%Y"), "isbn": isbn_text(gcstar_fields.get("isbn", ""), fields.get("GTIN", "")),
+            "cost": cost_text(gcstar_fields.get("cost", "")),
             "type": gcstar_fields.get("type", "").strip(), "category": gcstar_fields.get("category", "").strip(),
             "format": gcstar_fields.get("format", "").strip(), "numberboards": str(pages) if pages else "",
             "comment": fields.get("Notes", "").strip(), "file": str(comic), "borrower": "none"}

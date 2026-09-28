@@ -14,6 +14,7 @@ def _xdg(variable: str, default: str) -> Path:
 CONFIG_FILE = _xdg("XDG_CONFIG_HOME", ".config") / "config.json"
 LIBRARY_DB = _xdg("XDG_DATA_HOME", ".local/share") / "library.db"
 GCD_DB = _xdg("XDG_DATA_HOME", ".local/share") / "gcd_es.db"
+UNIVERSOMARVEL_DB = _xdg("XDG_DATA_HOME", ".local/share") / "universomarvel.db"
 RENAME_LOG = _xdg("XDG_DATA_HOME", ".local/share") / "renames.log"
 METADATA_LOG = _xdg("XDG_DATA_HOME", ".local/share") / "metadata.log"
 GCSTAR_LOG = _xdg("XDG_DATA_HOME", ".local/share") / "gcstar.log"

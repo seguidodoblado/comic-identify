@@ -13,7 +13,7 @@ from .comicinfo import FIELD_ORDER, category_of, with_category
 from .naming import Values, looks_normalized
 
 SERIES_FIELDS = ("Series", "Volume", "Year", "Month", "Day", "Count", "Publisher", "Imprint", "LanguageISO", "Web",
-                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist")   # créditos: por lote, no por número
+                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist", "Translator")   # créditos: por lote, no por número
 LANGUAGES = {"🇪🇸": "es", "🇺🇸": "en"}
 GCD_SERIES_URL = "https://www.comics.org/series/{}/"
 NO_CATEGORY = ""        # «no cambiar»
@@ -49,6 +49,15 @@ def suggest_fields(values: Values, publisher: str = "", info=None) -> dict[str, 
         if info.issue_count:
             fields["Count"] = str(info.issue_count)
     return {key: value for key, value in fields.items() if value}
+
+
+def append_block(existing: str, block: str) -> str:
+    """`block` debajo de lo que ya haya en las notas, sin repetirlo si ya está (volver a elegir la misma ficha no lo
+    duplica) y sin tocar lo que ya se había escrito."""
+    block, existing = block.strip(), existing.strip()
+    if not block or block in existing:
+        return existing
+    return f"{existing}\n{block}" if existing else block
 
 
 def common_value(infos: Sequence[Mapping[str, str]], key: str) -> tuple[str, bool]:
@@ -88,9 +97,10 @@ def initial_category(infos: Sequence[Mapping[str, str]]) -> str:
 
 
 def file_changes(series: Mapping[str, str], category: str, number: str, title: str, summary: str,
-                 current: Mapping[str, str]) -> dict[str, str]:
+                 current: Mapping[str, str], pages: int = 0, extra: Mapping[str, str] | None = None) -> dict[str, str]:
     """Todo lo que hay que dejar en un archivo: campos de serie + Nº + título + resumen + (si se eligió) categoría
-    en `Tags`."""
+    en `Tags` + `PageCount` (las páginas contadas en el propio archivo, que es la fuente fiable) + `extra` (datos de
+    un solo ejemplar, como el código de barras, que no pisan lo demás)."""
     changes = dict(series)
     if number.strip():
         changes["Number"] = str(int(number)) if number.strip().isdigit() else number.strip()
@@ -98,8 +108,12 @@ def file_changes(series: Mapping[str, str], category: str, number: str, title: s
     changes["Summary"] = summary.strip()
     if category != NO_CATEGORY:
         changes["Tags"] = with_category(current.get("Tags", ""), category)
+    if pages > 0:
+        changes["PageCount"] = str(pages)
+    for key, value in (extra or {}).items():
+        if value.strip() and key not in changes:
+            changes[key] = value.strip()
     return changes
-
 
 
 LABELS = {"Title": "Título", "Series": "Serie", "Volume": "Volumen", "Number": "Nº", "Count": "Total",
