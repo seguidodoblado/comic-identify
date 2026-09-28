@@ -5,6 +5,21 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-09-28
+
+### Added
+- **Créditos, género, personajes y más de GCD en los metadatos**: el índice de GCD importa ahora las historias de cada número y
+  sus créditos (del modelo nuevo de «creadores» del volcado, el que muestra comics.org: el 75 % de las historias tiene
+  alguno frente al ~30 % del texto antiguo), y con un resultado de GCD **con número** elegido y un solo archivo,
+  «Metadatos archivo…» precarga guion, lápiz, tinta, color, rotulación, edición, traducción y autor de la portada, además del
+  género (traducido si se conoce), los personajes, la fecha, la web del número, el código de barras y la sinopsis. Los
+  traductores (anotados en GCD como «guion» con la nota «traducción») van a Traducción; una historia sin créditos propios
+  hereda los de la original reimpresa; con varias historias, las Notas llevan «Créditos por historia (GCD)». El
+  «Coste» de «Transferir a GCstar…» sale de GCD si da el precio en euros o pesetas (convertidas).
+- Nuevos campos en el diálogo de Metadatos: **Género**, **Personajes** y **Edición** (`Genre`, `Characters` y `Editor`).
+- **Hay que volver a importar el volcado de GCD** (Ajustes; unos 12 segundos) para tener esos datos: el índice pasa de
+  ~15 MB a ~40 MB. Un índice de la versión anterior sigue sirviendo para buscar, y Ajustes avisa de que no trae créditos.
+
 ## [0.26.3] - 2026-09-28
 
 ### Fixed

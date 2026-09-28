@@ -81,9 +81,19 @@ Cada renombrado se registra en `~/.local/share/comic-identify/renames.log` y se 
 
 Normalizar y escribir metadatos actúan sobre el archivo original, no sobre una copia, aunque lo hayas abierto pegándolo.
 
+**Créditos de GCD.** Si eliges un resultado de GCD **con número** (no una serie), «Metadatos archivo…» precarga lo que
+GCD sabe de ese número: guion, lápiz, tinta, color, rotulación, edición y autor de la portada (los mismos que muestra su
+web, del modelo nuevo de «creadores» del volcado), el género (en español si se conoce) y los personajes, la fecha, la
+web del número, el código de barras y la sinopsis si la hay. Los traductores (que GCD anota como «guion» con la nota
+«traducción») van a Traducción, no a Guion. Una historia sin créditos propios hereda los de la historia original de la
+que es reimpresión. Con varias historias se añade en las Notas «Créditos por historia (GCD)». Como los créditos son de un
+solo ejemplar, solo se ofrecen al etiquetar un archivo suelto; y hace falta un índice de GCD reciente: si el tuyo es
+anterior (Ajustes lo avisa), vuelve a importar el volcado. «Transferir a GCstar…» toma de ahí el coste cuando GCD lo da
+en euros o en pesetas (convertidas), y el ISBN.
+
 **Metadatos archivo… / Metadatos carpeta…** escriben el `ComicInfo.xml` del cómic abierto o de todos los de una
-carpeta: serie, volumen, editorial, sello, año (y, opcionales, mes y día), total, idioma, formato, web, notas (varias
-líneas), los créditos (guion, lápiz, tinta, color, rotulación, traducción, portada), la categoría que tú eliges y, por
+carpeta: serie, volumen, editorial, sello, año (y, opcionales, mes y día), total, idioma, formato, género, personajes,
+web, notas (varias líneas), los créditos (guion, lápiz, tinta, color, rotulación, traducción, edición, portada), la categoría que tú eliges y, por
 archivo, el número, el título y el resumen del ejemplar. El número de páginas (`PageCount`) se cuenta siempre en el
 propio archivo. Se rellena con lo que ya tienen los archivos, la serie de GCD, la ficha de Universo Marvel elegida y el
 nombre de la carpeta; lo que el archivo ya tiene no se pisa. Cada escritura se verifica en una copia antes de sustituir el
@@ -240,7 +250,7 @@ identificación por portada contra tu propia colección no necesita ninguna:
 
 - **GCD** (recomendada para ediciones en español): descarga el volcado SQLite de
   <https://www.comics.org/download/> (cuenta gratuita, ~1,8 GB comprimido, ~6,7 GB descomprimido) e
-  impórtalo con **Importar volcado de GCD…**. Tarda unos segundos y genera un índice de ~14 MB en
+  impórtalo con **Importar volcado de GCD…**. Tarda unos segundos y genera un índice de ~40 MB (con las historias y los créditos de cada número) en
   `~/.local/share/comic-identify/gcd_es.db`; el volcado ya no hace falta después.
   Si actualizas desde una versión anterior, vuelve a importarlo: la app te avisa cuando el índice es antiguo.
 - **ComicVine**: clave gratuita en <https://comicvine.gamespot.com/api/>.
@@ -290,6 +300,10 @@ sudo apt install ../comic-identify_<versión>-1_all.deb
 - La cobertura de GCD es desigual: Marvel y DC de Planeta, Zinco y Panini hasta ~2011 están bien
   representados, pero lo reciente de Panini y ECC es parcial. Solo un ~2 % de los números españoles
   tiene código de barras registrado.
+- Los créditos de GCD dependen de lo que hayan anotado sus colaboradores: en el índice en español, ~87 % de los números tiene
+  algún crédito, pero muchos solo el de portada o el de la traducción. Los géneros se traducen al español solo los más
+  comunes, las sinopsis (solo ~7 % de las historias) casi siempre están en inglés, y el precio solo se convierte si
+  GCD lo da en euros o pesetas.
 - El umbral de coincidencia (`MATCH_THRESHOLD` en `identify.py`) está calibrado solo con portadas
   sintéticas; conviene ajustarlo con portadas reales.
 - La lectura del código de barras depende de `zbarimg` y de que el código sea legible en la imagen.
