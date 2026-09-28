@@ -626,6 +626,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             for old in self.cache_dir.glob("portada_*.png"):   # portadas extraídas de cargas anteriores
                 if old != image:
                     old.unlink(missing_ok=True)
+            if self.preview.get_visible():   # el panel era de otro cómic (o de su sesión de IA): un elemento nuevo lo cierra
+                self._close_preview(None)
             self.source_file = source
             self.image = image
             self._set_pages([])
@@ -2073,7 +2075,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.preview = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, visible=False)
             self.preview.set_size_request(PREVIEW_WIDTH, -1)
             header = Gtk.Box(spacing=8)
-            self.preview_title = Gtk.Label(xalign=0, hexpand=True)
+            self.preview_title = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END)   # se recorta antes que ensanchar el panel
             self.assistant_back = icon_button(("go-previous-symbolic",), "Volver al asistente", visible=False)
             self.assistant_back.connect("clicked", lambda _b: self._open_preview(
                 "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
@@ -2082,7 +2084,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             close.connect("clicked", self._close_preview)
             for widget in (self.preview_title, self.preview_link, self.assistant_back, close):
                 header.append(widget)
-            self.preview_stack = Gtk.Stack(vexpand=True)
+            # hhomogeneous=False: solo la página visible cuenta para el ancho (por defecto un Stack reserva el de la más ancha,
+            # aunque esté oculta, y tras usar el terminal el panel de WebKit seguía ocupando su ancho)
+            self.preview_stack = Gtk.Stack(vexpand=True, hhomogeneous=False)
             self.preview_stack.add_named(self._native_view(), "native")
             self.preview.append(header)
             self.preview.append(self.preview_stack)
