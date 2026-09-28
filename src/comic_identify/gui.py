@@ -21,7 +21,7 @@ from .covers import (
     read_page,
     thumbnail_bytes,
 )
-from .gcd import GcdIndex, build_index
+from .gcd import GcdIndex, build_index, issue_id_from_url
 from .gcstar import (
     VOCABULARY_FIELDS,
     GCstarError,
@@ -40,6 +40,7 @@ from .identify import (
     Candidate,
     alternative_candidate,
     attach_cover,
+    gcd_issue_candidate,
     identify,
     marvel_issue_candidate,
     page_candidate,
@@ -2151,7 +2152,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
             self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label="Abrir en el navegador")
             self.use_ficha = Gtk.Button(label="Usar esta ficha", visible=False, css_classes=["suggested-action"], tooltip_text=(
-                "Es la ficha de un ejemplar de Universo Marvel o Tebeosfera: la usa para rellenar los metadatos"))
+                "Es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD: la usa para rellenar los metadatos"))
             self.use_ficha.connect("clicked", self._use_web_ficha)
             close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text="Cerrar el panel")
             close.connect("clicked", self._close_preview)
@@ -2373,17 +2374,20 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         @staticmethod
         def _catalog_page(uri: str) -> tuple[str, str]:
-            """(fuente, ruta) si `uri` es la ficha de un ejemplar de Universo Marvel o Tebeosfera; si no, vacío."""
+            """(fuente, ruta o id) si `uri` es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD; si no, vacío."""
             if page := ficha_page(uri):
                 return "Universo Marvel", page
             if page := tebeosfera_site.ficha_page(uri):
                 return "Tebeosfera", page
+            if (issue_id := issue_id_from_url(uri)) is not None:
+                return "GCD", str(issue_id)
             return "", ""
 
         def _web_uri_changed(self, webview, _param):
             """Al navegar hasta la ficha de un ejemplar, se ofrece usarla (si no es ya la elegida)."""
-            _site, page = self._catalog_page(webview.get_uri())
-            chosen = self.selected is not None and self.selected.extra.get("SpanishPage") == page
+            site, page = self._catalog_page(webview.get_uri())
+            key = "issue_id" if site == "GCD" else "SpanishPage"
+            chosen = self.selected is not None and str(self.selected.extra.get(key, "")) == page
             self.use_ficha.set_visible(bool(page) and not chosen)
 
         def _use_web_ficha(self, _button):
@@ -2392,11 +2396,28 @@ def run_gui(initial_image: Path | None = None) -> None:
             if not page:
                 return
             self.use_ficha.set_visible(False)
+            if site == "GCD":
+                self._use_gcd_ficha(int(page))
+                return
             title = self.webview.get_title() or page
             stub = tebeosfera_page_candidate(title, page) if site == "Tebeosfera" else page_candidate(title, page)
             self.results.unselect_all()
             self.selected = stub
             self._resolve_catalog(stub)
+
+        def _use_gcd_ficha(self, issue_id: int):
+            """GCD ya está entero en local: al contrario que Universo Marvel y Tebeosfera, no hace falta consultar nada,
+            así que se resuelve al momento."""
+            gcd = self._gcd()
+            hit = gcd.issue_by_id(issue_id) if gcd is not None else None
+            if hit is None:
+                self.status.set_text("Ese número no está en tu índice de GCD (¿lo has importado, o es de otro país?).")
+                return
+            candidate = gcd_issue_candidate(hit)
+            self.results.unselect_all()
+            self._show_candidates([candidate, *self.candidates])
+            self.results.select_row(self.results.get_row_at_index(0))
+            self.status.set_text(f"Ficha de GCD: {candidate.title} · {candidate.subtitle}")
 
         def _favicon_changed(self, webview, _param):
             """comics.org bloquea la descarga directa de su icono; el motor del panel sí lo recibe al mostrar una ficha."""

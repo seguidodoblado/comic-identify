@@ -10,9 +10,24 @@ from collections.abc import Callable
 from contextlib import closing
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 ISSUE_URL = "https://www.comics.org/issue/{}/"
 SERIES_URL = "https://www.comics.org/series/{}/covers/"   # galería de portadas de la serie
+HOST = urlparse(ISSUE_URL).hostname   # "www.comics.org"
+_ISSUE_PATH = re.compile(r"^/issue/(\d+)/?$")
+
+
+def issue_id_from_url(url: str) -> int | None:
+    """El identificador del número si `url` es la ficha de un ejemplar en comics.org («/issue/12345/»); None si no
+    (para «Usar esta ficha» al navegar por su web)."""
+    parsed = urlparse(url or "")
+    if parsed.hostname != HOST:
+        return None
+    match = _ISSUE_PATH.match(parsed.path)
+    return int(match.group(1)) if match else None
+
+
 _REQUIRED = ("gcd_issue", "gcd_series", "gcd_publisher", "gcd_brand", "gcd_issue_brand_emblem",
              "stddata_country", "stddata_language")
 SCHEMA_VERSION = 3  # 2: sello editorial (brand) en cada número; 3: historias, créditos, precio y fecha de venta
@@ -418,6 +433,19 @@ class GcdIndex:
             brand = db.execute("SELECT brand FROM issues WHERE series_id = ? AND brand <> '' "
                                "GROUP BY brand ORDER BY COUNT(*) DESC LIMIT 1", (series_id,)).fetchone()
         return SeriesInfo(*row, brand=brand[0] if brand else "")
+
+    def issue_by_id(self, issue_id: int) -> GcdHit | None:
+        """El número `issue_id` tal cual está en el índice (para «Usar esta ficha» al navegar por su web: no hace falta
+        ninguna consulta, GCD ya está entero en local)."""
+        with closing(sqlite3.connect(self.path)) as db:
+            row = db.execute(
+                "SELECT i.number, i.title, i.key_date, i.brand, s.id, s.name, s.publisher, s.year_began, "
+                "s.year_ended, s.country FROM issues i JOIN series s ON s.id = i.series_id WHERE i.id = ?",
+                (issue_id,)).fetchone()
+        if row is None:
+            return None
+        number, title, date, brand, series_id, name, publisher, began, ended, country = row
+        return GcdHit(name, publisher, _years(began, ended), number, title, date, issue_id, country, brand, series_id)
 
     def by_barcode(self, digits: str) -> list[GcdHit]:
         digits = re.sub(r"\D", "", digits)

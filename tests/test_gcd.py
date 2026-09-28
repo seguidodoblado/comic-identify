@@ -149,3 +149,24 @@ def test_filters_never_fall_back_to_any_word_of_the_title(index):
     assert {h.issue_id for h in index.search("cuatro spiderman", "7")} == {103}                  # sin filtros: cualquier palabra
     assert index.search("cuatro spiderman", "7", publisher="panini") == []                        # con filtros: nada, no ruido
     assert index.search("cuatro spiderman", "7", year="2007") == []
+
+
+def test_issue_id_from_url_only_accepts_comics_org_issue_pages():
+    from comic_identify.gcd import issue_id_from_url
+    assert issue_id_from_url("https://www.comics.org/issue/1005/") == 1005
+    assert issue_id_from_url("https://www.comics.org/issue/1005") == 1005   # también sin la barra final
+    for url in ("https://www.comics.org/series/12/covers/", "https://example.com/issue/1005/", "", None):
+        assert issue_id_from_url(url) is None
+
+
+def test_issue_by_id_gives_the_same_hit_as_a_search_and_none_for_an_unknown_id(index):
+    from_search = index.search("spiderman", "12")[0]
+    from_id = index.issue_by_id(from_search.issue_id)
+    assert from_id == from_search
+    assert index.issue_by_id(999999) is None
+
+
+def test_gcd_issue_candidate_is_the_same_as_from_a_search():
+    from comic_identify.identify import gcd_issue_candidate
+    hit = pipeline.GcdHit("Spiderman", "Panini", "2000-", "12", issue_id=12, brand="Panini Comics")
+    assert gcd_issue_candidate(hit) == pipeline._gcd_candidate(hit)

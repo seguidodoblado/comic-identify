@@ -116,6 +116,12 @@ def search_gcd(gcd: GcdIndex, text: str, number: str = "", publisher: str = "",
     return [_gcd_candidate(hit) for hit in gcd.search(text, number, publisher=publisher, year=year)][:MAX_GCD]
 
 
+def gcd_issue_candidate(hit: GcdHit) -> Candidate:
+    """Un número de GCD ya conocido del todo, código de barras exacto aparte (para «Usar esta ficha» al navegar por su
+    web: no hace falta ninguna consulta, GCD ya está entero en local)."""
+    return _gcd_candidate(hit)
+
+
 def _marvel_candidate(entry: Entry) -> Candidate:
     """Una serie del catálogo (aún sin número): al elegirla con un número escrito se consulta su ficha."""
     editorial, brand = EDITION_BY_PUBLISHER.get(entry.publisher, (entry.publisher, ""))
