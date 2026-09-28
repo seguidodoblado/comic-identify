@@ -5,6 +5,40 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-09-28
+
+### Added
+- **Universo Marvel** (fichas.universomarvel.com) como fuente local, como GCD: el catálogo de las ediciones españolas
+  de Marvel (Forum/Planeta, Panini y Vértice: unas 3.350 series). «Descargar el índice de Universo Marvel», en
+  Ajustes, lo baja en tres peticiones espaciadas (unos 4 segundos) y lo guarda en una base local; después las series
+  salen en las sugerencias al escribir y al buscar, junto a las de GCD.
+- **Fichas de Universo Marvel bajo demanda**: al elegir una serie con el número escrito se consulta solo la ficha de
+  ese ejemplar (fecha, precio, páginas, formato, código de barras, rotulación, traducción, autores de la portada,
+  historias y enlace al ejemplar USA original) y sale como un candidato con esos datos. Cada página se descarga una
+  vez y queda en la base local, con su HTML original para poder releerla sin volver a pedirla si mejora el lector. Las
+  series largas que reparten sus números por rangos («1-100», «101-200»…) solo descargan el rango que hace falta.
+  Con un candidato de Universo Marvel elegido, **Normalizar nombre** rellena nombre, volumen, bandera 🇪🇸, año,
+  sello y editorial, y **Metadatos archivo** añade año, mes, editorial, sello, serie, web y los créditos de la edición
+  (rotulación, traducción y portada); con un solo archivo, además, el título del cómic y el código de barras
+  (`GTIN`). Esos datos de un solo ejemplar no se ofrecen al etiquetar una carpeta entera.
+- **Ejemplares USA y comentarios de la edición en las Notas**: con una ficha de Universo Marvel elegida y un solo
+  archivo, las Notas del diálogo de Metadatos llevan, debajo de «Contenido original», el «Contenido USA» (cada
+  ejemplar original con el enlace a su ficha) y los «Comentarios de la edición»; de ahí pasan al comentario de GCstar
+  al transferir. Si las notas ya tenían algo, se añade debajo sin tocarlo y sin repetirlo. Por eso las Notas pasan a
+  ser un campo de varias líneas (con desplazamiento) y la ventana de Metadatos es algo más alta.
+- **`PageCount`** en ComicInfo.xml: al escribir metadatos se cuentan las imágenes del propio archivo (no las páginas
+  que diga ninguna ficha) y se deja siempre al día; antes no se escribía nunca. Un archivo sin páginas legibles no
+  lo recibe.
+- **Coste e ISBN en «Transferir a GCstar…»**: dos campos nuevos en el diálogo. Con una ficha de Universo Marvel
+  elegida vienen rellenos: el coste en euros (las pesetas se convierten al cambio oficial, 166,386, para no mezclar
+  monedas en una misma columna) y el ISBN si la ficha lo trae. El precio no existe en ComicInfo.xml, así que solo se
+  conoce por la ficha elegida al transferir (y se puede corregir a mano). El ISBN del `.gcs` ya no se rellena con un
+  código de barras que no lo sea (p. ej. el 977… de una revista); en ComicInfo.xml, `GTIN` es el ISBN si la ficha lo
+  tiene y, si no, el código de barras.
+- **Traducción** en los créditos del diálogo de Metadatos (campo `Translator` de ComicInfo.xml); los créditos pasan a
+  tres columnas para ocupar el mismo alto.
+- Volver a descargar el índice de Universo Marvel no borra las fichas ya consultadas. Entra en las copias de seguridad.
+
 ## [0.21.0] - 2026-09-28
 
 ### Added

@@ -97,6 +97,33 @@ desde **Ajustes** (`~/.local/share/comic-identify/gcstar.log`); el deshacer no t
 desde entonces. La
 ruta al `.gcs` se configura una vez en Ajustes.
 
+## Universo Marvel
+
+[fichas.universomarvel.com](https://fichas.universomarvel.com/) es el catálogo más completo de las ediciones españolas de
+Marvel (Forum/Planeta, Panini, Vértice…), con fecha, precio, páginas, créditos y el ejemplar USA original de cada número.
+No tiene API ni volcado y es una web personal, así que la aplicación **no la rastrea**:
+
+1. En **Ajustes**, «Descargar el índice de Universo Marvel» baja solo las páginas de índice de Forum/Planeta, Panini y
+   Vértice (tres peticiones con pausa entre ellas, identificándose como `comic-identify`) y crea
+   `~/.local/share/comic-identify/universomarvel.db`. Con él, las series salen entre las sugerencias al escribir el
+   título (sin tildes ni mayúsculas, «spider man» encuentra «Spiderman»).
+2. Al elegir una serie **con el número escrito**, se consulta solo la ficha de ese ejemplar (una o dos peticiones,
+   una sola vez: después sale de la base local) y aparece como candidato con su fecha, páginas, precio y formato; su
+   página se ve en el panel de la derecha. Un especial suelto no necesita número.
+3. Con ese candidato elegido, **Normalizar nombre** parte de sus datos (nombre, volumen, 🇪🇸, año de la edición, sello y
+   editorial) y **Metadatos archivo** precarga año, mes, editorial, sello, web de la serie y los créditos de la edición
+   (rotulación, traducción, portada); con un solo archivo, también el título del cómic y el código de barras. Las
+   páginas (`PageCount`) siempre se cuentan en el propio archivo, con o sin ficha. El contenido original lo sigues
+   indicando tú.
+   Las Notas llevan, debajo de «Contenido original», los ejemplares USA que recoge la edición (con el enlace a su ficha)
+   y los comentarios de la edición; pasan al comentario de GCstar al transferir.
+4. En **Transferir a GCstar…**, «Coste» e «ISBN» vienen rellenos con la ficha elegida (el precio en euros: las
+   pesetas se convierten a 166,386; el precio no existe en ComicInfo.xml, así que hay que tener la ficha elegida al
+   transferir). Un código de barras que no sea un ISBN no se pone en ese campo.
+
+La base guarda de cada ficha sus campos ya leídos y el HTML original comprimido, así que si mejora el lector se
+vuelve a leer sin volver a pedir nada a la web. Volver a descargar el índice no borra las fichas.
+
 ## Copias de seguridad
 
 En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección y GCD), los
