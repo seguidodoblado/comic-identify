@@ -5,6 +5,14 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-09-28
+
+### Fixed
+- **Los logotipos que pones a mano salían enormes y descentrados** (p. ej. uno cuadrado de 900 px salía de unos 80 px de alto
+  y desplazado del borde derecho): GTK no reescala bien una imagen grande dentro de un hueco pequeño. Ahora se reducen al
+  hueco de las filas (116×24 px, conservando la proporción) y quedan alineados a la derecha como los descargados; vale
+  PNG, JPG y SVG de cualquier tamaño, y uno ilegible se ignora (sale la etiqueta con el nombre).
+
 ## [0.26.2] - 2026-09-28
 
 ### Fixed

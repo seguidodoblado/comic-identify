@@ -189,7 +189,7 @@ borrar sin problema.
 
 Las editoriales sin logotipo propio (la mayoría de las latinoamericanas y otras muchas españolas) llevan en su lugar una
 etiqueta con su nombre, así que ninguna fila de GCD queda sin marca. Para ponerles su logotipo, guarda un archivo `.png`,
-`.jpg` o `.svg` con el nombre que aparece en la ayuda de la etiqueta (p. ej. `ediciones-b.png`) en
+`.jpg` o `.svg` (de cualquier tamaño: se reduce al hueco de la fila) con el nombre que aparece en la ayuda de la etiqueta (p. ej. `ediciones-b.png`) en
 `~/.local/share/comic-identify/logos`; también sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…).
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
