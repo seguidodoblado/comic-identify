@@ -4,6 +4,7 @@ from pathlib import Path
 from threading import Event, Thread
 
 from . import __version__
+from . import backup as backup_module
 from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
 from .collection import build_series, ranges
 from .comicinfo import CATEGORIES, MetadataError, build_xml, category_of, read_info
@@ -62,7 +63,7 @@ from .naming import (
 from .originals import content_years, find_volumes
 from .renamer import rename_file, rename_series, undo_last
 from .settings import GCD_DB, GCSTAR_LOG, LIBRARY_DB, METADATA_LOG, RENAME_LOG, Settings
-from .sources import SOURCES, search_url
+from .sources import GROUPS, SOURCES, search_url
 
 COMICVINE_API_URL = "https://comicvine.gamespot.com/api/"
 GCD_DOWNLOAD_URL = "https://www.comics.org/download/"
@@ -171,6 +172,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             notebook.append_page(self._library_page(), Gtk.Label(label="Mi colección"))
             notebook.append_page(self._settings_page(), Gtk.Label(label="Ajustes"))
             self.set_child(notebook)
+            self.connect("close-request", self._auto_backup)
             self._refresh_library()
             Thread(target=self._load_icons, daemon=True).start()
             paste = Gtk.Shortcut(trigger=Gtk.ShortcutTrigger.parse_string("<Control>v"),
@@ -300,13 +302,16 @@ def run_gui(initial_image: Path | None = None) -> None:
             all_button.connect("clicked", lambda _b: (popover.popdown(), self._open_all_sources()))
             entries.append(all_button)
             entries.append(Gtk.Separator(margin_top=2, margin_bottom=2))
-            for source in SOURCES:
-                content = Gtk.Box(spacing=8)
-                content.append(self._icon(source.host, 16))
-                content.append(Gtk.Label(label=source.name, xalign=0))
-                entry = Gtk.Button(child=content, has_frame=False, tooltip_text=f"Busca en {source.host}")
-                entry.connect("clicked", lambda _b, n=source.name: (popover.popdown(), self._open_source(n)))
-                entries.append(entry)
+            for category in GROUPS:
+                entries.append(Gtk.Label(label=category, xalign=0, margin_start=6, margin_top=6,
+                                         css_classes=["heading"]))
+                for source in (s for s in SOURCES if s.category == category):
+                    content = Gtk.Box(spacing=8)
+                    content.append(self._icon(source.host, 16))
+                    content.append(Gtk.Label(label=source.name, xalign=0))
+                    entry = Gtk.Button(child=content, has_frame=False, tooltip_text=f"Busca en {source.host}")
+                    entry.connect("clicked", lambda _b, n=source.name: (popover.popdown(), self._open_source(n)))
+                    entries.append(entry)
             popover.set_child(entries)
             web_menu = Gtk.MenuButton(child=menu_content, popover=popover, tooltip_text=(
                 "Abre en tu navegador la búsqueda del título en la web que elijas"))
@@ -2331,9 +2336,207 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.gcstar_info = Gtk.Label(xalign=0, wrap=True)
             for widget in (gcstar_line, save_gcstar, self.gcstar_undo_button, self.gcstar_info):
                 page.append(widget)
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Copias de seguridad: guardan tus índices (colección y GCD), los ajustes y los registros de deshacer "
+                "en un .zip verificado. Se hace una automática al cerrar la aplicación (solo si algo ha cambiado) y "
+                "las que quieras a mano. Las automáticas más antiguas se borran; las manuales, nunca. Ojo: el zip "
+                "incluye tu clave de ComicVine.")))
+            self.backup_entry = Gtk.Entry(text=self.settings.backup_dir, hexpand=True,
+                                          placeholder_text="Carpeta donde guardar las copias")
+            choose_backup = icon_button(("folder-open-symbolic", "document-open-symbolic"), "Elegir carpeta…")
+            choose_backup.connect("clicked", self._choose_backup_dir)
+            backup_line = Gtk.Box(spacing=8)
+            backup_line.append(self.backup_entry)
+            backup_line.append(choose_backup)
+            self.backup_keep = Gtk.SpinButton.new_with_range(1, 99, 1)
+            self.backup_keep.set_value(self.settings.backup_keep)
+            keep_line = Gtk.Box(spacing=8)
+            keep_line.append(Gtk.Label(label="Copias automáticas que se conservan:"))
+            keep_line.append(self.backup_keep)
+            save_backup = icon_button(("document-save-symbolic",), "Guardar", halign=Gtk.Align.START)
+            save_backup.connect("clicked", self._save_backup_settings)
+            self.backup_now_button = icon_button(("document-save-as-symbolic", "document-save-symbolic"),
+                                                 "Copiar ahora")
+            self.backup_now_button.connect("clicked", self._backup_now)
+            self.backup_restore_button = icon_button(("document-revert-symbolic", "edit-undo-symbolic"),
+                                                     "Restaurar una copia…")
+            self.backup_restore_button.connect("clicked", self._open_restore)
+            backup_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
+            backup_buttons.append(save_backup)
+            backup_buttons.append(self.backup_now_button)
+            backup_buttons.append(self.backup_restore_button)
+            self.backup_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (backup_line, keep_line, backup_buttons, self.backup_info):
+                page.append(widget)
+            self._refresh_backup_info()
             scroll = Gtk.ScrolledWindow()   # la página es más alta que la ventana
             scroll.set_child(page)
             return scroll
+
+        # ---- Copias de seguridad ------------------------------------------------------------------
+        def _backup_dir(self) -> Path | None:
+            text = self.settings.backup_dir.strip()
+            return Path(text).expanduser() if text else None
+
+        def _refresh_backup_info(self):
+            folder = self._backup_dir()
+            self.backup_now_button.set_sensitive(folder is not None)
+            self.backup_restore_button.set_sensitive(folder is not None)
+            if folder is None:
+                self.backup_info.set_text("Elige una carpeta para activar las copias.")
+                return
+            backups = backup_module.list_backups(folder)
+            if not backups:
+                self.backup_info.set_text("Todavía no hay copias en esa carpeta.")
+                return
+            last = backups[0]
+            self.backup_info.set_text(f"{len(backups)} copia(s). La última: {last.created:%d/%m/%Y %H:%M} "
+                                      f"({backup_module.KIND_LABELS.get(last.kind, last.kind)}).")
+
+        def _choose_backup_dir(self, _button):
+            Gtk.FileDialog(title="Carpeta de las copias de seguridad").select_folder(self, None, self._backup_dir_chosen)
+
+        def _backup_dir_chosen(self, dialog, result):
+            try:
+                self.backup_entry.set_text(dialog.select_folder_finish(result).get_path())
+            except GLib.Error:
+                pass  # Selección cancelada.
+
+        def _save_backup_settings(self, _button):
+            self.settings.backup_dir = self.backup_entry.get_text().strip()
+            self.settings.backup_keep = self.backup_keep.get_value_as_int()
+            self.settings.save()
+            self._refresh_backup_info()
+
+        def _backup_now(self, _button):
+            folder = self._backup_dir()
+            if folder is None:
+                return
+            if self.indexing:
+                self.backup_info.set_text("Hay una indexación en marcha: espera a que termine para copiar.")
+                return
+            self.backup_now_button.set_sensitive(False)
+            self.backup_info.set_text("Copiando…")
+
+            def run():
+                try:
+                    archive = backup_module.create(folder, backup_module.MANUAL, version=__version__)
+                except backup_module.BackupError as error:
+                    later(self._backup_done, None, error)
+                else:
+                    later(self._backup_done, archive, None)
+            Thread(target=run, daemon=True).start()
+
+        def _backup_done(self, archive, error):
+            self.backup_now_button.set_sensitive(True)
+            if error is not None:
+                self.backup_info.set_text(f"No se pudo copiar: {error}")
+                return
+            self._refresh_backup_info()
+            self.backup_info.set_text(f"Copia guardada: {archive.name}. {self.backup_info.get_text()}")
+
+        def _auto_backup(self, _window):
+            """Al cerrar: una copia automática si algo ha cambiado desde la última. Nunca impide cerrar."""
+            folder = self._backup_dir()
+            if folder is None or self.indexing:
+                return False
+            try:
+                if not backup_module.unchanged_since_last(folder):
+                    backup_module.create(folder, backup_module.AUTO, version=__version__)
+                    backup_module.prune(folder, self.settings.backup_keep)
+            except (backup_module.BackupError, OSError) as error:
+                print(f"Copia de seguridad automática fallida: {error}", file=sys.stderr)
+            return False
+
+        def _reload_settings(self):
+            """Tras restaurar: los ajustes vuelven a leerse del archivo y los campos de Ajustes los reflejan (si no,
+            el siguiente «Guardar» escribiría encima lo que había antes de restaurar)."""
+            self.settings = Settings.load()
+            self.key.set_text(self.settings.api_key)
+            self.assistant_entry.set_text(self.settings.assistant)
+            self.prompt_view.get_buffer().set_text(self.settings.prompt)
+            self.gcstar_entry.set_text(self.settings.gcstar_path)
+            self.backup_entry.set_text(self.settings.backup_dir)
+            self.backup_keep.set_value(self.settings.backup_keep)
+            self._update_normalize()
+
+        def _open_restore(self, _button):
+            folder = self._backup_dir()
+            if folder is None:
+                return
+            if self.indexing:
+                self.backup_info.set_text("Hay una indexación en marcha: espera a que termine para restaurar.")
+                return
+            backups = backup_module.list_backups(folder)
+            if not backups:
+                self.backup_info.set_text("No hay copias que restaurar en esa carpeta.")
+                return
+            window = Gtk.Window(title="Restaurar una copia", transient_for=self, modal=True, default_width=640,
+                                default_height=460)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
+                          margin_start=14, margin_end=14)
+            window.set_child(box)
+            box.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se guarda una copia del "
+                "estado actual («antes de restaurar»), por si te arrepientes.")))
+            listing = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
+            for info in backups:
+                what = ", ".join(info.names)
+                row = Gtk.Label(xalign=0, wrap=True, margin_top=4, margin_bottom=4, margin_start=6, label=(
+                    f"{info.created:%d/%m/%Y %H:%M:%S} · {backup_module.KIND_LABELS.get(info.kind, info.kind)} · "
+                    f"{info.size / 1_048_576:.1f} MB\n{what}"))
+                listing.append(row)
+            scroll = Gtk.ScrolledWindow(vexpand=True, has_frame=True)
+            scroll.set_child(listing)
+            box.append(scroll)
+            info_label = Gtk.Label(xalign=0, wrap=True)
+            box.append(info_label)
+            buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
+            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), "Cancelar")
+            restore = icon_button(("document-revert-symbolic", "edit-undo-symbolic"), "Restaurar", sensitive=False)
+            restore.add_css_class("destructive-action")
+            buttons.append(cancel)
+            buttons.append(restore)
+            box.append(buttons)
+            cancel.connect("clicked", lambda _b: window.close())
+            listing.connect("row-selected", lambda _l, row: restore.set_sensitive(row is not None))
+
+            def do_restore(_button):
+                row = listing.get_selected_row()
+                if row is None:
+                    return
+                archive = backups[row.get_index()].path
+                restore.set_sensitive(False)
+                cancel.set_sensitive(False)
+                info_label.set_text("Restaurando…")
+
+                def run():
+                    try:
+                        result = backup_module.restore(archive, version=__version__)
+                    except backup_module.BackupError as error:
+                        later(failed, error)
+                    else:
+                        later(done, result)
+
+                def failed(error):
+                    info_label.set_text(f"No se ha restaurado nada: {error}")
+                    cancel.set_sensitive(True)
+                    restore.set_sensitive(True)
+
+                def done(result):
+                    window.close()
+                    self._reload_settings()
+                    self._refresh_gcd()
+                    self._refresh_library()
+                    self._refresh_backup_info()
+                    self.backup_info.set_text(
+                        f"Restaurado: {', '.join(result.restored)}. Estado anterior guardado en "
+                        f"«{result.safety.name if result.safety else 'ninguna copia (no había datos)'}».")
+                Thread(target=run, daemon=True).start()
+            restore.connect("clicked", do_restore)
+            window.present()
 
         def _save_assistant(self, _button):
             command = self.assistant_entry.get_text().strip()

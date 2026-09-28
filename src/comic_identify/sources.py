@@ -7,12 +7,16 @@ from typing import NamedTuple
 from urllib.parse import quote_plus
 
 GOOGLE = "https://www.google.com/search?q={}"
+GENERAL, MARVEL, DC = "Generalistas", "Marvel", "DC"
+GROUPS = (GENERAL, MARVEL, DC)   # orden en el menú
+
 
 class Source(NamedTuple):
     name: str
     template: str | None    # búsqueda propia de la web, con {q}
     domain: str | None      # si no tiene: búsqueda «site:» en Google
     host: str               # servidor de la web: de él se toma el icono
+    category: str = GENERAL  # en qué grupo se muestra en el menú
 
 
 SOURCES = (
@@ -22,11 +26,11 @@ SOURCES = (
     Source("Norma Comics", None, "normacomics.com", "www.normacomics.com"),   # la tienda de cómics de Norma
     Source("Panini", "https://www.panini.es/shp_esp_es/catalogsearch/result/?q={q}", None, "www.panini.es"),
     # Catálogo de ediciones españolas de Marvel (Forum, Planeta, Panini)
-    Source("Universo Marvel", None, "fichas.universomarvel.com", "fichas.universomarvel.com"),
+    Source("Universo Marvel", None, "fichas.universomarvel.com", "fichas.universomarvel.com", MARVEL),
     # Web oficial de DC (en inglés); su robots.txt veta su buscador, por eso va por «site:» en Google
-    Source("DC Comics", None, "dc.com", "www.dc.com"),
+    Source("DC Comics", None, "dc.com", "www.dc.com", DC),
     # Wiki de DC (en inglés): número original, fechas y contenido de cada ejemplar
-    Source("DC Database", None, "dc.fandom.com", "dc.fandom.com"),
+    Source("DC Database", None, "dc.fandom.com", "dc.fandom.com", DC),
     Source("Zona Negativa", "https://www.zonanegativa.com/?s={q}", None, "www.zonanegativa.com"),
 )
 NAMES = tuple(source.name for source in SOURCES)

@@ -43,6 +43,14 @@ def test_every_source_has_a_host_for_its_icon():
     assert all(source.host and "/" not in source.host for source in SOURCES)
 
 
+def test_every_source_belongs_to_a_known_category_and_none_is_left_empty():
+    from comic_identify.sources import GROUPS, SOURCES
+    assert all(source.category in GROUPS for source in SOURCES)
+    assert all(any(source.category == category for source in SOURCES) for category in GROUPS)
+    assert {s.name: s.category for s in SOURCES if s.category != "Generalistas"} == {
+        "Universo Marvel": "Marvel", "DC Comics": "DC", "DC Database": "DC"}
+
+
 def test_publisher_and_year_narrow_the_search_when_given():
     google = search_url("Tebeosfera", "Capitán Marvel", "1", "Forum", "2000")
     assert _query(google) == {"q": ["site:tebeosfera.com Capitán Marvel 1 Forum 2000"]}
