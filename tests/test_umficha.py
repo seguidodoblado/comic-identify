@@ -520,3 +520,14 @@ def test_a_database_created_before_covers_existed_gets_the_table_when_first_need
     assert index.get_cover("esp/portadas/x.jpg") is None
     index.store_cover("esp/portadas/x.jpg", b"datos")
     assert index.get_cover("esp/portadas/x.jpg") == b"datos"
+
+
+def test_usa_info_summary_is_the_synopsis_of_the_matching_stories(tmp_path):
+    client = _usa_client(tmp_path, {"usa/twogk1060.html": USA})
+    one = client.usa_info([("usa/twogk1060.html", "T #60")], "esp/2piskidv101.html")
+    assert one.summary == "Una sinopsis larga."                      # una sola historia: su texto tal cual
+    empty = client.usa_info([("usa/twogk1060.html", "T #60")], "esp/2piskidv103.html")
+    assert empty.summary == ""                                        # su sinopsis es «-»: no se inventa nada
+    several = client.usa_info([("usa/twogk1060.html", "T #60")], "esp/desconocida.html")
+    assert several.summary == "\xabUno\xbb: Una sinopsis larga."         # varias historias: con t\xedtulo, en una l\xednea
+    assert "\n" not in several.summary

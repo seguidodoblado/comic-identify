@@ -332,6 +332,7 @@ class UsaInfo:
     missing: list[str]          # originales cuya ficha no se pudo leer (enlace roto, sin red…)
     approximate: list[str]      # originales en los que no se pudo saber qué historias son las de este ejemplar
     story_lines: list[str]      # una línea por historia USA: «- «Título» (Serie #N): Guión X · Lápiz Y · Tinta Z · Color W»
+    summary: str = ""           # la sinopsis de esas historias, para el campo Resumen (vacío si la ficha no la trae)
 
 
 class UniversoMarvelClient:
@@ -408,7 +409,7 @@ class UniversoMarvelClient:
         impide los demás. Cada ficha USA se descarga una vez y queda en la base."""
         names: dict[str, dict[str, None]] = {field: {} for field in USA_CREDITS}
         years: dict[int, None] = {}
-        missing, approximate, story_lines = [], [], []
+        missing, approximate, story_lines, synopses, matched = [], [], [], [], 0
         unique: dict[str, str] = {}
         for page, text in refs:   # cada original una vez, en el orden en que aparece
             unique.setdefault(page, text)
@@ -426,7 +427,10 @@ class UniversoMarvelClient:
                 stories = ficha.stories
             if ficha.year:
                 years.setdefault(ficha.year, None)
+            matched += len(stories)
             for story in stories:
+                if story.synopsis:
+                    synopses.append((story.title, story.synopsis))
                 shown = " · ".join(f"{role} {', '.join(split_names(story.credits[role]))}" for role in STORY_ROLES
                                    if split_names(story.credits.get(role, "")))
                 if shown:   # el desglose que los campos, con una sola lista por rol, no pueden dar
@@ -435,5 +439,8 @@ class UniversoMarvelClient:
                     for role in roles:
                         for name in split_names(story.credits.get(role, "")):
                             names[field].setdefault(name, None)
+        # una sola historia: su sinopsis tal cual; varias: cada una con su título, en un solo párrafo (el Resumen del
+        # diálogo es de una línea)
+        summary = synopses[0][1] if matched == 1 and synopses else " ".join(f"«{title}»: {text}" for title, text in synopses)
         return UsaInfo({field: ", ".join(found) for field, found in names.items()}, sorted(years), missing,
-                       approximate, story_lines)
+                       approximate, story_lines, summary)

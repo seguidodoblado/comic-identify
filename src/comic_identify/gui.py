@@ -293,7 +293,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 controls.append(widget)
             self.status = Gtk.Label(label=INITIAL_STATUS, xalign=0, wrap=True)   # sin ajuste, un estado largo obliga a ensanchar la ventana
             self.search_progress = Gtk.ProgressBar(show_text=False, visible=False)   # solo mientras se consulta a
-            self._search_pulse_id = 0                                              # ComicVine: tarda varios segundos
+            self._search_pulse_id = 0
+            self._progress_jobs: set[str] = set()   # quién la mantiene encendida: ComicVine, Universo Marvel…                                              # ComicVine: tarda varios segundos
             self.picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
             self.picture.set_size_request(300, 190)   # se encoge sola si falta altura: debajo van los botones, las flechas y los metadatos
             self.cover_placeholder = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6,
@@ -765,6 +766,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _reset(self, _button=None):
             """Vuelve al estado inicial: sin campos, resultados, portada, ficha ni sesión de IA."""
             self._generation += 1
+            self._marvel_request += 1   # lo que aún venga de Universo Marvel ya no interesa
             self.busy = False
             self._stop_search_progress()
             if self._live_timer:
@@ -800,12 +802,23 @@ def run_gui(initial_image: Path | None = None) -> None:
             Thread(target=self._work, args=(self.image, client, query, number, publisher, year, self._generation),
                    daemon=True).start()
 
-        def _start_search_progress(self):
+        def _start_search_progress(self, job: str = "comicvine"):
+            """Barra pulsante bajo el estado mientras dura algún trabajo lento de red (ComicVine, Universo Marvel);
+            sigue encendida hasta que terminan todos."""
+            self._progress_jobs.add(job)
             self.search_progress.set_visible(True)
-            self.search_progress.pulse()
-            self._search_pulse_id = GLib.timeout_add(150, lambda: (self.search_progress.pulse(), True)[1])
+            if not self._search_pulse_id:
+                self.search_progress.pulse()
+                self._search_pulse_id = GLib.timeout_add(150, lambda: (self.search_progress.pulse(), True)[1])
 
-        def _stop_search_progress(self):
+        def _stop_search_progress(self, job: str | None = None):
+            """Termina el trabajo `job` (o todos, sin argumento); la barra se apaga cuando no queda ninguno."""
+            if job is None:
+                self._progress_jobs.clear()
+            else:
+                self._progress_jobs.discard(job)
+            if self._progress_jobs:
+                return
             if self._search_pulse_id:
                 GLib.source_remove(self._search_pulse_id)
                 self._search_pulse_id = 0
@@ -831,14 +844,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             if generation is not None and generation != self._generation:
                 return   # se ha limpiado mientras tanto
             self.busy = False
-            self._stop_search_progress()
+            self._stop_search_progress("comicvine")
             self.status.set_text(f"No se pudo procesar la imagen: {error}")
 
         def _show(self, outcome, generation=None):
             if generation is not None and generation != self._generation:
                 return   # se ha limpiado mientras tanto
             self.busy = False
-            self._stop_search_progress()
+            self._stop_search_progress("comicvine")
             if outcome.issue_number and not self.number.get_text():   # p. ej. del código de barras
                 self._set_fields(number=outcome.issue_number)
             self.library_matches = [c for c in outcome.candidates if c.source == "Mi colección"]
@@ -1591,6 +1604,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             chosen = self.selected   # con una ficha de Universo Marvel y un solo archivo, también las fichas USA
             wants_usa = (len(files) == 1 and chosen is not None and chosen.source == "Universo Marvel"
                          and chosen.extra.get("level") == "issue")
+            if wants_usa:
+                self._start_search_progress("usa")
 
             def read():   # en otro hilo: un RAR se lee lanzando `unrar`
                 infos, counts = [], {}
@@ -1615,6 +1630,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _metadata_loaded(self, where: Path, files: list[Path], infos: list, counts: dict, usa=None,
                              usa_error: str = ""):
+            self._stop_search_progress("usa")
             self.status.set_text(f"Metadatos leídos de {len(files)} archivo(s).")
             gcd = self._gcd()
             info = None
@@ -1638,6 +1654,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             notice = ""
             if usa is not None:
                 extra.update({key: value for key, value in usa.credits.items() if value})
+                if usa.summary:   # la sinopsis de las historias, para el Resumen (solo si el archivo no lo tiene ya)
+                    per_issue["Summary"] = usa.summary
                 if usa.story_lines:   # además de los campos (unión), el desglose de quién hizo qué en cada historia
                     per_issue["NotesBlock"] = compose_notes(self.selected.extra.get("NotesUsa", ""), usa.story_lines,
                                                             self.selected.extra.get("NotesComments", ""))
@@ -1768,7 +1786,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 title_entry = Gtk.Entry(text=(info or {}).get("Title", "") or (per_issue or {}).get("Title", ""),
                                         width_chars=16, hexpand=True,
                                         placeholder_text="Título del ejemplar (opcional)")
-                summary_entry = Gtk.Entry(text=(info or {}).get("Summary", ""), width_chars=16, hexpand=True,
+                summary_entry = Gtk.Entry(text=(info or {}).get("Summary", "") or (per_issue or {}).get("Summary", ""),
+                                          width_chars=16, hexpand=True,
                                           placeholder_text="Resumen del ejemplar (opcional)")
                 state_label = Gtk.Label(xalign=0, width_chars=14, ellipsize=Pango.EllipsizeMode.END, tooltip_text=error)
                 for widget in (include, name, number_entry, title_entry, summary_entry, state_label):
@@ -2041,6 +2060,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                                 series.extra["page"])
             self._marvel_request += 1
             request = self._marvel_request
+            self._start_search_progress("marvel")
             image = self.image   # la portada abierta, para compararla con la de la ficha
             if webkit_available():   # mientras tanto, la propia web de la serie
                 self._show_web(series.url, "Serie en Universo Marvel")
@@ -2069,7 +2089,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             Thread(target=run, daemon=True).start()
 
         def _marvel_resolved(self, request: int, series: Candidate, candidate: Candidate | None, problem: str):
-            if request != self._marvel_request or self.selected is not series:
+            if request != self._marvel_request:
+                return   # lo ha sustituido otra consulta (o se ha limpiado): ella se ocupa de la barra
+            self._stop_search_progress("marvel")
+            if self.selected is not series:
                 return   # se ha elegido otra cosa mientras tanto
             if candidate is None:
                 self.status.set_text(problem)
@@ -2470,7 +2493,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                                              "Descargar el índice de Universo Marvel", halign=Gtk.Align.START)
             self.marvel_button.connect("clicked", self._download_marvel)
             self.marvel_info = Gtk.Label(xalign=0, wrap=True)
-            for widget in (self.marvel_button, self.marvel_info):
+            self.marvel_progress = Gtk.ProgressBar(visible=False)   # pulsa mientras se descarga el índice
+            self._marvel_pulse_id = 0
+            for widget in (self.marvel_button, self.marvel_progress, self.marvel_info):
                 page.append(widget)
             self._refresh_marvel()
 
@@ -2782,6 +2807,9 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _download_marvel(self, _button):
             self.marvel_button.set_sensitive(False)
+            self.marvel_progress.set_visible(True)
+            self.marvel_progress.pulse()
+            self._marvel_pulse_id = GLib.timeout_add(150, lambda: (self.marvel_progress.pulse(), True)[1])
 
             def run():
                 try:
@@ -2790,8 +2818,15 @@ def run_gui(initial_image: Path | None = None) -> None:
                     later(self.marvel_info.set_text, f"No se pudo descargar: {error}")
                 else:
                     later(self._refresh_marvel)
-                later(self.marvel_button.set_sensitive, True)
+                later(self._marvel_download_finished)
             Thread(target=run, daemon=True).start()
+
+        def _marvel_download_finished(self):
+            if self._marvel_pulse_id:
+                GLib.source_remove(self._marvel_pulse_id)
+                self._marvel_pulse_id = 0
+            self.marvel_progress.set_visible(False)
+            self.marvel_button.set_sensitive(True)
 
         def _choose_gcd(self, _button):
             dump = Gtk.FileFilter(name="Volcado SQLite de GCD")
