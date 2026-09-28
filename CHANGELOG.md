@@ -5,6 +5,17 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-09-28
+
+### Added
+- **Sinopsis en el Resumen**: con una ficha de Universo Marvel elegida y un solo archivo, el campo Resumen del archivo
+  se precarga con la sinopsis de las historias USA que recoge (la de la ficha del original; muchas no la tienen y
+  entonces no se rellena nada). Con varias historias, cada una con su título en un solo párrafo. Si el archivo ya
+  tenía un Resumen, no se pisa; de ahí pasa a la sinopsis de GCstar al transferir.
+- **Barra de progreso pulsante** en las consultas a Universo Marvel, como la de ComicVine: al elegir una serie con su
+  número (ficha y portada), al abrir Metadatos con una ficha elegida (fichas USA) y al descargar el índice en Ajustes.
+  Las barras de ComicVine y de Universo Marvel no se pisan si coinciden.
+
 ## [0.23.0] - 2026-09-28
 
 ### Added

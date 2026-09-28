@@ -118,6 +118,8 @@ No tiene API ni volcado y es una web personal, así que la aplicación **no la r
    Con un solo archivo, los créditos de guion, lápiz, tinta y color se toman de las fichas USA de los originales
    que recoge el ejemplar (solo de las historias que enlazan a tu ficha española; la rotulación y la traducción
    son las de la española), una petición por original la primera vez y después desde la base local.
+   La **sinopsis** de las historias USA (si la ficha del original la trae) se precarga en el Resumen del archivo.
+   Mientras se consulta la web, una barra pulsante bajo el estado indica que está trabajando.
    Las Notas llevan además un desglose «Créditos por historia (USA)» (quién hizo qué en cada historia, ya que los campos
    solo admiten una lista por rol).
    Con un cómic abierto, la ficha elegida muestra el **parecido de su portada con la tuya** (el mismo porcentaje que
