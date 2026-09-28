@@ -123,7 +123,7 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
     amount, currency = ficha.price
     details = [ficha.date_text, f"{ficha.pages} págs." if ficha.pages else "", f"{amount} {currency}" if amount else "",
                ficha.format, ficha.comic_title]
-    extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": entry.url,
+    extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": BASE + issue.page,
              "Translator": ficha.credit("Traducción"), "Letterer": ficha.credit("Rotulación"),
              "CoverArtist": ficha.cover_credits, "GTIN": ficha.isbn or ficha.barcode, "Title": ficha.comic_title,
              "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE), "level": "issue", "page": issue.page,

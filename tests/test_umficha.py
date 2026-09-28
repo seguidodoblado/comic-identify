@@ -262,7 +262,7 @@ def test_issue_candidate_carries_the_edition_data_and_feeds_normalization_and_me
     assert candidate.extra["Month"] == "6" and candidate.extra["Year"] == "2020" and candidate.extra["Volume"] == "2"
     assert candidate.extra["Translator"] == "Ra\xfal Sastre" and candidate.extra["Letterer"] == "Norma Cuadrat, Marina Ariza"
     assert candidate.extra["CoverArtist"] == "Patrick Gleason, Morry Hollowell"
-    assert candidate.extra["Web"] == entry.url                          # la serie, no el ejemplar: es dato de serie
+    assert candidate.extra["Web"] == candidate.url == "https://fichas.universomarvel.com/esp/alertap.html"   # la ficha del ejemplar
     assert candidate.extra["GTIN"] == "977000559000400001" and candidate.extra["Title"] == "\xa1El futuro comienza aqu\xed!"
     values = suggest_values(candidate)
     assert (values.nombre, values.volumen, values.bandera, values.edicion, values.numero) == (
