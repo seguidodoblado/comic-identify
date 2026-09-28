@@ -97,11 +97,22 @@ desde **Ajustes** (`~/.local/share/comic-identify/gcstar.log`); el deshacer no t
 desde entonces. La
 ruta al `.gcs` se configura una vez en Ajustes.
 
+## Copias de seguridad
+
+En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección y GCD), los
+ajustes y los registros de deshacer, más un manifiesto con el SHA-256 de cada archivo; las bases SQLite se copian con la
+API de copia de SQLite (coherentes aunque estén en uso). Se hace una **automática al cerrar** la aplicación (solo si
+algo ha cambiado desde la última; se conservan las N últimas, 10 por defecto), y **Copiar ahora** hace una manual (las
+manuales nunca se borran solas). **Restaurar una copia…** lista las copias por fecha; antes de sustituir nada
+comprueba los SHA-256 y las bases, y guarda el estado actual como copia «antes de restaurar». Ojo: el zip incluye la
+clave de ComicVine (se crea legible solo por ti). El `.gcs` de GCstar y tus cómics no forman parte de la copia.
+
 ## Webs, asistente de IA y órdenes
 
-Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español
-(Tebeosfera, Whakoom, Norma, Norma Comics, Panini, Universo Marvel, DC Comics, DC Database y Zona Negativa) y se repliega al
-elegir una. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está marcada, la editorial y
+Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español,
+agrupadas en *Generalistas* (Tebeosfera, Whakoom, Norma, Norma Comics, Panini, Zona Negativa), *Marvel* (Universo
+Marvel) y *DC* (DC Comics, DC Database), y se repliega al elegir una. **Todas**, arriba del todo, abre las nueve, cada
+una en su pestaña del navegador. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está marcada, la editorial y
 el año: la aplicación no rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt` (Whakoom y los
 buscadores de Panini y DC).
 

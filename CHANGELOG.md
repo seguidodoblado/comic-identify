@@ -5,6 +5,18 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-09-28
+
+### Added
+- **Copias de seguridad y restauración** de los datos de la aplicación (índice de la colección, índice de GCD,
+  ajustes y registros de deshacer), en Ajustes: un `.zip` verificado (SHA-256 y comprobación de las bases) por copia.
+  Automática al cerrar la aplicación si algo ha cambiado (se conservan las N últimas), manual con «Copiar ahora»
+  (nunca se borra sola) y «Restaurar una copia…», que comprueba todo antes de tocar nada y guarda el estado actual
+  como copia «antes de restaurar».
+
+### Changed
+- El menú «Buscar en otras webs» agrupa las webs en Generalistas, Marvel y DC; «Todas» sigue arriba y abre las nueve.
+
 ## [0.20.4] - 2026-09-28
 
 ### Changed
