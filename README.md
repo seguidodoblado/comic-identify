@@ -108,7 +108,7 @@ huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
 **Transferir a GCstar…** añade el cómic abierto a una colección de [GCstar](https://www.gcstar.org/) sin tocar el
 resto de su archivo `.gcs`: solo inserta el elemento nuevo. Lleva el nombre y la serie, el número, los créditos (guion,
 lápiz, tinta, color, rotulación y «Cover Artist»), «Publicado por» como «Editorial - Sello» (GCstar no tiene campo de
-sello), la fecha de publicación (con día y mes si se conocen), la sinopsis, las notas como comentario, la web, el ISBN,
+sello), la fecha de publicación (con día y mes si se conocen), la sinopsis, las notas como comentario (con «Traducción: …» y «Edición: …» al final si hay dato, ya que GCstar no tiene campos para ellas), la etiqueta «Color» o «B&N» (según el `BlackAndWhite` del archivo, si lo tiene), la web, el ISBN,
 las páginas contadas en el archivo y la ruta del archivo. Además, los campos propios de GCstar (tipo, categoría,
 formato, colección, coste e ISBN), con un desplegable que sugiere lo que ya usas en esa colección: «Categoría» y
 «Formato» se prerrellenan con los del archivo; «Tipo» con «Europeo», «Americano» o «Manga» según bajo cuál de tus

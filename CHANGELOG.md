@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-09-28
+
+### Added
+- **Transferir a GCstar**: la traducción y la edición del ComicInfo.xml (GCstar no tiene campos para ellas) van al final del
+  comentario, como «Traducción: …» y «Edición: …», solo si hay dato.
+- **Transferir a GCstar**: el `BlackAndWhite` del ComicInfo.xml pasa a las **etiquetas** de GCstar: «Color» (No) o «B&N» (Yes),
+  escritas con el mismo formato que usa el propio GCstar (`<tags><line><col>…</col></line></tags>`, comprobado con un item
+  creado por él). Sin dato, sin etiqueta.
+
 ## [0.28.0] - 2026-09-28
 
 ### Added
