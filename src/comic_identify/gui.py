@@ -2607,7 +2607,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                 license_type=Gtk.License.CUSTOM, license=LICENSE_TEXT, wrap_license=True)
             about.add_credit_section("Datos de terceros", [
                 "Grand Comics Database (CC BY-SA 4.0) https://www.comics.org/",
-                "Comic Vine https://comicvine.gamespot.com/"])
+                "Comic Vine https://comicvine.gamespot.com/",
+                "Universo Marvel https://fichas.universomarvel.com/",
+                "Tebeosfera (textos CC BY-SA 4.0) https://www.tebeosfera.com/"])
             about.present()
 
         def _refresh_series(self):
@@ -2765,7 +2767,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             about.connect("clicked", self._about)
             page.append(about)   # arriba: la página es larga y así se ve al entrar
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Esta aplicación se apoya en el trabajo de dos comunidades de colaboradores, que son las que "
+                "Esta aplicación se apoya en el trabajo de cuatro comunidades de colaboradores, que son las que "
                 "han hecho el trabajo duro:")))
             page.append(self._credit(COMICVINE_HOST, "Comic Vine", (
                 "Enciclopedia colaborativa de cómics con una API gratuita. Aporta series, números y portadas, "
@@ -2775,6 +2777,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                 "Base de datos abierta y colaborativa de cómics de todo el mundo, mantenida por voluntarios. "
                 "De ella sale el índice de ediciones en español (España y Latinoamérica): títulos, números, "
                 "editoriales y sellos. Datos con licencia CC BY-SA 4.0."), GCD_SITE))
+            page.append(self._credit("fichas.universomarvel.com", "Universo Marvel", (
+                "Catálogo, mantenido por sus autores, de las ediciones españolas de Marvel de 31 editoriales (Forum/"
+                "Planeta, Panini, Vértice, Bruguera, Zinco…): fecha, precio, páginas, créditos, comentarios y el "
+                "ejemplar USA original de cada número. De él salen las fichas que consultas, una a una, y los "
+                "logotipos de algunas editoriales."), "https://fichas.universomarvel.com/"))
+            page.append(self._credit("www.tebeosfera.com", "Tebeosfera", (
+                "El gran catálogo de la historieta editada en España, de todas las editoriales y épocas, hecho por "
+                "la Asociación Cultural Tebeosfera y sus colaboradores. De él salen las colecciones y las fichas de "
+                "cada ejemplar: fecha, precio, créditos, géneros, ISBN y portada. Sus textos tienen licencia "
+                "CC BY-SA 4.0 y las imágenes son de sus titulares."), "https://www.tebeosfera.com/"))
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(label="Clave de la API de ComicVine (gratuita):", xalign=0))
             self.key = Gtk.PasswordEntry(show_peek_icon=True, text=self.settings.api_key)
