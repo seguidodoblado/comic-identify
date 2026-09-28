@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-09-28
+
+### Fixed
+- **El logotipo del usuario no salía en las series de Tebeosfera sin resolver** (antes de escribir el número y consultar su
+  ficha): Tebeosfera solo trae el trozo de editorial de la dirección de la serie («Surco»), no el nombre completo que dan
+  GCD o Universo Marvel («Ediciones Surco»), y no encontraba el archivo guardado con ese nombre. Ahora, si no hay un archivo
+  con el nombre exacto, se busca uno cuyas palabras coincidan con las del nombre (en cualquier sentido), así que sirve el
+  mismo archivo venga el nombre de donde venga.
+
 ## [0.34.0] - 2026-09-28
 
 ### Changed

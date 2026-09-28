@@ -230,14 +230,17 @@ todas las tiendas a la vez con **Todas** (arriba del todo, cada una en su pesta�
 del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo aparecen de segunda mano. Sin enlaces de
 afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
 
-Los resultados de Universo Marvel y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum (por el sello), Panini,
-Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera; se descargan una vez de la web de fichas a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden
-borrar sin problema.
+Los resultados de Universo Marvel, Tebeosfera y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum
+(por el sello), Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera; se descargan una vez de la web de fichas
+a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden borrar sin problema.
 
 Las editoriales sin logotipo propio (la mayoría de las latinoamericanas y otras muchas españolas) llevan en su lugar una
-etiqueta con su nombre, así que ninguna fila de GCD queda sin marca. Para ponerles su logotipo, guarda un archivo `.png`,
+etiqueta con su nombre, así que ninguna fila queda sin marca. Para ponerles su logotipo, guarda un archivo `.png`,
 `.jpg` o `.svg` (de cualquier tamaño: se reduce al hueco de la fila) con el nombre que aparece en la ayuda de la etiqueta (p. ej. `ediciones-b.png`) en
-`~/.local/share/comic-identify/logos`; también sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…).
+`~/.local/share/comic-identify/logos`; también sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…). Antes de
+consultar la ficha de un ejemplar, una serie de Tebeosfera solo trae el trozo de editorial que da su dirección web («Surco»),
+no el nombre completo que dan GCD o Universo Marvel («Ediciones Surco»): el archivo se reconoce igual mientras sus palabras
+estén todas en el nombre guardado, o al revés.
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
 guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque son marcas de sus webs. Se pueden
