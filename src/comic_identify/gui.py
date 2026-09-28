@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from threading import Event, Thread
 
-from . import __version__
+from . import __version__, webfilter
 from . import backup as backup_module
 from . import tebeosfera as tebeosfera_site
 from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
@@ -253,6 +253,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._quiet = False       # true mientras se escriben los campos por código
             self._live_timer = 0
             self.webview = None   # se crea al abrir la primera ficha: WebKit consume memoria
+            self._web_filter_ready, self._web_pending = False, ""   # el panel web espera a sus reglas de bloqueo
             self._big_covers: dict[str, bytes] = {}   # portadas grandes de ComicVine ya descargadas
             self._native_url = ""
             self.icon_widgets: dict[str, list] = {}   # host -> imágenes que muestran su icono
@@ -2345,12 +2346,32 @@ def run_gui(initial_image: Path | None = None) -> None:
                 # y evita repetir su comprobación en cada ficha.
                 session = WebKit.NetworkSession.new(str(data), str(cache))
                 session.get_website_data_manager().set_favicons_enabled(True)   # desactivados por defecto
+                # las cookies no se guardan en disco por sí solas: sin esto había que volver a pasar la comprobación de
+                # Cloudflare y a aceptar los avisos de cookies en cada arranque
+                session.get_cookie_manager().set_persistent_storage(str(data / "cookies.sqlite"),
+                                                                    WebKit.CookiePersistentStorage.SQLITE)
                 self.webview = WebKit.WebView(network_session=session, vexpand=True)
                 self.webview.connect("notify::favicon", self._favicon_changed)
                 self.webview.connect("notify::uri", self._web_uri_changed)
                 self.preview_stack.add_named(self.webview, "web")
+                self._web_filter_ready = False
+                store = WebKit.UserContentFilterStore.new(str(cache / "filters"))
+                store.save("tebeosfera", GLib.Bytes.new(webfilter.rules_json()), None, self._web_filter_saved)
             self._open_preview(title, url, "web")
-            self.webview.load_uri(url)
+            self._web_pending = url
+            if self._web_filter_ready:
+                self.webview.load_uri(url)   # si no, se carga en cuanto están compiladas las reglas (unos milisegundos)
+
+        def _web_filter_saved(self, store, result):
+            """Las reglas de bloqueo (ver `webfilter`) ya están compiladas: se aplican y se carga la página pedida. Si no se
+            pudieron compilar, la página carga igual, sin bloqueos."""
+            try:
+                self.webview.get_user_content_manager().add_filter(store.save_finish(result))
+            except GLib.Error:
+                pass
+            self._web_filter_ready = True
+            if self._web_pending:
+                self.webview.load_uri(self._web_pending)
 
         @staticmethod
         def _catalog_page(uri: str) -> tuple[str, str]:
