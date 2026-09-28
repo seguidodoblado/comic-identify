@@ -301,7 +301,14 @@ Al hacer clic en una sugerencia de GCD, su ficha de comics.org se abre en un pan
 se abre el ejemplar; sin número, la galería de portadas de la serie (GCD la pagina de 50 en 50). Se carga una sola
 página por clic y la aplicación no extrae ni guarda ninguna imagen: es una vista de comics.org tal como la ve un
 navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
-`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema.
+`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. Las cookies sí se guardan en disco
+(`cookies.sqlite`), así que la comprobación de Cloudflare de GCD no se repite en cada arranque.
+
+En las fichas de **Tebeosfera** el panel bloquea lo que no es de la ficha: los servicios de medición y publicidad de
+terceros (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, el compilador de estilos Tailwind por CDN) y las
+imágenes de anuncios propios de la web (asociarse, colaborar…). Sin ellos la ficha baja de unos 6 MB a algo más de 1 MB,
+no se instalan cookies de seguimiento y su aviso de cookies (que pregunta por esas mismas) no se muestra. Solo afecta a
+las páginas de Tebeosfera; GCD y Universo Marvel se ven tal cual. Las reglas están en `webfilter.py`.
 
 - **Identificar**: abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada, busca y elige.
 - **Mi colección**: añade carpetas e indexa. Se recorren con subcarpetas y las siguientes veces solo se

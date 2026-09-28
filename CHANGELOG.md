@@ -5,6 +5,18 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-09-28
+
+### Changed
+- **Fichas de Tebeosfera más ligeras y sin avisos de cookies**: el panel bloquea los servicios de medición y publicidad de
+  terceros que cargaba cada ficha (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, Tailwind por CDN) y las
+  imágenes de anuncios propios de la web. Una ficha pasa de ~6 MB y 109 peticiones a ~1,3 MB, ya no deja cookies de
+  seguimiento y no muestra su aviso de cookies. Solo afecta a las páginas de Tebeosfera.
+
+### Fixed
+- **Las cookies del panel web no se guardaban en disco** (en contra de lo que decía el código): había que volver a aceptar
+  avisos de cookies y a pasar la comprobación de Cloudflare de GCD en cada arranque. Ahora se guardan (`cookies.sqlite`).
+
 ## [0.32.0] - 2026-09-28
 
 ### Changed
