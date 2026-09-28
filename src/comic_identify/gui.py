@@ -495,7 +495,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             click = Gtk.GestureClick()   # doble clic: la página a la vista, en una ventana grande
             click.connect("pressed", lambda _g, presses, _x, _y: presses == 2 and self._open_viewer())
             self.picture.add_controller(click)
-            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0, hexpand=True)
+            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0)
             self.meta_heading.add_css_class("heading")
             self.delete_meta_button = icon_button(("edit-delete-symbolic", "user-trash-symbolic"), "Eliminar datos",
                                                   sensitive=False, tooltip_text=(
