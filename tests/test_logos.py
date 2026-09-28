@@ -90,3 +90,19 @@ def test_a_logo_put_by_the_user_wins_over_the_downloaded_one_and_covers_unknown_
     assert user_logo(("editorial-novaro",), mine) == mine / "editorial-novaro.jpg"
     assert user_logo(("otra", "editorial-novaro"), mine) == mine / "editorial-novaro.jpg"
     assert user_logo(("otra",), mine) is None and user_logo(("x",), None) is None and user_logo(("",), mine) is None
+
+
+def test_a_logo_saved_with_the_full_editorial_name_is_found_from_a_shorter_fragment_of_it(tmp_path):
+    """Tebeosfera, antes de consultar la ficha de un número, solo sabe el trozo de editorial de la dirección de la serie
+    («Surco»), no el nombre completo que dan GCD o Universo Marvel («Ediciones Surco»)."""
+    from comic_identify.logos import user_logo
+    mine = tmp_path / "mios"; mine.mkdir()
+    (mine / "ediciones-surco.jpg").write_bytes(_png_bytes())
+    assert user_logo(("surco",), mine) == mine / "ediciones-surco.jpg"          # el fragmento encuentra el nombre completo
+    assert user_logo(("ediciones-surco",), mine) == mine / "ediciones-surco.jpg"  # y el nombre completo se sigue encontrando
+    assert user_logo(("heras",), mine) is None                                  # una palabra que no está, no cuela
+    assert user_logo(("vertigo",), mine) is None                                # ninguna palabra en común: no es la misma editorial
+    (mine / "heras-books.png").write_bytes(_png_bytes())
+    assert user_logo(("heras-books",), mine) == mine / "heras-books.png"        # el nombre completo también al revés
+    assert user_logo(("heras",), mine) == mine / "heras-books.png"              # y un fragmento suyo, como con Surco
+

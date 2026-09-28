@@ -51,12 +51,33 @@ def short_name(name: str) -> str:
     return _LEGAL.sub("", name.replace('"', "")).strip(" ,.") or name.strip()
 
 
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", fold(text)))
+
+
 def user_logo(names: tuple[str, ...], user_dir: Path | None) -> Path | None:
-    """Un logotipo que haya puesto el usuario en su carpeta, por el nombre de archivo de alguno de esos nombres."""
+    """Un logotipo que haya puesto el usuario en su carpeta: por el nombre de archivo exacto de alguno de esos nombres o,
+    si no hay ninguno exacto, por sus palabras. Esto último es para Tebeosfera: antes de consultar la ficha de un número
+    solo sabe el trozo de editorial que trae la dirección de la serie («Surco»), no el nombre completo que dan GCD o
+    Universo Marvel («Ediciones Surco») y con el que el usuario habrá guardado el archivo; en cuanto las palabras de uno
+    están todas en el otro (en cualquier sentido), se da por bueno."""
     if user_dir is None:
         return None
-    return next((path for name in names if name for extension in USER_EXTENSIONS
-                 if (path := user_dir / f"{name}{extension}").is_file()), None)
+    if (exact := next((path for name in names if name for extension in USER_EXTENSIONS
+                       if (path := user_dir / f"{name}{extension}").is_file()), None)) is not None:
+        return exact
+    if not user_dir.is_dir():
+        return None
+    wanted = [words for name in names if name and (words := _words(name))]
+    if not wanted:
+        return None
+    for path in sorted(user_dir.iterdir()):
+        if path.suffix.lower() not in USER_EXTENSIONS:
+            continue
+        found = _words(path.stem)
+        if found and any(words <= found or found <= words for words in wanted):
+            return path
+    return None
 
 
 def logo_file(key: str, cache_dir: Path, user_dir: Path | None = None) -> Path | None:
