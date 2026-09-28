@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-09-28
+
+### Changed
+- **Transferir a GCStar**: el campo «Publicado por» lleva ahora «Editorial - Sello» en vez de solo la editorial, ya
+  que GCstar no tiene campo para el sello y así no se pierde. Si falta uno de los dos, se queda solo el otro.
+
 ## [0.20.3] - 2026-09-27
 
 ### Added
