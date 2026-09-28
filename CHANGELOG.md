@@ -5,6 +5,31 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-09-28
+
+### Added
+- **Formato**: con una ficha de Universo Marvel elegida, el formato que la ficha indica («Tomo tapa blanda»…, solo lo
+  traen algunas) se precarga en un campo nuevo «Formato» del diálogo de Metadatos (`Format` de ComicInfo.xml, con un
+  solo archivo) y de ahí en el «Formato» de «Transferir a GCstar…», que sigue ofreciendo los valores que ya usas.
+- **Autor de la portada en GCstar**: `CoverArtist` de ComicInfo.xml (que con una ficha de Universo Marvel sale de los
+  autores de su portada) se transfiere ahora al campo «Cover Artist» de GCstar (`artist`).
+- **Guion, lápiz, tinta y color desde las fichas USA**: con una ficha de Universo Marvel elegida y un solo archivo,
+  «Metadatos archivo» consulta la ficha del original USA de cada historia (el enlace «Contenido USA») y precarga esos
+  cuatro créditos, sin repetir nombres (el argumento cuenta como guion). De cada ficha USA solo se usan las historias
+  que enlazan a la ficha española de tu ejemplar (un número USA trae varias y el español puede recoger solo alguna);
+  si no se puede saber cuáles, se usan todas y se avisa. La rotulación y la traducción siguen viniendo de la ficha
+  española. Cada ficha USA se descarga una vez (con pausa entre peticiones) y queda en la base local; un enlace roto
+  (hay alguno en la web) no impide los demás y se avisa en el diálogo. Si los créditos ya estaban en el archivo, no se
+  pisan.
+- **Créditos por historia en las Notas**: como un ejemplar puede reunir historias de autores distintos y los campos
+  solo admiten una lista por rol, las Notas llevan además, bajo «Contenido USA», un «Créditos por historia (USA)» con
+  una línea por historia («Título» (Serie #N): Argumento · Guión · Lápiz · Tinta · Color). Si las Notas ya llevaban un
+  bloque de la ficha se refresca en vez de repetirlo; si hay algo escrito a mano debajo, no se toca.
+- **Parecido de la portada con la ficha**: al elegir una ficha de Universo Marvel con un cómic abierto, se descarga
+  su portada (una petición más, una sola vez), se calcula su huella y se compara con la del archivo, con el mismo
+  porcentaje y la misma «Coincidencia probable» que en las sugerencias de ComicVine, más su miniatura en la lista.
+  Las portadas se guardan reducidas (500 px) en la base local para no engordarla ni las copias de seguridad.
+
 ## [0.22.1] - 2026-09-28
 
 ### Fixed

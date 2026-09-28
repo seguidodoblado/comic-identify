@@ -115,6 +115,13 @@ No tiene API ni volcado y es una web personal, así que la aplicación **no la r
    (rotulación, traducción, portada); con un solo archivo, también el título del cómic y el código de barras. Las
    páginas (`PageCount`) siempre se cuentan en el propio archivo, con o sin ficha. El contenido original lo sigues
    indicando tú.
+   Con un solo archivo, los créditos de guion, lápiz, tinta y color se toman de las fichas USA de los originales
+   que recoge el ejemplar (solo de las historias que enlazan a tu ficha española; la rotulación y la traducción
+   son las de la española), una petición por original la primera vez y después desde la base local.
+   Las Notas llevan además un desglose «Créditos por historia (USA)» (quién hizo qué en cada historia, ya que los campos
+   solo admiten una lista por rol).
+   Con un cómic abierto, la ficha elegida muestra el **parecido de su portada con la tuya** (el mismo porcentaje que
+   en ComicVine) y su miniatura.
    Las Notas llevan, debajo de «Contenido original», los ejemplares USA que recoge la edición (con el enlace a su ficha)
    y los comentarios de la edición; pasan al comentario de GCstar al transferir.
 4. En **Transferir a GCstar…**, «Coste» e «ISBN» vienen rellenos con la ficha elegida (el precio en euros: las
