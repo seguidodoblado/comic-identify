@@ -5,6 +5,24 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-09-28
+
+### Changed
+- **Orden de los resultados**: tu colección siempre primero y, después, Tebeosfera, Universo Marvel y GCD (antes GCD iba
+  delante). Con una portada abierta, tu colección y el código de barras exacto van primero y luego el parecido de portada.
+
+### Added
+- **Tebeosfera** como nueva fuente, con todas las editoriales y épocas y el mismo funcionamiento que Universo Marvel:
+  índice local (Ajustes → «Descargar el índice de Tebeosfera»: ~13 peticiones a sus sitemaps públicos, unas 44.000 colecciones
+  y ~490.000 números), sugerencias al escribir con chip naranja e icono, ficha del ejemplar al elegir una colección con su
+  número (o «Usar esta ficha» al navegar por la web en el panel), portada con su **parecido con la tuya**, barra de progreso,
+  logotipo de la editorial, copia de seguridad del índice y ficha en el panel derecho.
+- Sus metadatos: año, mes y día, total, editorial y sello, idioma, formato, web, **todos los créditos** (guion, lápiz, tinta,
+  color, rotulación, portada, traducción, edición), género, sagas como personajes, título, ISBN/EAN, Blanco y negro y, en las
+  Notas, los datos de la edición, las ediciones relacionadas y el texto de la ficha. El coste (pesetas convertidas) y el ISBN
+  llegan a «Transferir a GCstar…».
+- Si el número escrito no existe en una colección, se ofrecen los más cercanos para elegir.
+
 ## [0.29.0] - 2026-09-28
 
 ### Added

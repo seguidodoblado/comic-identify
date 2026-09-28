@@ -27,7 +27,7 @@ Maintainer: Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>
 Homepage: https://github.com/seguidodoblado/comic-identify
 Description: Identifica un cómic a partir de su portada
  Aplicación GTK para gestionar una colección de cómics digitales: identifica por
- portada o título (Grand Comics Database, Universo Marvel, código de barras,
+ portada o título (Grand Comics Database, Universo Marvel, Tebeosfera, código de barras,
  ComicVine y comparación visual de portadas), normaliza nombres, escribe metadatos
  ComicInfo.xml, transfiere a GCstar, hace copias de seguridad y ofrece un
  asistente de IA opcional con tu propia sesión.

@@ -4,17 +4,18 @@ Aplicación de escritorio (GTK 4 + PyGObject, interfaz en español) para gestion
 digitales (CBR, CBZ y CB7):
 
 - **Identifica** un cómic a partir de su portada o de su título, con Grand Comics Database (GCD), el catálogo de
-  ediciones españolas de Marvel de [Universo Marvel](https://fichas.universomarvel.com/), ComicVine y tu propia colección.
+  ediciones españolas de Marvel de [Universo Marvel](https://fichas.universomarvel.com/), el de toda la historieta
+  editada en España de [Tebeosfera](https://www.tebeosfera.com/), ComicVine y tu propia colección.
 - **Normaliza** los nombres de archivos y carpetas según un patrón configurable, con deshacer.
 - **Escribe metadatos** `ComicInfo.xml` (el formato que entienden Kavita, Komga y ComicTagger), con deshacer y con datos
-  de las fichas de Universo Marvel (créditos, fecha, sinopsis…).
+  de las fichas de Universo Marvel y de Tebeosfera (créditos, fecha, géneros, ISBN…).
 - **Lista las series** de tu colección con los números que tienes y los que faltan.
 - **Transfiere** el cómic catalogado a tu colección de [GCstar](https://www.gcstar.org/), con su portada.
 - **Copias de seguridad** verificadas de sus índices y ajustes, con restauración.
 - **Busca dónde comprar** el ejemplar (Panini, segunda mano, tiendas) y abre otras webs de cómic.
 
 La identificación es local (ZBar, hash perceptual, índices SQLite); consulta la API gratuita de ComicVine y, solo cuando
-eliges un resultado, las fichas de Universo Marvel (una página cada vez, guardada después en local). La IA es opcional:
+eliges un resultado, las fichas de Universo Marvel y de Tebeosfera (una página cada vez, guardada después en local). La IA es opcional:
 un botón abre tu propia CLI de IA en un terminal (ver más abajo).
 
 ## Cómo identifica
@@ -23,8 +24,8 @@ El título lo escribes tú: el OCR se descartó porque no lee los logotipos de l
 reales devolvía texto sin sentido).
 
 1. **Búsqueda mientras escribes** en el índice local de **Grand Comics Database (GCD)** (ediciones en
-   español, España primero), por título y número, y en el de **Universo Marvel** (series de Forum/Planeta, Panini y
-   Vértice). Es local: sin red ni límites.
+   español, España primero), por título y número, en el de **Universo Marvel** (series de Forum/Planeta, Panini y
+   Vértice) y en el de **Tebeosfera** (todas las colecciones, de cualquier editorial). Es local: sin red ni límites.
 2. **Tu colección**: compara la portada con un índice local de las primeras páginas de tus CBZ/CBR/CB7
    y te dice qué archivo es, sin red.
 3. **Código de barras** (`zbarimg`): coincidencia exacta en GCD y número de ejemplar del complemento.
@@ -32,12 +33,15 @@ reales devolvía texto sin sentido).
    sus portadas por parecido visual (dHash de 256 bits, tolerante a escala, compresión y márgenes).
 5. **Ficha en un panel a la derecha** al hacer clic en una sugerencia: de GCD, con número abre el
    ejemplar y sin número la galería de portadas de la serie; de ComicVine, una ficha con la portada grande,
-   el título, la editorial y la fecha; de Universo Marvel, la página de la serie o del ejemplar (ver más abajo).
+   el título, la editorial y la fecha; de Universo Marvel y de Tebeosfera, la página de la serie o del ejemplar (ver más
+   abajo).
    «Abrir en el navegador» está en la cabecera del panel. El panel se adapta al ancho de la pantalla (mínimo 420 px; el
    terminal del asistente pide 760) y la ventana no crece más que la pantalla ni cambia de tamaño si está maximizada.
 
-Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas. Cada uno lleva su
-fuente (GCD en morado, Universo Marvel en rojo y ComicVine en verde, con el icono de su web) y, cuando la editorial es una de las conocidas (Forum, Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera), su
+Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas. Al escribir,
+salen primero los de **tu colección**, luego los de **Tebeosfera**, los de **Universo Marvel** y los de **GCD**; con
+una portada abierta, primero tu colección y el código de barras exacto y después, por parecido de portada, el resto. Cada uno lleva su
+fuente (GCD en morado, Universo Marvel en rojo, Tebeosfera en naranja y ComicVine en verde, con el icono de su web) y, cuando la editorial es una de las conocidas (Forum, Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera), su
 logotipo.
 
 Además del título y el número puedes acotar con **Editorial / distribuidor** (en GCD también casa con el
@@ -166,9 +170,38 @@ La base guarda de cada ficha sus campos ya leídos y el HTML original comprimido
 leer sin volver a pedir nada a la web; las portadas se guardan reducidas (500 px). Volver a descargar el índice no borra
 las fichas.
 
+## Tebeosfera
+
+[Tebeosfera](https://www.tebeosfera.com/) es el gran catálogo de la historieta editada en España, de todas las editoriales y
+épocas (Panini, ECC, Norma, Planeta, Zinco, Forum, Vértice, Bruguera…). Lo mantiene una asociación cultural y no tiene API
+ni volcado, así que la aplicación **no la rastrea**: su `robots.txt` solo veta `/adminpanel/` y anuncia sus sitemaps
+públicos, y de ahí sale el índice; cada ficha se pide solo cuando eliges un ejemplar. Todas las peticiones llevan pausa
+(1,5 s), piden la página comprimida y se identifican como `comic-identify`.
+
+Funciona igual que Universo Marvel:
+
+1. En **Ajustes**, «Descargar el índice de Tebeosfera» baja los sitemaps (unas 13 peticiones, unos 20 segundos, ~13 MB en
+   `~/.local/share/comic-identify/tebeosfera.db`): unas 44.000 colecciones y sus ~490.000 números. Las colecciones salen entre
+   las sugerencias al escribir el título (con un chip naranja y el icono de la web), sin tildes ni mayúsculas.
+2. Al elegir una colección **con el número escrito** se consulta la ficha de ese ejemplar y su portada (una vez; luego sale
+   de la base local): fecha, páginas, precio, formato, créditos y el **parecido de su portada con la tuya**. Un número único
+   (un libro, un especial) no necesita número. Si el número no existe, se ofrecen los más cercanos. También puedes
+   **navegar por la web en el panel** y pulsar **Usar esta ficha** al llegar a la de un ejemplar.
+3. **Metadatos archivo** (con un solo archivo) precarga de la ficha: año, mes y día, total de la colección, editorial, sello
+   (si lo hay), idioma, formato, web, todos los créditos (guion, lápiz, tinta, color, rotulación, portada, traducción,
+   edición), **género**, «sagas» como personajes, título del número, código de barras (ISBN o EAN), **Blanco y negro** (según
+   el interior) y, en las Notas, los datos de la edición que no tienen campo (origen, distribución, tamaño, color, impresión,
+   ISSN, depósito legal), las ediciones relacionadas y el texto de la ficha.
+4. **Transferir a GCstar…** usa el mismo coste (las pesetas se convierten) e ISBN de la ficha elegida.
+
+Tebeosfera escribe títulos y nombres en MAYÚSCULAS: se pasan a mayúscula inicial (conservando siglas y cifras romanas), que es
+lo único que se puede hacer sin perder información; los que ya traen minúsculas se respetan. En la lista, las colecciones
+salen con el nombre que da su dirección (sin tildes) hasta que consultas alguna de sus fichas. Las imágenes son de sus
+titulares; la base local es para tu uso personal, no la redistribuyas.
+
 ## Copias de seguridad
 
-En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección, GCD y Universo Marvel), los
+En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección, GCD, Universo Marvel y Tebeosfera), los
 ajustes y los registros de deshacer, más un manifiesto con el SHA-256 de cada archivo; las bases SQLite se copian con la
 API de copia de SQLite (coherentes aunque estén en uso). Se hace una **automática al cerrar** la aplicación (solo si
 algo ha cambiado desde la última; se conservan las N últimas, 10 por defecto), y **Copiar ahora** hace una manual (las
@@ -331,6 +364,10 @@ la aplicación es una obra derivada y debe conservar esa atribución y licencia 
 Los datos de las fichas de Universo Marvel (fichas.universomarvel.com) pertenecen a sus autores, y los personajes y
 publicaciones a sus titulares. La base local (`universomarvel.db`, con las fichas y portadas que consultas) es para tu uso
 personal: no la redistribuyas.
+
+Los datos de Tebeosfera (www.tebeosfera.com) son de la Asociación Cultural Tebeosfera y de sus colaboradores (sus textos
+se distribuyen con licencia CC BY-SA 4.0 y las imágenes son de sus titulares). La base local (`tebeosfera.db`, con las
+fichas y portadas que consultas) es para tu uso personal.
 
 ## Licencia
 
