@@ -5,6 +5,21 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-09-28
+
+### Fixed
+- **El panel de WebKit (fichas de GCD y de Universo Marvel) seguía rompiendo el ancho de la pantalla** después de haber usado
+  el terminal del asistente: el panel derecho reservaba el ancho de su página más ancha aunque estuviera oculta, y la
+  cabecera («Ficha…», «Abrir en el navegador», «Volver al asistente», cerrar) no podía encogerse, así que el mínimo
+  de la ventana pasaba de la pantalla (con letra grande, hasta 2081 px en una de 1920) y dejaba de poder maximizarse.
+  Ahora solo cuenta la página visible y el título de la cabecera se recorta en vez de ensanchar el panel; probado con un
+  gestor de ventanas real, la ventana maximizada y tres tamaños de letra. La corrección de 0.26.1 solo cubría la primera
+  apertura del terminal.
+
+### Changed
+- **Abrir, arrastrar o pegar un cómic nuevo cierra el panel derecho** si estaba abierto con la ficha (o la sesión de IA) del
+  anterior. Solo se cierra cuando el nuevo se ha cargado de verdad: si falla la lectura, el panel se queda como estaba.
+
 ## [0.26.1] - 2026-09-28
 
 ### Fixed

@@ -49,7 +49,7 @@ y el estado dice qué serie se está comparando.
 ## Ver el cómic abierto
 
 - **Abrir…** (o pegar con Ctrl+V un archivo copiado en el gestor de archivos, o arrastrarlo) abre un CBR/CBZ/CB7 (se usa su primera imagen como portada) o
-  una imagen suelta.
+  una imagen suelta. Abrir un elemento nuevo cierra el panel derecho si estaba abierto con la ficha o la sesión de IA del anterior.
 - **Páginas:** las flechas bajo la portada (primera, anterior, siguiente, última) permiten mirar el resto de
   páginas, por ejemplo la contraportada. La búsqueda sigue usando la portada.
 - **Ampliar:** doble clic en la página a la vista la abre en una ventana grande (flechas, teclado ← → Inicio Fin Esc y
