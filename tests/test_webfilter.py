@@ -18,7 +18,8 @@ def test_the_third_party_trackers_of_a_ficha_are_blocked_and_the_site_itself_is_
                 "https://www.google.com/ccm/collect?en=page_view",
                 "https://www.tebeosfera.com/T3content/img/T3_avisos/d/j/banner.png",
                 "https://www.tebeosfera.com/T3content/img/T3_instituciones/5/m/tn_logo.jpg",
-                "https://www.tebeosfera.com/neko/img/awasetoco.png"):
+                "https://www.tebeosfera.com/neko/img/awasetoco.png",
+                "https://static.cloudflareinsights.com/beacon.min.js"):
         assert blocked(url), url
     for url in ("https://www.tebeosfera.com/numeros/universo_dc_1989_zinco_10.html",
                 "https://www.tebeosfera.com/T3content/img/T3_numeros/1/0/portada.jpg",
@@ -27,12 +28,23 @@ def test_the_third_party_trackers_of_a_ficha_are_blocked_and_the_site_itself_is_
         assert not blocked(url), url
 
 
-def test_every_rule_only_applies_to_tebeosfera_and_the_cookie_notice_is_hidden():
+def test_trackers_and_the_cookie_notice_only_concern_tebeosfera_and_gcd_only_loses_its_cloudflare_beacon():
     rules = webfilter.rules()
-    assert all(rule["trigger"]["if-domain"] == ["*tebeosfera.com"] for rule in rules)   # GCD y Universo Marvel, intactos
+    others = [rule for rule in rules if rule["action"]["type"] in ("block", "css-display-none")
+              and rule["trigger"]["if-domain"] != ["*tebeosfera.com"]]
+    assert [(r["trigger"]["if-domain"], r["trigger"]["url-filter"]) for r in others] == [
+        (["*comics.org"], "cloudflareinsights\\.com")]
     hide = [rule for rule in rules if rule["action"]["type"] == "css-display-none"]
     assert [rule["action"]["selector"] for rule in hide] == [".cc-cookies"]
-    assert {rule["action"]["type"] for rule in rules} == {"block", "css-display-none"}
+    assert {rule["action"]["type"] for rule in rules} == {"block", "css-display-none", "block-cookies"}
+
+
+def test_tebeosfera_and_universo_marvel_are_consulted_without_cookies_but_gcd_keeps_cloudflares():
+    cookies = [rule for rule in webfilter.rules() if rule["action"]["type"] == "block-cookies"]
+    assert sorted(rule["trigger"]["if-domain"][0] for rule in cookies) == ["*tebeosfera.com", "*universomarvel.com"]
+    assert all(rule["trigger"]["url-filter"] == ".*" for rule in cookies)   # todas las peticiones de esas páginas
+    # sin `cf_clearance` la comprobación de Cloudflare de GCD no se supera nunca: no se le bloquean las cookies
+    assert not any("comics.org" in domain for rule in cookies for domain in rule["trigger"]["if-domain"])
 
 
 def test_the_rules_are_valid_json_for_webkit():

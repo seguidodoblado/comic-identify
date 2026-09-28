@@ -20,12 +20,22 @@ TRACKING_PATHS = (r"google\.com/pagead/", r"google\.es/pagead/", r"google\.com/c
 # Los anuncios propios de la web (asociarse, colaborar, sus instituciones…): imágenes de varios MB que se ven en cada ficha
 # y no son de ella (la portada y las muestras están en «T3_numeros»)
 PROMOTIONS = ("/T3_avisos/", "/T3_instituciones/", "/neko/img/awasetoco.png")
-BANNER = ".cc-cookies"   # el aviso de cookies de la web (cookiecuttr)
+BANNER = ".cc-cookies"
+# Estas webs se consultan sin cookies: ni las envía el panel ni guarda las que le den (`block-cookies`). GCD (comics.org) no
+# puede estar aquí: su comprobación anti-robots de Cloudflare no se supera sin su cookie `cf_clearance` (sin ella, la página
+# se queda en «Un momento…»), y es la única que deja; solo vive en memoria y desaparece al cerrar la aplicación.
+NO_COOKIES = ("*tebeosfera.com", "*universomarvel.com")
+# La web de GCD (comics.org) carga además la medición de visitas de Cloudflare
+GCD_TRACKERS = ("cloudflareinsights.com",)   # el aviso de cookies de la web (cookiecuttr)
 HEAVY = ("cdn.tailwindcss.com",)   # un compilador de estilos que se descarga y ejecuta en cada ficha
 
 
 def _block(pattern: str) -> dict:
     return {"trigger": {"url-filter": pattern, "if-domain": [DOMAIN]}, "action": {"type": "block"}}
+
+
+def _for(domain: str, action: dict, pattern: str = ".*") -> dict:
+    return {"trigger": {"url-filter": pattern, "if-domain": [domain]}, "action": action}
 
 
 def rules() -> list[dict]:
@@ -35,6 +45,8 @@ def rules() -> list[dict]:
     found += [_block(re.escape(path)) for path in PROMOTIONS]
     found.append({"trigger": {"url-filter": ".*", "if-domain": [DOMAIN]},
                   "action": {"type": "css-display-none", "selector": BANNER}})
+    found += [_for("*comics.org", {"type": "block"}, re.escape(host)) for host in GCD_TRACKERS]
+    found += [_for(domain, {"type": "block-cookies"}) for domain in NO_COOKIES]
     return found
 
 

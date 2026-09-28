@@ -2346,10 +2346,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 # y evita repetir su comprobación en cada ficha.
                 session = WebKit.NetworkSession.new(str(data), str(cache))
                 session.get_website_data_manager().set_favicons_enabled(True)   # desactivados por defecto
-                # las cookies no se guardan en disco por sí solas: sin esto había que volver a pasar la comprobación de
-                # Cloudflare y a aceptar los avisos de cookies en cada arranque
-                session.get_cookie_manager().set_persistent_storage(str(data / "cookies.sqlite"),
-                                                                    WebKit.CookiePersistentStorage.SQLITE)
+                # sin cookies en disco (el panel no guarda ninguna) y, con las reglas de `webfilter`, sin cookies de las webs
+                (data / "cookies.sqlite").unlink(missing_ok=True)   # las que dejó la versión anterior
                 self.webview = WebKit.WebView(network_session=session, vexpand=True)
                 self.webview.connect("notify::favicon", self._favicon_changed)
                 self.webview.connect("notify::uri", self._web_uri_changed)
