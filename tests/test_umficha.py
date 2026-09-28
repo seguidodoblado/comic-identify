@@ -531,3 +531,9 @@ def test_usa_info_summary_is_the_synopsis_of_the_matching_stories(tmp_path):
     several = client.usa_info([("usa/twogk1060.html", "T #60")], "esp/desconocida.html")
     assert several.summary == "\xabUno\xbb: Una sinopsis larga."         # varias historias: con t\xedtulo, en una l\xednea
     assert "\n" not in several.summary
+
+
+@pytest.mark.parametrize("color, expected", [("Color", "No"), ("Tricolor", "No"), ("Blanco y Negro", "Yes"), ("B/N", "Yes"),
+                                            ("Bicolor", ""), ("", "")])
+def test_black_and_white_follows_the_ficha_colour_word(color, expected):
+    assert Ficha(color=color).black_and_white == expected

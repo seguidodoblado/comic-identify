@@ -44,6 +44,7 @@ PUBLISHERS = {"Forum/Planeta": "forum.html", "Panini": "panini.html", "Vértice"
 # la editorial quien lo publica. Solo se rellena lo que se sabe con certeza; el resto se completa a mano al normalizar.
 EDITION_BY_PUBLISHER = {"Forum/Planeta": ("Planeta DeAgostini", "Forum"), "Panini": ("Panini Comics", ""),
                         "Vértice": ("Ediciones Vértice", "")}
+PUBLISHER_BY_SITE = {"Forum": "Forum/Planeta", "Panini": "Panini", "Vértice": "Vértice"}   # cómo firma cada una su ficha
 SCHEMA_VERSION = 1
 MIN_INTERVAL = 1.5          # segundos entre peticiones: es un servidor pequeño
 TIMEOUT = 20
@@ -102,6 +103,14 @@ def split_volume(title: str) -> tuple[str, str]:
     if not match or match.group("rest").strip():
         return title.strip(), ""
     return match.group("name").strip(), "" if match.group("volume") == "1" else match.group("volume")
+
+
+def ficha_page(url: str) -> str:
+    """La ruta relativa («esp/amalgambwagshif11.html») si `url` es la ficha de un ejemplar español de la web, y si no, vacío."""
+    parsed = urlparse(url or "")
+    if parsed.hostname != HOST or not re.fullmatch(r"/esp/[^/]+\.html", parsed.path):
+        return ""
+    return parsed.path.lstrip("/")
 
 
 def split_ficha_title(title: str) -> tuple[str, str]:

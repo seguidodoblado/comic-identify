@@ -175,3 +175,28 @@ def test_series_and_issue_candidates_are_told_apart_so_selecting_an_issue_never_
     issue = marvel_issue_candidate(Entry("Forum/Planeta", "Especiales", "\xa1Alerta!", "esp/alertaf.html"),
                                    SeriesIssue("g", "", "esp/alertaf.html"), Ficha(title="\xa1Alerta!"))
     assert issue.extra["level"] == "issue" and issue.number == ""     # un especial suelto: mismo aspecto, otro nivel
+
+
+def test_ficha_page_recognises_only_spanish_issue_pages_of_the_site():
+    assert um.ficha_page("https://fichas.universomarvel.com/esp/amalgambwagshif11.html") == "esp/amalgambwagshif11.html"
+    for url in ("https://fichas.universomarvel.com/amalgamf_v1.html", "https://fichas.universomarvel.com/usa/aphf1001.html",
+                "https://fichas.universomarvel.com/esp/", "https://example.com/esp/a.html", "", None):
+        assert um.ficha_page(url) == ""
+
+
+def test_series_listing_its_fichas_by_title_offers_them_as_candidates():
+    from comic_identify.identify import alternative_candidate
+    from comic_identify.umficha import SeriesIssue
+    entry = Entry("Forum/Planeta", "Series Regulares y Limitadas", "Amalgam vol.1", "amalgamf_v1.html")
+    candidate = alternative_candidate(entry, SeriesIssue("AMALGAM VOL.1 - FORUM", "JLX", "esp/jlx1.html"))
+    assert (candidate.title, candidate.extra["level"], candidate.extra["page"]) == (
+        "Amalgam vol.1 \xb7 JLX", "series", "esp/jlx1.html")     # una ficha suelta: al elegirla se consulta sola
+
+
+def test_ficha_reached_by_browsing_takes_its_publisher_from_the_ficha_itself():
+    from comic_identify.identify import marvel_issue_candidate, page_candidate
+    from comic_identify.umficha import Ficha, SeriesIssue
+    stub = page_candidate("AMALGAM", "esp/amalgambwagshif11.html")
+    entry = Entry(stub.extra["index_publisher"], "", stub.title, stub.extra["page"])
+    candidate = marvel_issue_candidate(entry, SeriesIssue("", "", entry.page), Ficha(title="Amalgam vol.1 n\xba 1", publisher="Forum"))
+    assert (candidate.publisher, candidate.brand, candidate.extra["index_publisher"]) == ("Planeta DeAgostini", "Forum", "Forum/Planeta")

@@ -191,6 +191,15 @@ class Ficha:
         return ", ".join(names)
 
     @property
+    def black_and_white(self) -> str:
+        """El valor de `BlackAndWhite` de ComicInfo: «Yes» si la ficha dice blanco y negro, «No» si es a color y vacío
+        si no lo dice o es algo intermedio (bicolor…)."""
+        text = self.color.strip().lower()
+        if text in ("b/n", "blanco y negro", "blanco/negro"):
+            return "Yes"
+        return "No" if text in ("color", "tricolor") else ""
+
+    @property
     def price_euros(self) -> str:
         """El precio en euros con punto decimal («0.60», «3.90»): las pesetas se convierten al cambio oficial, para que
         una misma columna de costes no mezcle monedas. Vacío si la ficha no trae precio."""

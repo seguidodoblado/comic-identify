@@ -15,6 +15,7 @@ from .umficha import Ficha, SeriesIssue, comments_section, edition_notes, usa_se
 from .universomarvel import (
     BASE,
     EDITION_BY_PUBLISHER,
+    PUBLISHER_BY_SITE,
     Entry,
     UniversoMarvelIndex,
     split_ficha_title,
@@ -28,7 +29,7 @@ MAX_VOLUMES = 3
 MAX_GCD = 12
 MAX_MARVEL = 8
 MARVEL_METADATA = ("Volume", "Year", "Month", "Web", "Translator", "Letterer", "CoverArtist", "Format")   # por serie o lote
-MARVEL_PER_ISSUE = ("GTIN", "Title", "NotesBlock")   # de un solo ejemplar: solo al etiquetar un archivo suelto
+MARVEL_PER_ISSUE = ("GTIN", "Title", "NotesBlock", "BlackAndWhite")   # de un solo ejemplar: solo al etiquetar un archivo suelto
 
 Progress = Callable[[str], None]
 
@@ -115,6 +116,18 @@ def _marvel_candidate(entry: Entry) -> Candidate:
                                                        "section": entry.section})
 
 
+def page_candidate(title: str, page: str) -> Candidate:
+    """Una ficha suelta de la web a la que se llegó navegando (sin serie ni editorial de índice conocidas)."""
+    return _marvel_candidate(Entry("", "", title, page))
+
+
+def alternative_candidate(entry: Entry, issue: SeriesIssue) -> Candidate:
+    """Una ficha de la página de una serie que no se pudo buscar por número (las lista por título): se elige en la lista
+    y, como cualquier ficha suelta, se consulta al seleccionarla."""
+    label = issue.label or issue.group
+    return _marvel_candidate(Entry(entry.publisher, entry.section, f"{entry.title} · {label}", issue.page))
+
+
 def usa_refs(ficha: Ficha) -> list[list[str]]:
     """Los ejemplares USA que recoge una ficha española, sin repetir: [[página, texto]…]."""
     seen: dict[str, str] = {}
@@ -130,17 +143,18 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
     series_title, number = split_ficha_title(ficha.title)
     name, volume = split_volume(series_title if number else entry.title)
     number = number or issue.label
-    editorial, brand = EDITION_BY_PUBLISHER.get(entry.publisher, (entry.publisher, ""))
+    publisher = entry.publisher or PUBLISHER_BY_SITE.get(ficha.publisher, "")   # una ficha abierta desde la web no lo trae
+    editorial, brand = EDITION_BY_PUBLISHER.get(publisher, (publisher, ""))
     amount, currency = ficha.price
     details = [ficha.date_text, f"{ficha.pages} págs." if ficha.pages else "", f"{amount} {currency}" if amount else "",
                ficha.format, ficha.comic_title]
     extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": BASE + issue.page,
              "Translator": ficha.credit("Traducción"), "Letterer": ficha.credit("Rotulación"),
              "CoverArtist": ficha.cover_credits, "Format": ficha.format, "GTIN": ficha.isbn or ficha.barcode, "Title": ficha.comic_title,
-             "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE),
+             "BlackAndWhite": ficha.black_and_white, "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE),
              "NotesUsa": usa_section(ficha, BASE), "NotesComments": comments_section(ficha),
              "UsaRefs": json.dumps(usa_refs(ficha), ensure_ascii=False), "SpanishPage": issue.page, "level": "issue", "page": issue.page,
-             "index_publisher": entry.publisher}
+             "index_publisher": publisher}
     return Candidate(f"{name} #{number}" if number else name, "Universo Marvel", subtitle=" · ".join(d for d in details if d),
                      url=BASE + issue.page, series=name, issue_name=ficha.comic_title, number=number,
                      year=str(ficha.year or ""), publisher=editorial, brand=brand, country="es", extra=extra)

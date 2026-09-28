@@ -36,9 +36,11 @@ from .identify import (
     MARVEL_METADATA,
     MARVEL_PER_ISSUE,
     Candidate,
+    alternative_candidate,
     attach_cover,
     identify,
     marvel_issue_candidate,
+    page_candidate,
     search_gcd,
     search_marvel,
 )
@@ -90,7 +92,12 @@ from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
 from .theming import icon_choice, is_dark_theme, theme_variant
 from .umficha import GCD_CREDITS_HEADING, compose_notes
 from .universomarvel import Entry as MarvelEntry
-from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
+from .universomarvel import (
+    UniversoMarvelClient,
+    UniversoMarvelError,
+    UniversoMarvelIndex,
+    ficha_page,
+)
 from .universomarvel import build_index as build_marvel_index
 
 COMICVINE_API_URL = "https://comicvine.gamespot.com/api/"
@@ -98,6 +105,7 @@ GCD_DOWNLOAD_URL = "https://www.comics.org/download/"
 GCD_SITE = "https://www.comics.org/"
 COMICVINE_HOST, GCD_HOST = "comicvine.gamespot.com", "www.comics.org"
 FALLBACK_ICON = "applications-internet-symbolic"
+MAX_ALTERNATIVES = 30   # fichas que se ofrecen de una serie cuyo número no se encuentra
 SERIES_FILTERS = ["Incompletas", "Todas", "Sin todos sus metadatos", "Sin total indicado"]
 SERIES_SHOWN = 300
 PAGE_MAX_SIDE = 1600   # las páginas se reducen a esto para mostrarlas: un escaneo enorme no bloquea la ventana
@@ -410,6 +418,14 @@ def run_gui(initial_image: Path | None = None) -> None:
                                   margin_start=6, margin_end=6)
             buy_entries.append(Gtk.Label(label="Busca el ejemplar en tu navegador", xalign=0, margin_start=6,
                                          margin_bottom=4, css_classes=["dim-label"]))
+            all_shops = Gtk.Box(spacing=8)
+            all_shops.append(Gtk.Image(icon_name=pick_icon("edit-select-all-symbolic", FALLBACK_ICON), pixel_size=16))
+            all_shops.append(Gtk.Label(label="Todas", xalign=0))
+            all_shops_button = Gtk.Button(child=all_shops, has_frame=False,
+                                          tooltip_text=f"Busca en las {len(SHOPS)} tiendas, cada una en su pestaña")
+            all_shops_button.connect("clicked", lambda _b: (buy_popover.popdown(), self._open_all_shops()))
+            buy_entries.append(all_shops_button)
+            buy_entries.append(Gtk.Separator(margin_top=2, margin_bottom=2))
             for group in SHOP_GROUPS:
                 buy_entries.append(Gtk.Label(label=group, xalign=0, margin_start=6, margin_top=6,
                                              css_classes=["heading"]))
@@ -522,6 +538,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.status.set_text(f"Escribe un título (o elige un resultado) para buscarlo en {name}.")
                 return
             Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+
+        def _open_all_shops(self):
+            try:
+                urls = [shop_url(shop.name, *self._shop_terms()) for shop in SHOPS]
+            except ValueError:
+                self.status.set_text("Escribe un título (o elige un resultado) para buscarlo en las tiendas.")
+                return
+            for url in urls:
+                Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+            self.status.set_text(f"Abriendo la búsqueda en {len(SHOPS)} tiendas, cada una en su pestaña…")
 
         def _open_all_sources(self, _button=None):
             title, number, publisher, year = self._fields()
@@ -1937,7 +1963,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     else:
                         changes = file_changes(series, category, r["number"].get_text(), r["title"].get_text(),
                                                r["summary"].get_text(), r["info"], r["pages"],
-                                               {"GTIN": (per_issue or {}).get("GTIN", "")})
+                                               {key: (per_issue or {}).get(key, "") for key in ("GTIN", "BlackAndWhite")})
                         if differs(r["info"], changes):
                             r["changes"] = changes
                             r["state"].set_text("se modifica" if r["info"] else "se crea")
@@ -2102,9 +2128,12 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.assistant_back.connect("clicked", lambda _b: self._open_preview(
                 "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
             self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label="Abrir en el navegador")
+            self.use_ficha = Gtk.Button(label="Usar esta ficha", visible=False, css_classes=["suggested-action"], tooltip_text=(
+                "Es la ficha de un ejemplar de Universo Marvel: la usa para rellenar los metadatos"))
+            self.use_ficha.connect("clicked", self._use_web_ficha)
             close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text="Cerrar el panel")
             close.connect("clicked", self._close_preview)
-            for widget in (self.preview_title, self.preview_link, self.assistant_back, close):
+            for widget in (self.preview_title, self.use_ficha, self.preview_link, self.assistant_back, close):
                 header.append(widget)
             # hhomogeneous=False: solo la página visible cuenta para el ancho (por defecto un Stack reserva el de la más ancha,
             # aunque esté oculta, y tras usar el terminal el panel de WebKit seguía ocupando su ancho)
@@ -2164,8 +2193,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             request = self._marvel_request
             self._start_search_progress("marvel")
             image = self.image   # la portada abierta, para compararla con la de la ficha
-            if webkit_available():   # mientras tanto, la propia web de la serie
-                self._show_web(series.url, "Serie en Universo Marvel")
+            if webkit_available() and not (self.webview and self.webview.get_uri() == series.url):
+                self._show_web(series.url, "Serie en Universo Marvel")   # mientras tanto, la propia web
             self.status.set_text("Consultando la ficha en Universo Marvel…" if entry.is_single_issue else
                                  f"Buscando el nº {number} de «{series.title}» en Universo Marvel…")
 
@@ -2174,8 +2203,12 @@ def run_gui(initial_image: Path | None = None) -> None:
                     client = UniversoMarvelClient(UniversoMarvelIndex(UNIVERSOMARVEL_DB))
                     issue = client.find_issue(entry, number)
                     if issue is None:
+                        # una serie que lista sus fichas por título (Amalgam…) no tiene «nº 1»: se ofrecen tal cual
+                        others = [i for i in client.series_issues(entry) if i.page.startswith("esp/")][:MAX_ALTERNATIVES]
                         later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} "
-                              "en Universo Marvel (o no está catalogado todavía).")
+                              "en Universo Marvel (o no está catalogado todavía)." + (
+                                  " Elige una de sus fichas en la lista." if others else ""),
+                              [alternative_candidate(entry, i) for i in others])
                         return
                     ficha = client.ficha(issue.page)
                     candidate = marvel_issue_candidate(entry, issue, ficha)
@@ -2190,13 +2223,17 @@ def run_gui(initial_image: Path | None = None) -> None:
                     later(self._marvel_resolved, request, series, candidate, "")
             Thread(target=run, daemon=True).start()
 
-        def _marvel_resolved(self, request: int, series: Candidate, candidate: Candidate | None, problem: str):
+        def _marvel_resolved(self, request: int, series: Candidate, candidate: Candidate | None, problem: str,
+                             alternatives: list[Candidate] = ()):
             if request != self._marvel_request:
                 return   # lo ha sustituido otra consulta (o se ha limpiado): ella se ocupa de la barra
             self._stop_search_progress("marvel")
             if self.selected is not series:
                 return   # se ha elegido otra cosa mientras tanto
             if candidate is None:
+                if alternatives:   # las fichas de esa serie, para elegir una (la serie deja de estar elegida)
+                    rest = [c for c in self.candidates if c is not series]
+                    self._show_candidates([*alternatives, *rest])
                 self.status.set_text(problem)
                 return
             rest = [c for c in self.candidates if c is not series]
@@ -2257,9 +2294,28 @@ def run_gui(initial_image: Path | None = None) -> None:
                 session.get_website_data_manager().set_favicons_enabled(True)   # desactivados por defecto
                 self.webview = WebKit.WebView(network_session=session, vexpand=True)
                 self.webview.connect("notify::favicon", self._favicon_changed)
+                self.webview.connect("notify::uri", self._web_uri_changed)
                 self.preview_stack.add_named(self.webview, "web")
             self._open_preview(title, url, "web")
             self.webview.load_uri(url)
+
+        def _web_uri_changed(self, webview, _param):
+            """Al navegar por Universo Marvel hasta la ficha de un ejemplar, se ofrece usarla (si no es ya la elegida)."""
+            page = ficha_page(webview.get_uri())
+            chosen = self.selected is not None and self.selected.extra.get("SpanishPage") == page
+            self.use_ficha.set_visible(bool(page) and not chosen)
+
+        def _use_web_ficha(self, _button):
+            """La ficha que se ve en el panel pasa a ser el resultado elegido, con todos sus datos."""
+            uri = self.webview.get_uri()
+            page = ficha_page(uri)
+            if not page:
+                return
+            self.use_ficha.set_visible(False)
+            stub = page_candidate(self.webview.get_title() or page, page)
+            self.results.unselect_all()
+            self.selected = stub
+            self._resolve_marvel(stub)
 
         def _favicon_changed(self, webview, _param):
             """comics.org bloquea la descarga directa de su icono; el motor del panel sí lo recibe al mostrar una ficha."""
