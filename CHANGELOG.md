@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-09-28
+
 ### Fixed
 - **El botón «Eliminar datos» ensanchaba la ventana**: quedaba pegado al borde derecho de la columna de la portada en vez
   de junto al texto «ComicInfo.xml», y con datos largos podía desplazarlo todo. Ahora va justo al lado del texto y los
