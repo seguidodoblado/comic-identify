@@ -139,8 +139,9 @@ def run_gui(initial_image: Path | None = None) -> None:
     try:
         import gi
         gi.require_version("Gdk", "4.0")
+        gi.require_version("GdkPixbuf", "2.0")
         gi.require_version("Gtk", "4.0")
-        from gi.repository import Gdk, Gio, GLib, Gtk, Pango
+        from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
     except (ImportError, ValueError) as error:
         raise RuntimeError("GTK 4/PyGObject no está instalado.") from error
 
@@ -2314,10 +2315,21 @@ def run_gui(initial_image: Path | None = None) -> None:
                     later(self._logo_ready, key, path)
             Thread(target=run, daemon=True).start()
 
+        @staticmethod
+        def _scaled_logo(path: Path):
+            """El logotipo del usuario, reducido para que quepa en el hueco (conservando la proporción) y hecho textura: GTK
+            no escala bien una imagen grande dentro de un hueco pequeño (se ve enorme y descentrada). Vale PNG, JPG y SVG.
+            None si no se puede leer."""
+            try:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), LOGO_BOX[0], LOGO_BOX[1], True)
+            except GLib.Error:
+                return None
+            return Gdk.Texture.new_for_pixbuf(pixbuf)
+
         def _publisher_logo(self, candidate: Candidate):
-            """La marca de la editorial de la fila, en un hueco fijo a la derecha: su logotipo (los de la web de fichas o
-            uno que haya puesto el usuario) o, si no hay ninguno, una etiqueta con su nombre. Solo en las filas de GCD
-            y Universo Marvel; las demás no tienen editorial."""
+            """La marca de la editorial de la fila, en un hueco fijo a la derecha: su logotipo (uno que haya puesto el
+            usuario, o el descargado de la web de fichas) o, si no hay ninguno, una etiqueta con su nombre. Solo en las
+            filas de GCD y Universo Marvel; las demás no tienen editorial."""
             if candidate.source not in ("GCD", "Universo Marvel"):
                 return None
             name = candidate.publisher.strip()
@@ -2326,21 +2338,24 @@ def run_gui(initial_image: Path | None = None) -> None:
                 return None
             slot = Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
             slot.set_size_request(*LOGO_BOX)
-            path = (logo_file(key, self.logo_dir, LOGO_DIR) if key is not None
-                    else user_logo((publisher_slug(name),), LOGO_DIR))
-            if key is None and path is None:   # editorial sin logotipo: su nombre, para que ninguna fila quede sin marca
-                slug = publisher_slug(name)
-                slot.append(Gtk.Label(label=short_name(name), hexpand=True, halign=Gtk.Align.END, ellipsize=Pango.EllipsizeMode.END,
-                                      max_width_chars=16, css_classes=["publisher-badge"], tooltip_text=(
+            slug = key or publisher_slug(name)
+            custom = user_logo((slug,), LOGO_DIR)
+            texture = self._scaled_logo(custom) if custom is not None else None
+            if texture is not None:   # el del usuario manda sobre el descargado
+                slot.set_tooltip_text(LOGO_NAMES.get(key, name))
+                slot.append(Gtk.Picture(paintable=texture, can_shrink=False, hexpand=True, halign=Gtk.Align.END,
+                                        valign=Gtk.Align.CENTER))
+                return slot
+            path = logo_file(key, self.logo_dir) if key is not None else None
+            if key is None:   # editorial sin logotipo: su nombre, para que ninguna fila quede sin marca
+                slot.append(Gtk.Label(label=short_name(name), hexpand=True, halign=Gtk.Align.END,
+                                      ellipsize=Pango.EllipsizeMode.END, max_width_chars=16,
+                                      css_classes=["publisher-badge"], tooltip_text=(
                     f"{name}\nPara poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}")))
                 return slot
-            slot.set_tooltip_text(LOGO_NAMES.get(key, name))
-            custom = path is not None and path.parent == LOGO_DIR   # el del usuario puede ser de cualquier tamaño: se ajusta
+            slot.set_tooltip_text(LOGO_NAMES[key])
             # los descargados van ya reducidos: sin can_shrink se ven del tamaño exacto (GTK no los reescala a su gusto)
-            logo = Gtk.Picture(can_shrink=custom, hexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
-            if custom:
-                logo.set_content_fit(Gtk.ContentFit.CONTAIN)
-                logo.set_size_request(*LOGO_BOX)
+            logo = Gtk.Picture(can_shrink=False, hexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
             slot.append(logo)
             if path is not None:
                 logo.set_filename(str(path))
