@@ -5,6 +5,13 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-09-28
+
+### Added
+- **«Usar esta ficha» también en GCD**: al navegar por comics.org dentro del panel hasta la ficha de otro ejemplar, aparece
+  el botón y lo convierte en el resultado elegido, con sus datos; al ser un índice local no hace falta ninguna consulta,
+  se resuelve al momento (a diferencia de Universo Marvel y Tebeosfera, que sí piden su ficha).
+
 ## [0.35.0] - 2026-09-28
 
 ### Fixed

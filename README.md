@@ -301,9 +301,11 @@ La clave de ComicVine se guarda en `~/.config/comic-identify/config.json` (permi
 
 Al hacer clic en una sugerencia de GCD, su ficha de comics.org se abre en un panel a la derecha (requiere
 `gir1.2-webkit-6.0`; sin él, se abre en el navegador); las de Universo Marvel abren de la misma forma su página. Las de ComicVine usan una ficha propia, sin WebKit. Con número
-se abre el ejemplar; sin número, la galería de portadas de la serie (GCD la pagina de 50 en 50). Se carga una sola
-página por clic y la aplicación no extrae ni guarda ninguna imagen: es una vista de comics.org tal como la ve un
-navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
+se abre el ejemplar; sin número, la galería de portadas de la serie (GCD la pagina de 50 en 50). Al navegar por comics.org
+dentro del panel hasta la ficha de otro ejemplar (por ejemplo, para corregir la sugerencia o para uno que no encontraste
+al buscar) aparece **Usar esta ficha**: lo convierte en el resultado elegido con sus datos, sin ninguna consulta (GCD ya
+está entero en tu índice local). Se carga una sola página por clic y la aplicación no extrae ni guarda ninguna imagen: es
+una vista de comics.org tal como la ve un navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
 `~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. El panel no guarda cookies en disco: Universo Marvel no deja ninguna,
 Tebeosfera tampoco (se le bloquean) y GCD deja una sola, `cf_clearance`, la de la comprobación anti-robots de Cloudflare
 (sin ella la página se queda en «Un momento…»), que vive solo en memoria y se pierde al cerrar la aplicación.
