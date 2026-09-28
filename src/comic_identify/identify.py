@@ -94,7 +94,8 @@ def _gcd_candidate(hit: GcdHit, exact: bool = False) -> Candidate:
     detail = [p for p in (hit.publisher, brand, hit.years if not hit.number else "", hit.title, date) if p]
     return Candidate(title, "GCD", subtitle=" · ".join(detail), url=hit.url, exact=exact, series=hit.series,
                      number=hit.number, year=date[:4], publisher=hit.publisher, brand=hit.brand,
-                     country=hit.country, years=hit.years, series_id=hit.series_id)
+                     country=hit.country, years=hit.years, series_id=hit.series_id,
+                     extra={"issue_id": str(hit.issue_id)} if hit.issue_id else {})
 
 
 def search_gcd(gcd: GcdIndex, text: str, number: str = "", publisher: str = "",

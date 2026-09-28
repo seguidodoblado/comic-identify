@@ -88,7 +88,7 @@ from .settings import (
 )
 from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
 from .theming import icon_choice, is_dark_theme, theme_variant
-from .umficha import compose_notes
+from .umficha import GCD_CREDITS_HEADING, compose_notes
 from .universomarvel import Entry as MarvelEntry
 from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
 from .universomarvel import build_index as build_marvel_index
@@ -1109,6 +1109,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 # el precio no existe en ComicInfo.xml: solo se conoce por la ficha elegida (y se puede corregir aquí)
                 prefill["cost"] = self.selected.extra.get("Cost", "")
                 prefill["isbn"] = self.selected.extra.get("ISBN", "")
+            elif (details := self._gcd_issue_details(self._gcd())) is not None:   # o por el número elegido de GCD
+                prefill["cost"], prefill["isbn"] = details.cost, details.isbn
             gcstar_entries: dict[str, Gtk.Entry] = {}
             for row, (key, label) in enumerate(fields.items()):
                 entry = Gtk.Entry(hexpand=True, text=prefill.get(key, ""))
@@ -1731,6 +1733,17 @@ def run_gui(initial_image: Path | None = None) -> None:
                 if self.selected.brand:
                     extra["Imprint"] = self.selected.brand
             notice = ""
+            details = self._gcd_issue_details(gcd) if len(files) == 1 else None
+            if details is not None:   # créditos, género y personajes del número de GCD elegido
+                extra.update({key: value for key, value in details.credits.items() if value})
+                extra.update({"Genre": details.genre, "Characters": details.characters,
+                              "Year": details.date[0], "Month": details.date[1], "Day": details.date[2],
+                              "Web": self.selected.url})
+                per_issue.update({"GTIN": details.barcode or details.isbn, "Summary": details.summary})
+                if details.story_lines:   # varias historias: quién hizo qué en cada una, en las Notas
+                    per_issue["NotesBlock"] = "\n".join([GCD_CREDITS_HEADING, *details.story_lines])
+                notice = "Créditos, género y personajes: de la ficha del número en GCD" + (
+                    " (los de alguna historia, de la original reimpresa)." if details.inherited else ".")
             if usa is not None:
                 extra.update({key: value for key, value in usa.credits.items() if value})
                 if usa.summary:   # la sinopsis de las historias, para el Resumen (solo si el archivo no lo tiene ya)
@@ -1750,6 +1763,13 @@ def run_gui(initial_image: Path | None = None) -> None:
             elif usa_error:
                 notice = f"No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): {usa_error}"
             self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue, notice)
+
+        def _gcd_issue_details(self, gcd):
+            """Los datos que GCD tiene del número elegido (no de la serie), si el índice los trae."""
+            chosen = self.selected
+            if gcd is None or chosen is None or chosen.source != "GCD" or not chosen.extra.get("issue_id"):
+                return None
+            return gcd.issue_details(int(chosen.extra["issue_id"]))
 
         def _open_metadata_dialog(self, where: Path, files: list[Path], infos: list, values: Values, publisher: str,
                                   gcd_info, extra=None, counts=None, per_issue=None, notice: str = ""):
@@ -1786,10 +1806,11 @@ def run_gui(initial_image: Path | None = None) -> None:
                       "Year": ("Año", "2000"), "Month": ("Mes", "opcional, 01-12"), "Day": ("Día", "opcional, 01-31"),
                       "Count": ("Total de números", "los que tiene la serie"),
                       "LanguageISO": ("Idioma", "es, en…"), "Format": ("Formato", "Tomo tapa blanda, Grapa…"),
+                      "Genre": ("Género", "crimen, superhéroes…"), "Characters": ("Personajes", "Punisher, Micro…"),
                       "Web": ("Web", "ficha de GCD u otra"),
                       "Notes": ("Notas", "años del contenido original…")}
             layout = (("Series", "Volume"), ("Publisher", "Imprint"), ("Year", "Month", "Day", "Count"),
-                      ("LanguageISO", "Format"), ("Web",), ("Notes",))
+                      ("LanguageISO", "Format"), ("Genre", "Characters"), ("Web",), ("Notes",))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             entries: dict[str, Gtk.Entry] = {}
             for row, keys in enumerate(layout):
@@ -1820,9 +1841,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             credit_labels = {"Writer": ("Guion", "quien escribe"), "Penciller": ("Lápiz", "quien dibuja"),
                              "Inker": ("Tinta", "quien entinta"), "Colorist": ("Color", "quien colorea"),
                              "Letterer": ("Rotulación", "quien rotula"), "CoverArtist": ("Portada", "quien dibuja la portada"),
-                             "Translator": ("Traducción", "quien traduce")}
+                             "Translator": ("Traducción", "quien traduce"), "Editor": ("Edición", "quien edita")}
             credit_layout = (("Writer", "Penciller", "Inker"), ("Colorist", "Letterer", "CoverArtist"),
-                             ("Translator",))
+                             ("Translator", "Editor"))
             credit_grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             for row, keys in enumerate(credit_layout):
                 for index, key in enumerate(keys):
@@ -2983,7 +3004,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             index = GcdIndex(GCD_DB)
             if index.is_ready():
                 series, issues = index.counts()
-                self.gcd_info.set_text(f"Índice de GCD: {series} series y {issues} números.")
+                self.gcd_info.set_text(f"Índice de GCD: {series} series y {issues} números." + (
+                    "" if index.has_details() else " Es de una versión anterior y no trae los créditos, el género ni los "
+                    "personajes de cada número: vuelve a importar el volcado para tenerlos (tarda unos segundos)."))
             elif GCD_DB.exists():
                 self.gcd_info.set_text("El índice de GCD es de una versión anterior: vuelve a importar el "
                                        "volcado para actualizarlo (tarda unos segundos).")

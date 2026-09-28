@@ -14,7 +14,8 @@ from .naming import Values, looks_normalized
 from .umficha import NOTE_HEADINGS
 
 SERIES_FIELDS = ("Series", "Volume", "Year", "Month", "Day", "Count", "Publisher", "Imprint", "LanguageISO", "Web",
-                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist", "Translator", "Format")   # créditos: por lote, no por número
+                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist", "Translator", "Format", "Editor",
+                 "Genre", "Characters")   # créditos: por lote, no por número
 LANGUAGES = {"🇪🇸": "es", "🇺🇸": "en"}
 GCD_SERIES_URL = "https://www.comics.org/series/{}/"
 NO_CATEGORY = ""        # «no cambiar»
