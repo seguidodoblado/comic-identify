@@ -136,7 +136,10 @@ rastrea**: descarga una página cada vez, con pausa entre peticiones y el nombre
 2. Al elegir una serie **con el número escrito** se consulta la ficha de ese ejemplar (y su portada): una o dos peticiones,
    una sola vez; después sale de la base local. Aparece como candidato con fecha, páginas, precio y formato, con su
    miniatura y, si hay un cómic abierto, el **parecido de su portada con la tuya** (el mismo porcentaje que en
-   ComicVine). Un especial suelto no necesita número. Mientras se descarga, una barra pulsante lo indica.
+   ComicVine). Un especial suelto no necesita número. Mientras se descarga, una barra pulsante lo indica. Si la serie
+   lista sus fichas por título y no por número (p. ej. Amalgam), se ofrecen esas fichas en la lista para elegir una.
+   También puedes **navegar por la web dentro del panel**: al llegar a la ficha de un ejemplar aparece **Usar esta ficha**,
+   que la convierte en el resultado elegido, con todos sus datos.
 3. Con ese candidato elegido, **Normalizar nombre** parte de sus datos (nombre, volumen, 🇪🇸, año de la edición, sello y
    editorial) y **Metadatos archivo** precarga lo que la ficha sabe (ver abajo).
 4. En **Transferir a GCstar…**, «Coste» e «ISBN» vienen rellenos con la ficha elegida: el precio en euros (las pesetas se
@@ -146,8 +149,10 @@ rastrea**: descarga una página cada vez, con pausa entre peticiones y el nombre
 **Qué pasa a los metadatos** (con un solo archivo; mes, créditos de la edición y demás son de un ejemplar y no se ofrecen
 al etiquetar una carpeta entera):
 
-- De la ficha española: año, mes, editorial, sello, idioma, formato (solo si la ficha lo dice), web de la ficha,
-  rotulación, traducción, autores de la portada, título del cómic y código de barras (`GTIN`, o el ISBN si lo hay).
+- De la ficha española: año, mes (la ficha lo escribe en letra: «Febrero 1997»), editorial, sello, idioma, formato (solo si
+  la ficha lo dice), web de la ficha, rotulación, traducción, autores de la portada, título del cómic, código de barras
+  (`GTIN`, o el ISBN si lo hay) y **Blanco y negro** (`BlackAndWhite`: «Yes» si la ficha dice blanco y negro, «No» si dice
+  color; el diálogo no lo muestra, se escribe al aplicar; con «Bicolor» u otra cosa, se deja como esté).
 - De las fichas USA de los originales que recoge el ejemplar: guion, lápiz, tinta y color (el argumento cuenta como guion)
   y la sinopsis, que va al Resumen. De cada original solo se usan las historias que enlazan a tu ficha española; si no se
   puede saber cuáles, se usan todas y el diálogo avisa («Revisa»), igual que si algún enlace de la web está roto.
@@ -189,7 +194,7 @@ marcada, la editorial y el año: la aplicación no rastrea esas webs, y de hecho
 (Whakoom y los buscadores de Panini y DC).
 
 El menú **Comprar**, a su lado, abre la búsqueda del ejemplar (con el resultado elegido, o lo escrito si no hay ninguno) en
-Panini, en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios, Iberlibro) y en tiendas (Amazon.es, Casa
+todas las tiendas a la vez con **Todas** (arriba del todo, cada una en su pestaña) o en una sola: Panini, en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios, Iberlibro) y en tiendas (Amazon.es, Casa
 del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo aparecen de segunda mano. Sin enlaces de
 afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
 

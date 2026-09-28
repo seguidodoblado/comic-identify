@@ -5,6 +5,19 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-09-28
+
+### Added
+- **Comprar → Todas**: abre la búsqueda del ejemplar en las ocho tiendas a la vez, cada una en su pestaña, como el «Todas»
+  de «Buscar en otras webs».
+- **Usar esta ficha**: al navegar por Universo Marvel en el panel derecho hasta la ficha de un ejemplar, aparece ese botón
+  y la ficha pasa a ser el resultado elegido, con sus créditos, mes, traducción, portada, etc. (antes, si llegabas a una
+  ficha haciendo clic en el panel, el resultado elegido seguía siendo la serie y «Metadatos archivo» no traía sus datos).
+- Si una serie lista sus fichas por título y no por número (Amalgam…), al no encontrar el número escrito se ofrecen sus
+  fichas (hasta 30) en la lista para elegir una.
+- **Blanco y negro** (`BlackAndWhite` de ComicInfo.xml) desde la ficha de Universo Marvel: «Yes» si dice blanco y negro,
+  «No» si dice color; se escribe al aplicar los metadatos de un solo archivo.
+
 ## [0.27.0] - 2026-09-28
 
 ### Added
