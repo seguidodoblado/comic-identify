@@ -26,9 +26,11 @@ Suggests: rar, p7zip-full
 Maintainer: Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>
 Homepage: https://github.com/seguidodoblado/comic-identify
 Description: Identifica un cómic a partir de su portada
- Aplicación GTK que combina búsqueda local en Grand Comics Database, código de
- barras, ComicVine y comparación visual de portadas, reconoce portadas de tu
- propia colección y ofrece un asistente de IA opcional con tu propia sesión.
+ Aplicación GTK para gestionar una colección de cómics digitales: identifica por
+ portada o título (Grand Comics Database, Universo Marvel, código de barras,
+ ComicVine y comparación visual de portadas), normaliza nombres, escribe metadatos
+ ComicInfo.xml, transfiere a GCstar, hace copias de seguridad y ofrece un
+ asistente de IA opcional con tu propia sesión.
 EOT
 chmod 755 "$stage/usr/bin/comic-identify"
 chmod 755 "$stage/DEBIAN/postinst"

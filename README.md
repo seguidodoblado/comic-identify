@@ -3,13 +3,19 @@
 Aplicación de escritorio (GTK 4 + PyGObject, interfaz en español) para gestionar una colección de cómics
 digitales (CBR, CBZ y CB7):
 
-- **Identifica** un cómic a partir de su portada o de su título.
+- **Identifica** un cómic a partir de su portada o de su título, con Grand Comics Database (GCD), el catálogo de
+  ediciones españolas de Marvel de [Universo Marvel](https://fichas.universomarvel.com/), ComicVine y tu propia colección.
 - **Normaliza** los nombres de archivos y carpetas según un patrón configurable, con deshacer.
-- **Escribe metadatos** `ComicInfo.xml` (el formato que entienden Kavita, Komga y ComicTagger), con deshacer.
+- **Escribe metadatos** `ComicInfo.xml` (el formato que entienden Kavita, Komga y ComicTagger), con deshacer y con datos
+  de las fichas de Universo Marvel (créditos, fecha, sinopsis…).
 - **Lista las series** de tu colección con los números que tienes y los que faltan.
+- **Transfiere** el cómic catalogado a tu colección de [GCstar](https://www.gcstar.org/), con su portada.
+- **Copias de seguridad** verificadas de sus índices y ajustes, con restauración.
+- **Busca dónde comprar** el ejemplar (Panini, segunda mano, tiendas) y abre otras webs de cómic.
 
-La identificación es local (ZBar, hash perceptual, índice SQLite) y solo consulta la API gratuita de
-ComicVine. La IA es opcional: un botón abre tu propia CLI de IA en un terminal (ver más abajo).
+La identificación es local (ZBar, hash perceptual, índices SQLite); consulta la API gratuita de ComicVine y, solo cuando
+eliges un resultado, las fichas de Universo Marvel (una página cada vez, guardada después en local). La IA es opcional:
+un botón abre tu propia CLI de IA en un terminal (ver más abajo).
 
 ## Cómo identifica
 
@@ -17,7 +23,8 @@ El título lo escribes tú: el OCR se descartó porque no lee los logotipos de l
 reales devolvía texto sin sentido).
 
 1. **Búsqueda mientras escribes** en el índice local de **Grand Comics Database (GCD)** (ediciones en
-   español, España primero), por título y número. Es local: sin red ni límites.
+   español, España primero), por título y número, y en el de **Universo Marvel** (series de Forum/Planeta, Panini y
+   Vértice). Es local: sin red ni límites.
 2. **Tu colección**: compara la portada con un índice local de las primeras páginas de tus CBZ/CBR/CB7
    y te dice qué archivo es, sin red.
 3. **Código de barras** (`zbarimg`): coincidencia exacta en GCD y número de ejemplar del complemento.
@@ -25,9 +32,11 @@ reales devolvía texto sin sentido).
    sus portadas por parecido visual (dHash de 256 bits, tolerante a escala, compresión y márgenes).
 5. **Ficha en un panel a la derecha** al hacer clic en una sugerencia: de GCD, con número abre el
    ejemplar y sin número la galería de portadas de la serie; de ComicVine, una ficha con la portada grande,
-   el título, la editorial y la fecha. «Abrir en el navegador» está en la cabecera del panel.
+   el título, la editorial y la fecha; de Universo Marvel, la página de la serie o del ejemplar (ver más abajo).
+   «Abrir en el navegador» está en la cabecera del panel.
 
-Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas.
+Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas. Cada uno lleva su
+fuente y, cuando la editorial es Forum, Panini o Vértice, su logotipo.
 
 Además del título y el número puedes acotar con **Editorial / distribuidor** (en GCD también casa con el
 sello: «Forum», «Panini»…) y **Año**. La búsqueda en GCD es al vuelo, mientras escribes; la de ComicVine, con
@@ -56,10 +65,9 @@ y el estado dice qué serie se está comparando.
 los valores desde la sugerencia elegida y tú los corriges; el patrón es configurable con `{nombre}`, `{volumen}`,
 `{bandera}`, `{contenido}`, `{edicion}`, `{sello}`, `{editorial}` y `{numero}`. Sello y editorial son cada uno un
 tramo independiente del patrón: si falta alguno de los dos, se omite entero sin dejar guiones sueltos. El año real
-del contenido en ediciones
-españolas hay que ponerlo a mano o buscarlo con el botón **Buscar en ComicVine…** del formulario (título original en inglés
-+ números americanos que recoge la edición → fechas de portada); si no se conoce, se deja vacío y el nombre
-lleva solo los años de la edición.
+del contenido en ediciones españolas hay que ponerlo a mano o buscarlo con el botón **Buscar en ComicVine…** del
+formulario (título original en inglés + números americanos que recoge la edición → fechas de portada); si no se
+conoce, se deja vacío y el nombre lleva solo los años de la edición.
 
 **Normalizar carpeta…** (la carpeta es la serie): elige antes una serie de GCD en los resultados, pulsa el botón y
 elige la carpeta. Se propone el nombre de la carpeta con los datos de la serie (nombre, bandera, años de la
@@ -72,70 +80,78 @@ Cada renombrado se registra en `~/.local/share/comic-identify/renames.log` y se 
 Normalizar y escribir metadatos actúan sobre el archivo original, no sobre una copia, aunque lo hayas abierto pegándolo.
 
 **Metadatos archivo… / Metadatos carpeta…** escriben el `ComicInfo.xml` del cómic abierto o de todos los de una
-carpeta: serie, volumen, editorial, sello, año, total, idioma, web, notas, los créditos (guion, lápiz, tinta, color,
-rotulación, portada), la categoría que tú eliges y, por archivo, el número, el título y el resumen del ejemplar. Se
-rellena con lo que ya tienen los archivos, la serie de GCD y el nombre de la carpeta. Cada escritura se verifica en
-una copia antes de sustituir el original, se conservan los campos que no están en el formulario (como las páginas) y
-se puede deshacer por lotes desde **Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona en CBZ, RAR
-(4 y 5) y 7-Zip; para escribir en RAR hace falta el programa `rar` (no libre).
+carpeta: serie, volumen, editorial, sello, año (y, opcionales, mes y día), total, idioma, formato, web, notas (varias
+líneas), los créditos (guion, lápiz, tinta, color, rotulación, traducción, portada), la categoría que tú eliges y, por
+archivo, el número, el título y el resumen del ejemplar. El número de páginas (`PageCount`) se cuenta siempre en el
+propio archivo. Se rellena con lo que ya tienen los archivos, la serie de GCD, la ficha de Universo Marvel elegida y el
+nombre de la carpeta; lo que el archivo ya tiene no se pisa. Cada escritura se verifica en una copia antes de sustituir el
+original, se conservan los campos que no están en el formulario (como las páginas) y se puede deshacer por lotes desde
+**Ajustes** (`~/.local/share/comic-identify/metadata.log`). Funciona en CBZ, RAR (4 y 5) y 7-Zip; para escribir en RAR
+hace falta el programa `rar` (no libre).
 
 **Series de la colección** (pestaña Mi colección): tras indexar, lista las series con los números que tienes y los que
 faltan. Necesita el «Total de números» en los metadatos para saber cuántos faltan al final; sin él solo detecta
 huecos entre los que hay. Marca los archivos aislados que parecen de otra serie.
 
 **Transferir a GCstar…** añade el cómic abierto a una colección de [GCstar](https://www.gcstar.org/) sin tocar el
-resto de su archivo `.gcs`: solo inserta el elemento nuevo, con los créditos, la editorial, el año, las páginas y la
-ruta del archivo, más los campos propios de GCstar (tipo, categoría, formato, colección), con un desplegable que
-sugiere lo que ya usas en esa colección; «Categoría» se prerrellena sola con la que ya tenga el archivo, y «Tipo»
-con «Europeo», «Americano» o «Manga» según bajo cuál de tus carpetas de «Mi colección» (`EUROPA`, `USA`, `JAPÓN`)
-esté el cómic (solo mira el nombre de esas carpetas, no en qué disco estén). También copia la portada y la
-contraportada a una carpeta `comics` propia dentro de la del `.gcs` (para compartirla con otras colecciones de
+resto de su archivo `.gcs`: solo inserta el elemento nuevo. Lleva el nombre y la serie, el número, los créditos (guion,
+lápiz, tinta, color, rotulación y «Cover Artist»), «Publicado por» como «Editorial - Sello» (GCstar no tiene campo de
+sello), la fecha de publicación (con día y mes si se conocen), la sinopsis, las notas como comentario, la web, el ISBN,
+las páginas contadas en el archivo y la ruta del archivo. Además, los campos propios de GCstar (tipo, categoría,
+formato, colección, coste e ISBN), con un desplegable que sugiere lo que ya usas en esa colección: «Categoría» y
+«Formato» se prerrellenan con los del archivo; «Tipo» con «Europeo», «Americano» o «Manga» según bajo cuál de tus
+carpetas de «Mi colección» (`EUROPA`, `USA`, `JAPÓN`) esté el cómic (solo mira el nombre de esas carpetas, no en qué
+disco estén); «Coste» e «ISBN» con los de la ficha de Universo Marvel elegida (ver más abajo). También copia la portada
+y la contraportada a una carpeta `comics` propia dentro de la del `.gcs` (para compartirla con otras colecciones de
 GCstar sin mezclar sus imágenes), con la misma estructura de subcarpetas y el mismo nombre que ya uses (`<nombre>
 - Portada.jpg` / `- Trasera.jpg`), siempre que el cómic esté bajo una carpeta configurada en «Mi colección» (si
 no, se transfiere sin portada). Se niega a escribir si detecta GCstar abierto, y se puede deshacer por lotes
 desde **Ajustes** (`~/.local/share/comic-identify/gcstar.log`); el deshacer no toca una imagen que haya cambiado
-desde entonces. La
-ruta al `.gcs` se configura una vez en Ajustes.
+desde entonces. La ruta al `.gcs` se configura una vez en Ajustes.
 
 ## Universo Marvel
 
 [fichas.universomarvel.com](https://fichas.universomarvel.com/) es el catálogo más completo de las ediciones españolas de
-Marvel (Forum/Planeta, Panini, Vértice…), con fecha, precio, páginas, créditos y el ejemplar USA original de cada número.
-No tiene API ni volcado y es una web personal, así que la aplicación **no la rastrea**:
+Marvel (hoy la aplicación usa Forum/Planeta, Panini y Vértice), con fecha, precio, páginas, formato, créditos, comentarios
+y el ejemplar USA original de cada número. No tiene API ni volcado y es una web personal, así que la aplicación **no la
+rastrea**: descarga una página cada vez, con pausa entre peticiones y el nombre `comic-identify` como identificación.
 
-1. En **Ajustes**, «Descargar el índice de Universo Marvel» baja solo las páginas de índice de Forum/Planeta, Panini y
-   Vértice (tres peticiones con pausa entre ellas, identificándose como `comic-identify`) y crea
+**Cómo se usa**
+
+1. En **Ajustes**, «Descargar el índice de Universo Marvel» baja solo las tres páginas de índice y crea
    `~/.local/share/comic-identify/universomarvel.db`. Con él, las series salen entre las sugerencias al escribir el
-   título (sin tildes ni mayúsculas, «spider man» encuentra «Spiderman»).
-2. Al elegir una serie **con el número escrito**, se consulta solo la ficha de ese ejemplar (una o dos peticiones,
-   una sola vez: después sale de la base local) y aparece como candidato con su fecha, páginas, precio y formato; su
-   página se ve en el panel de la derecha. Un especial suelto no necesita número.
+   título (sin tildes ni mayúsculas: «spider man» encuentra «Spiderman»).
+2. Al elegir una serie **con el número escrito** se consulta la ficha de ese ejemplar (y su portada): una o dos peticiones,
+   una sola vez; después sale de la base local. Aparece como candidato con fecha, páginas, precio y formato, con su
+   miniatura y, si hay un cómic abierto, el **parecido de su portada con la tuya** (el mismo porcentaje que en
+   ComicVine). Un especial suelto no necesita número. Mientras se descarga, una barra pulsante lo indica.
 3. Con ese candidato elegido, **Normalizar nombre** parte de sus datos (nombre, volumen, 🇪🇸, año de la edición, sello y
-   editorial) y **Metadatos archivo** precarga año, mes, editorial, sello, la web de su ficha y los créditos de la edición
-   (rotulación, traducción, portada); con un solo archivo, también el título del cómic y el código de barras. Las
-   páginas (`PageCount`) siempre se cuentan en el propio archivo, con o sin ficha. El contenido original lo sigues
-   indicando tú.
-   Con un solo archivo, los créditos de guion, lápiz, tinta y color se toman de las fichas USA de los originales
-   que recoge el ejemplar (solo de las historias que enlazan a tu ficha española; la rotulación y la traducción
-   son las de la española), una petición por original la primera vez y después desde la base local.
-   La **sinopsis** de las historias USA (si la ficha del original la trae) se precarga en el Resumen del archivo.
-   Mientras se consulta la web, una barra pulsante bajo el estado indica que está trabajando.
-   Las Notas llevan además un desglose «Créditos por historia (USA)» (quién hizo qué en cada historia, ya que los campos
-   solo admiten una lista por rol).
-   Con un cómic abierto, la ficha elegida muestra el **parecido de su portada con la tuya** (el mismo porcentaje que
-   en ComicVine) y su miniatura.
-   Las Notas llevan, debajo de «Contenido original», los ejemplares USA que recoge la edición (con el enlace a su ficha)
-   y los comentarios de la edición; pasan al comentario de GCstar al transferir.
-4. En **Transferir a GCstar…**, «Coste» e «ISBN» vienen rellenos con la ficha elegida (el precio en euros: las
-   pesetas se convierten a 166,386; el precio no existe en ComicInfo.xml, así que hay que tener la ficha elegida al
-   transferir). Un código de barras que no sea un ISBN no se pone en ese campo.
+   editorial) y **Metadatos archivo** precarga lo que la ficha sabe (ver abajo).
+4. En **Transferir a GCstar…**, «Coste» e «ISBN» vienen rellenos con la ficha elegida: el precio en euros (las pesetas se
+   convierten a 166,386) y el ISBN si lo trae; el precio no existe en ComicInfo.xml, así que la ficha debe estar elegida
+   al transferir. Un código de barras que no sea un ISBN no se pone en ese campo.
 
-La base guarda de cada ficha sus campos ya leídos y el HTML original comprimido, así que si mejora el lector se
-vuelve a leer sin volver a pedir nada a la web. Volver a descargar el índice no borra las fichas.
+**Qué pasa a los metadatos** (con un solo archivo; mes, créditos de la edición y demás son de un ejemplar y no se ofrecen
+al etiquetar una carpeta entera):
+
+- De la ficha española: año, mes, editorial, sello, idioma, formato (solo si la ficha lo dice), web de la ficha,
+  rotulación, traducción, autores de la portada, título del cómic y código de barras (`GTIN`, o el ISBN si lo hay).
+- De las fichas USA de los originales que recoge el ejemplar: guion, lápiz, tinta y color (el argumento cuenta como guion)
+  y la sinopsis, que va al Resumen. De cada original solo se usan las historias que enlazan a tu ficha española; si no se
+  puede saber cuáles, se usan todas y el diálogo avisa («Revisa»), igual que si algún enlace de la web está roto.
+  La rotulación y la traducción son siempre las de la ficha española.
+- En las **Notas**, bajo «Contenido original»: el «Contenido USA» (cada original con el enlace a su ficha), un
+  desglose «Créditos por historia (USA)» (quién hizo qué en cada historia, ya que los campos solo admiten una lista por
+  rol) y los comentarios de la edición. De ahí pasan al comentario de GCstar.
+- El contenido original (los años) lo sigues indicando tú.
+
+La base guarda de cada ficha sus campos ya leídos y el HTML original comprimido, así que si mejora el lector se vuelve a
+leer sin volver a pedir nada a la web; las portadas se guardan reducidas (500 px). Volver a descargar el índice no borra
+las fichas.
 
 ## Copias de seguridad
 
-En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección y GCD), los
+En **Ajustes** se elige una carpeta para las copias. Cada copia es un `.zip` con los índices (colección, GCD y Universo Marvel), los
 ajustes y los registros de deshacer, más un manifiesto con el SHA-256 de cada archivo; las bases SQLite se copian con la
 API de copia de SQLite (coherentes aunque estén en uso). Se hace una **automática al cerrar** la aplicación (solo si
 algo ha cambiado desde la última; se conservan las N últimas, 10 por defecto), y **Copiar ahora** hace una manual (las
@@ -148,9 +164,18 @@ clave de ComicVine (se crea legible solo por ti). El `.gcs` de GCstar y tus cóm
 Bajo el campo del título, el desplegable **Buscar en otras webs** reúne accesos directos a webs de cómic en español,
 agrupadas en *Generalistas* (Tebeosfera, Whakoom, Norma, Norma Comics, Panini, Zona Negativa), *Marvel* (Universo
 Marvel) y *DC* (DC Comics, DC Database), y se repliega al elegir una. **Todas**, arriba del todo, abre las nueve, cada
-una en su pestaña del navegador. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está marcada, la editorial y
-el año: la aplicación no rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt` (Whakoom y los
-buscadores de Panini y DC).
+una en su pestaña del navegador. Abren en tu navegador la búsqueda con el título, el número y, si la casilla está
+marcada, la editorial y el año: la aplicación no rastrea esas webs, y de hecho algunas lo prohíben en su `robots.txt`
+(Whakoom y los buscadores de Panini y DC).
+
+El menú **Comprar**, a su lado, abre la búsqueda del ejemplar (con el resultado elegido, o lo escrito si no hay ninguno) en
+Panini, en webs de segunda mano (Todocolección, eBay.es, Wallapop, Milanuncios, Iberlibro) y en tiendas (Amazon.es, Casa
+del Libro). Forum/Planeta y Vértice ya no publican, así que sus números solo aparecen de segunda mano. Sin enlaces de
+afiliado y sin rastrear nada: es tu navegador quien carga la búsqueda.
+
+Los resultados de Universo Marvel y de GCD llevan, a la derecha, el logotipo de la editorial cuando es Forum, Panini o
+Vértice; se descargan una vez de la web de fichas a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden
+borrar sin problema.
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
 guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque son marcas de sus webs. Se pueden
@@ -179,7 +204,7 @@ sudo apt install ./comic-identify_<versión>-1_all.deb
 ```
 
 El paquete recomienda (y `apt` instala por defecto) `unrar` o `p7zip-full` para leer RAR y 7-Zip,
-`gir1.2-webkit-6.0` para las fichas de GCD y `gir1.2-vte-3.91` para el asistente de IA; sugiere `rar` para escribir
+`gir1.2-webkit-6.0` para las fichas de GCD y de Universo Marvel y `gir1.2-vte-3.91` para el asistente de IA; sugiere `rar` para escribir
 metadatos en RAR.
 
 **Entorno de desarrollo.** Dependencias del sistema (Debian/Ubuntu/Mint):
@@ -210,7 +235,7 @@ La clave de ComicVine se guarda en `~/.config/comic-identify/config.json` (permi
 ## Uso
 
 Al hacer clic en una sugerencia de GCD, su ficha de comics.org se abre en un panel a la derecha (requiere
-`gir1.2-webkit-6.0`; sin él, se abre en el navegador). Las de ComicVine usan una ficha propia, sin WebKit. Con número
+`gir1.2-webkit-6.0`; sin él, se abre en el navegador); las de Universo Marvel abren de la misma forma su página. Las de ComicVine usan una ficha propia, sin WebKit. Con número
 se abre el ejemplar; sin número, la galería de portadas de la serie (GCD la pagina de 50 en 50). Se carga una sola
 página por clic y la aplicación no extrae ni guarda ninguna imagen: es una vista de comics.org tal como la ve un
 navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
@@ -222,8 +247,9 @@ navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en 
   está, `7z`. El índice vive en `~/.local/share/comic-identify/library.db`. Si una carpeta configurada no está
   accesible (disco externo desmontado, carpeta vacía), su índice se conserva y se avisa; al quitarla de la lista, sus
   portadas se olvidan al momento. Debajo, la lista de series con sus huecos.
-- **Ajustes**: clave de ComicVine, volcado de GCD, comando y mensaje del asistente de IA, deshacer renombrados y
-  metadatos, y el botón **Acerca de…**.
+- **Ajustes**: clave de ComicVine, volcado de GCD, índice de Universo Marvel, comando y mensaje del asistente de IA,
+  deshacer renombrados, metadatos y transferencias a GCstar, ruta del `.gcs`, copias de seguridad y restauración, y el
+  botón **Acerca de…**.
 
 ## Comprobaciones
 
@@ -253,6 +279,12 @@ sudo apt install ../comic-identify_<versión>-1_all.deb
   sintéticas; conviene ajustarlo con portadas reales.
 - La lectura del código de barras depende de `zbarimg` y de que el código sea legible en la imagen.
 - ComicVine limita las peticiones; cada identificación hace unas pocas consultas.
+- Universo Marvel: solo se usan Forum/Planeta, Panini y Vértice (la web tiene unas 25 editoriales más), y el lector
+  depende del HTML de esa web, que es antiguo y de varias épocas: si cambia o una ficha es distinta, puede faltar algún
+  dato (se avisa, nunca se inventa). Los créditos USA pueden incluir de más cuando la ficha del original no enlaza a tu
+  ejemplar (se avisa con «Revisa»). Hay enlaces rotos en la propia web.
+- El «Coste» de GCstar es un campo numérico sin decimales en su modelo de cómics: el valor se guarda bien, pero su
+  ventana podría mostrarlo redondeado (sin comprobar en GCstar).
 - La lista de series supone que una carpeta es una serie: en carpetas sueltas o de eventos, con varias series
   mezcladas y sin metadatos, no se calculan huecos.
 
@@ -261,6 +293,10 @@ sudo apt install ../comic-identify_<versión>-1_all.deb
 Los datos de GCD son © Grand Comics Database (<https://www.comics.org/>) y se distribuyen bajo
 licencia [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). El índice local que genera
 la aplicación es una obra derivada y debe conservar esa atribución y licencia si se comparte.
+
+Los datos de las fichas de Universo Marvel (fichas.universomarvel.com) pertenecen a sus autores, y los personajes y
+publicaciones a sus titulares. La base local (`universomarvel.db`, con las fichas y portadas que consultas) es para tu uso
+personal: no la redistribuyas.
 
 ## Licencia
 

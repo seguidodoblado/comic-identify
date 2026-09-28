@@ -5,6 +5,25 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-09-28
+
+### Changed
+- El README (y la descripción del paquete `.deb`) se han puesto al día: Universo Marvel, copias de seguridad, Comprar,
+  transferencia a GCstar y metadatos ampliados estaban sin documentar o documentados a medias; la sección de Universo Marvel
+  se ha reordenado, y se añaden sus limitaciones y el aviso de datos de terceros.
+
+### Added
+- **Comprar**: un menú junto a «Buscar en otras webs» que abre en tu navegador la búsqueda del ejemplar (serie, número y
+  editorial o sello del resultado elegido o, si no hay, lo escrito en los campos) en Panini, en webs de segunda mano
+  (Todocolección, eBay.es, Wallapop, Milanuncios e Iberlibro) y en tiendas (Amazon.es y Casa del Libro). Forum/Planeta y
+  Vértice ya no publican, así que sus números solo se encuentran de segunda mano. Sin enlaces de afiliado; usa la misma
+  casilla de «Incluir también la editorial y el año».
+- **Logotipos de las editoriales** (Forum, Panini y Vértice) en pequeño, a la derecha de cada resultado de Universo
+  Marvel y de GCD cuya editorial o sello se reconoce, en un hueco de tamaño fijo. No se incluyen en el paquete (son
+  marcas de sus editoriales): se descargan una sola vez de la web de fichas a la caché del usuario
+  (`~/.cache/comic-identify/logos`), ya reducidos, y si no se pueden descargar la fila queda sin logotipo y no se
+  vuelve a intentar hasta pasada una semana.
+
 ## [0.24.0] - 2026-09-28
 
 ### Added
