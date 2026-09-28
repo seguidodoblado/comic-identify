@@ -33,7 +33,8 @@ reales devolvía texto sin sentido).
 5. **Ficha en un panel a la derecha** al hacer clic en una sugerencia: de GCD, con número abre el
    ejemplar y sin número la galería de portadas de la serie; de ComicVine, una ficha con la portada grande,
    el título, la editorial y la fecha; de Universo Marvel, la página de la serie o del ejemplar (ver más abajo).
-   «Abrir en el navegador» está en la cabecera del panel.
+   «Abrir en el navegador» está en la cabecera del panel. El panel se adapta al ancho de la pantalla (mínimo 420 px; el
+   terminal del asistente pide 760) y la ventana no crece más que la pantalla ni cambia de tamaño si está maximizada.
 
 Ningún método automático acierta al 100 %: el resultado es una lista de candidatos para que elijas. Cada uno lleva su
 fuente (GCD en morado, Universo Marvel en rojo y ComicVine en verde, con el icono de su web) y, cuando la editorial es una de las conocidas (Forum, Panini, Vértice, Planeta DeAgostini, ECC, Zinco, Norma o Bruguera), su
@@ -159,6 +160,14 @@ algo ha cambiado desde la última; se conservan las N últimas, 10 por defecto),
 manuales nunca se borran solas). **Restaurar una copia…** lista las copias por fecha; antes de sustituir nada
 comprueba los SHA-256 y las bases, y guarda el estado actual como copia «antes de restaurar». Ojo: el zip incluye la
 clave de ComicVine (se crea legible solo por ti). El `.gcs` de GCstar y tus cómics no forman parte de la copia.
+
+## Tema claro y oscuro
+
+En **Ajustes**, «Claro» y «Oscuro» cambian al tema GTK hermano del que tenga tu sistema, conservando el acento
+(`Mint-Y-Aqua` ↔ `Mint-Y-Dark-Aqua`, `Adwaita` ↔ `Adwaita-dark`); en oscuro se usan los iconos simbólicos y en claro los de
+color de tu tema de iconos. La elección se guarda en `config.json` (`dark_mode`) y se aplica al arrancar; mientras no elijas,
+se sigue el tema del sistema. Cambiarlo reinicia la aplicación (una ventana ya presentada no se repinta en Cinnamon/Mint) y
+conserva el cómic abierto, lo escrito en los campos y la pestaña; no se puede cambiar durante una indexación.
 
 ## Webs, asistente de IA y órdenes
 

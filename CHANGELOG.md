@@ -5,6 +5,18 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-09-28
+
+### Fixed
+- **Abrir el asistente de IA (o cualquier panel derecho) sacaba la ventana de la pantalla y le quitaba el maximizar**: el
+  panel pedía 760 px fijos y la ventana crecía otros tantos aunque ya estuviera maximizada; con una letra algo mayor,
+  la parte izquierda más el panel superaban el ancho de la pantalla y el gestor de ventanas dejaba de permitir
+  maximizar. Ahora el panel se adapta al espacio que da la pantalla (con un mínimo de 420 px), la ventana nunca crece más
+  que la pantalla y, si está maximizada o a pantalla completa, no se toca su tamaño.
+
+### Changed
+- README: descripción del tema claro/oscuro y del ajuste del panel derecho al ancho de la pantalla.
+
 ## [0.26.0] - 2026-09-28
 
 ### Added

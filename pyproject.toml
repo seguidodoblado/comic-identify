@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comic-identify"
-version = "0.26.0"
+version = "0.26.1"
 description = "Identificación de cómics a partir de su portada"
 readme = "README.md"
 requires-python = ">=3.10"
