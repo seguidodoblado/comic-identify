@@ -42,6 +42,7 @@ from .identify import (
     search_marvel,
 )
 from .library import Library
+from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key
 from .metadata import differs, write_batch
 from .metadata import undo_last as undo_metadata
 from .metaform import (
@@ -82,7 +83,7 @@ from .settings import (
     UNIVERSOMARVEL_DB,
     Settings,
 )
-from .sources import GROUPS, SOURCES, search_url
+from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
 from .umficha import compose_notes
 from .universomarvel import Entry as MarvelEntry
 from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
@@ -210,8 +211,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._big_covers: dict[str, bytes] = {}   # portadas grandes de ComicVine ya descargadas
             self._native_url = ""
             self.icon_widgets: dict[str, list] = {}   # host -> imágenes que muestran su icono
+            self.logo_widgets: dict[str, list] = {}    # editorial -> logotipos de las filas que esperan el suyo
+            self._logo_requested: set[str] = set()
             self.cache_dir = Path(GLib.get_user_cache_dir()) / "comic-identify"
             self.icon_dir = self.cache_dir / "icons"
+            self.logo_dir = self.cache_dir / "logos"   # logotipos de editoriales (ver logos.py)
             self.source_file: Path | None = None   # CBR/CBZ abierto: el que se puede normalizar
             self.selected: Candidate | None = None
             self._marvel_request = 0   # descarta la respuesta de una ficha si ya se eligió otra cosa
@@ -252,7 +256,8 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _load_icons(self):
             """Descarga (una sola vez, luego caché) los iconos de las webs; en segundo plano."""
-            wanted = [(source.host, False) for source in SOURCES] + [(COMICVINE_HOST, True), (GCD_HOST, True)]
+            wanted = ([(source.host, False) for source in (*SOURCES, *SHOPS)]
+                      + [(COMICVINE_HOST, True), (GCD_HOST, True)])
             ensure_icons(wanted, self.icon_dir, lambda host, path: later(self._icon_ready, host, path))
 
         # ---- Identificar -------------------------------------------------------------------
@@ -337,7 +342,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             scroll.set_child(self.results)
 
             self.web_extra = Gtk.CheckButton(label="Incluir también la editorial y el año", active=True, tooltip_text=(
-                "Añade la editorial y el año a la búsqueda de las webs; si no salen resultados, desmárcalo"))
+                "Añade la editorial y el año a la búsqueda de las webs y de las tiendas; si no salen resultados, desmárcalo"))
             menu_content = Gtk.Box(spacing=6)
             menu_content.append(Gtk.Image(icon_name=pick_icon("web-browser-symbolic", FALLBACK_ICON)))
             menu_content.append(Gtk.Label(label="Buscar en otras webs"))
@@ -369,8 +374,34 @@ def run_gui(initial_image: Path | None = None) -> None:
             web_menu = Gtk.MenuButton(child=menu_content, popover=popover, tooltip_text=(
                 "Abre en tu navegador la búsqueda del título en la web que elijas"))
             self.web_menu = web_menu
+            buy_content = Gtk.Box(spacing=6)
+            buy_content.append(Gtk.Image(icon_name=pick_icon("shopping-cart-symbolic", "package-x-generic-symbolic",
+                                                             "emblem-shared-symbolic", FALLBACK_ICON)))
+            buy_content.append(Gtk.Label(label="Comprar"))
+            buy_content.append(Gtk.Image(icon_name=pick_icon("pan-down-symbolic")))
+            buy_popover = Gtk.Popover()
+            buy_entries = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, margin_top=6, margin_bottom=6,
+                                  margin_start=6, margin_end=6)
+            buy_entries.append(Gtk.Label(label="Busca el ejemplar en tu navegador", xalign=0, margin_start=6,
+                                         margin_bottom=4, css_classes=["dim-label"]))
+            for group in SHOP_GROUPS:
+                buy_entries.append(Gtk.Label(label=group, xalign=0, margin_start=6, margin_top=6,
+                                             css_classes=["heading"]))
+                for shop in (s for s in SHOPS if s.category == group):
+                    shop_line = Gtk.Box(spacing=8)
+                    shop_line.append(self._icon(shop.host, 16))
+                    shop_line.append(Gtk.Label(label=shop.name, xalign=0))
+                    shop_button = Gtk.Button(child=shop_line, has_frame=False, tooltip_text=f"Busca en {shop.host}")
+                    shop_button.connect("clicked", lambda _b, n=shop.name: (buy_popover.popdown(), self._open_shop(n)))
+                    buy_entries.append(shop_button)
+            buy_popover.set_child(buy_entries)
+            buy_menu = Gtk.MenuButton(child=buy_content, popover=buy_popover, tooltip_text=(
+                "Abre en tu navegador la búsqueda del ejemplar en una tienda o en una web de segunda mano "
+                "(Forum y Vértice ya no publican: solo se encuentran de segunda mano)"))
+            self.buy_menu = buy_menu
             sources = Gtk.Box(spacing=12)
             sources.append(web_menu)
+            sources.append(buy_menu)
             sources.append(self.web_extra)
             side = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
             side.append(refine)
@@ -443,6 +474,26 @@ def run_gui(initial_image: Path | None = None) -> None:
                 url = search_url(name, title, number, publisher, year)
             except ValueError:
                 self.status.set_text(f"Escribe un título para buscarlo en {name}.")
+                return
+            Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+
+        def _shop_terms(self) -> tuple[str, str, str, str]:
+            """Qué buscar al comprar: el resultado elegido (serie, número y editorial o sello) o, si no hay ninguno con
+            datos, lo escrito en los campos; con la casilla desmarcada, sin editorial ni año."""
+            title, number, publisher, year = self._fields()
+            chosen = self.selected
+            if chosen is not None and chosen.source in ("Universo Marvel", "GCD") and chosen.series:
+                title, number = chosen.series, chosen.number or number
+                publisher, year = chosen.brand or chosen.publisher or publisher, chosen.year or year
+            if not self.web_extra.get_active():
+                publisher = year = ""
+            return title, number, publisher, year
+
+        def _open_shop(self, name: str):
+            try:
+                url = shop_url(name, *self._shop_terms())
+            except ValueError:
+                self.status.set_text(f"Escribe un título (o elige un resultado) para buscarlo en {name}.")
                 return
             Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
 
@@ -2195,8 +2246,41 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.webview = None
             self.results.unselect_all()
 
-        @staticmethod
-        def _row(candidate: Candidate):
+        def _logo_ready(self, key: str, path: Path):
+            for picture in self.logo_widgets.pop(key, []):
+                picture.set_filename(str(path))
+
+        def _request_logo(self, key: str):
+            """Descarga (una sola vez; luego, caché) el logotipo de esa editorial, en segundo plano."""
+            if key in self._logo_requested:
+                return
+            self._logo_requested.add(key)
+
+            def run():
+                if (path := fetch_logo(key, self.logo_dir)) is not None:
+                    later(self._logo_ready, key, path)
+            Thread(target=run, daemon=True).start()
+
+        def _publisher_logo(self, candidate: Candidate):
+            """El logotipo de la editorial de la fila (Forum, Panini, Vértice), en un hueco fijo a la derecha; None si
+            la editorial no es una de las conocidas."""
+            key = logo_key(candidate.publisher, candidate.brand, candidate.extra.get("index_publisher", ""))
+            if key is None:
+                return None
+            slot = Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.CENTER,
+                           tooltip_text={"forum": "Forum", "panini": "Panini", "vertice": "Vértice"}[key])
+            slot.set_size_request(*LOGO_BOX)
+            # sin can_shrink y con el archivo ya reducido: se ve del tamaño exacto (GTK no lo reescala a su gusto)
+            logo = Gtk.Picture(can_shrink=False, hexpand=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
+            slot.append(logo)
+            if (path := logo_file(key, self.logo_dir)) is not None:
+                logo.set_filename(str(path))
+            else:
+                self.logo_widgets.setdefault(key, []).append(logo)
+                self._request_logo(key)
+            return slot
+
+        def _row(self, candidate: Candidate):
             row = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6, margin_end=6)
             thumb = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN)
             thumb.set_size_request(70, 105)
@@ -2235,6 +2319,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                 text.append(score)
             row.append(thumb)
             row.append(text)
+            if (logo := self._publisher_logo(candidate)) is not None:
+                row.append(logo)
             if candidate.path:
                 open_folder = icon_button(("folder-open-symbolic",), "Abrir carpeta", valign=Gtk.Align.CENTER)
                 open_folder.connect("clicked", lambda _b, p=candidate.path: Gtk.FileLauncher.new(

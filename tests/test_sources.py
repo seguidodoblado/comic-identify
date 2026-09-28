@@ -57,3 +57,26 @@ def test_publisher_and_year_narrow_the_search_when_given():
     assert _query(search_url("Zona Negativa", "Batman", "", "Zinco", "1987"))["s"] == ["Batman Zinco 1987"]
     assert _query(search_url("Panini", "Batman", "5", "", "2012"))["q"] == ["Batman 5 2012"]      # los que faltan se omiten
     assert search_url("Panini", "Batman", "5") == search_url("Panini", "Batman", "5", "", "")     # y son opcionales
+
+
+def test_shops_build_search_urls_for_the_title_number_publisher_and_year():
+    from comic_identify.sources import SHOP_GROUPS, SHOPS, shop_url
+    assert _query(shop_url("Todocolección", "Spiderman", "34", "Panini", "2005")) == {"bu": ["Spiderman 34 Panini 2005"]}
+    assert _query(shop_url("eBay.es", "Capitán Marvel", "1"))["_nkw"] == ["Capitán Marvel 1"]
+    assert _query(shop_url("Wallapop", "Alpha Flight"))["keywords"] == ["Alpha Flight"]
+    assert _query(shop_url("Milanuncios", "Conan"))["s"] == ["Conan"]
+    assert _query(shop_url("Iberlibro", "Conan", "3"))["kn"] == ["Conan 3"]
+    assert _query(shop_url("Amazon.es", "Conan"))["k"] == ["Conan"]
+    assert _query(shop_url("Casa del Libro", "Conan"))["q"] == ["Conan"]
+    assert _query(shop_url("Panini", "Batman", "5", "", "2012"))["q"] == ["Batman 5 2012"]   # los que faltan se omiten
+    assert {shop.category for shop in SHOPS} == set(SHOP_GROUPS) and len(SHOPS) == 8
+    assert all(shop.host and "/" not in shop.host and "{q}" in shop.template for shop in SHOPS)
+
+
+def test_shop_url_needs_a_title_and_a_known_shop_and_encodes_special_characters():
+    from comic_identify.sources import shop_url
+    with pytest.raises(ValueError):
+        shop_url("Wallapop", "   ", "34")
+    with pytest.raises(ValueError):
+        shop_url("Inventada", "Batman")
+    assert "%26" in shop_url("Todocolecci\xf3n", "Alpha Flight & La Masa") and "+" in shop_url("Wallapop", "Alpha Flight")
