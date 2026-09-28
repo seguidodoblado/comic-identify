@@ -200,3 +200,38 @@ def test_ficha_reached_by_browsing_takes_its_publisher_from_the_ficha_itself():
     entry = Entry(stub.extra["index_publisher"], "", stub.title, stub.extra["page"])
     candidate = marvel_issue_candidate(entry, SeriesIssue("", "", entry.page), Ficha(title="Amalgam vol.1 n\xba 1", publisher="Forum"))
     assert (candidate.publisher, candidate.brand, candidate.extra["index_publisher"]) == ("Planeta DeAgostini", "Forum", "Forum/Planeta")
+
+
+def test_every_publisher_of_the_web_has_its_own_index_page_and_a_named_edition():
+    assert len(um.PUBLISHERS) == 31 and len(set(um.PUBLISHERS.values())) == 31          # una página por editorial
+    assert all(page.endswith(".html") for page in um.PUBLISHERS.values())
+    assert set(um.EDITION_BY_PUBLISHER) == set(um.PUBLISHERS)                            # todas con su editorial
+    assert um.EDITION_BY_PUBLISHER["Forum/Planeta"] == ("Planeta DeAgostini", "Forum")   # el sello solo donde se sabe
+    assert um.EDITION_BY_PUBLISHER["Zinco"] == ("Ediciones Zinco", "") and um.EDITION_BY_PUBLISHER["Norma"][0] == "Norma Editorial"
+
+
+def test_a_ficha_opened_from_the_web_of_another_publisher_keeps_the_publisher_it_signs():
+    from comic_identify.identify import marvel_issue_candidate
+    from comic_identify.umficha import Ficha, SeriesIssue
+    entry = Entry("", "", "Capit\xe1n Am\xe9rica", "esp/capamsur105.html")
+    issue = marvel_issue_candidate(entry, SeriesIssue("g", "5", "esp/capamsur105.html"),
+                                   Ficha(title="Capit\xe1n Am\xe9rica n\xba 5", publisher="Surco"))
+    assert issue.publisher == "Ediciones Surco" and issue.extra["index_publisher"] == "Surco"
+
+
+def test_a_range_subpage_that_only_lists_numbers_without_fichas_is_not_an_error(tmp_path):
+    series = "<html><body><table><tr><td><a href='cimoc_v1_100.html'>1-100</a></td></tr></table></body></html>"
+    listing = "<html><body><caption>CIMOC #1-100</caption><table><tr><td><b>1</b></td><td><b>2</b></td></tr></table></body></html>"
+    pages = {"cimoc_v1.html": series, "cimoc_v1_100.html": listing}
+    calls = []
+
+    def fetch(url):
+        calls.append(url)
+        return pages[url.rsplit("/", 1)[1]].encode()
+    index = um.UniversoMarvelIndex(tmp_path / "um.db")
+    um.build_index(tmp_path / "um.db", publishers={"Norma": "norma.html"},
+                   fetch=lambda url: b"<h2>Series</h2><select><option value='cimoc_v1.html'>Cimoc vol.1</option></select>")
+    client = um.UniversoMarvelClient(index, fetch=fetch)
+    entry = index.search("cimoc")[0]
+    assert client.find_issue(entry, "1") is None and client.find_issue(entry, "2") is None
+    assert len(calls) == 2                                   # la serie y la subpágina, cada una una vez

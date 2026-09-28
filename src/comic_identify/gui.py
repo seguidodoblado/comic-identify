@@ -2819,8 +2819,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
                 "Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones españolas de Marvel (Forum/"
-                "Planeta, Panini, Vértice). Es una web personal, así que no se rastrea: se descarga el índice de "
-                "series (tres peticiones espaciadas) para buscar al escribir y, al elegir una serie con su número "
+                "Planeta, Panini, Vértice, Bruguera y otras 27 editoriales). Es una web personal, así que no se rastrea: "
+                "se descarga el índice de series (una petición por editorial, espaciadas: casi un minuto) para buscar al escribir y, al elegir una serie con su número "
                 "escrito, solo la ficha de ese ejemplar, una vez; queda guardada en la base local.")))
             self.marvel_button = icon_button(("folder-download-symbolic", "document-save-symbolic"),
                                              "Descargar el índice de Universo Marvel", halign=Gtk.Align.START)

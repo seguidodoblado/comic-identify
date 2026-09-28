@@ -39,12 +39,39 @@ from .umficha import (
 
 HOST = "fichas.universomarvel.com"
 BASE = f"https://{HOST}/"
-PUBLISHERS = {"Forum/Planeta": "forum.html", "Panini": "panini.html", "Vértice": "vertice.html"}
+# Las editoriales que enlaza la portada de la web (cada una con una página de índice). Salen primero las cuatro que
+# licenciaron Marvel en España y después las que la han publicado alguna vez.
+PUBLISHERS = {"Forum/Planeta": "forum.html", "Panini": "panini.html", "Vértice": "vertice.html",
+              "Bruguera": "bruguera.html", "Manhattan": "manhattan.html", "Ferma": "ferma.html", "Laida": "laida.html",
+              "Novaro": "novaro.html", "Montena": "montena.html", "Distrinovel": "distrinovel.html",
+              "Surco": "surco.html", "Rasgos": "rasgos.html", "Zinco": "zinco.html", "Norma": "ned.html",
+              "Vid": "vid.html", "Sword Studio": "swords.html", "Dolmen": "dolmen.html", "Kraken": "kraken.html",
+              "ECC": "ecc.html", "Diábolo": "diabolo.html", "Ediciones Recreativas": "er.html",
+              "Dronte": "edronte.html", "Toutain": "toutain.html", "Nueva Frontera": "nfrontera.html",
+              "Ediprint": "ediprint.html", "Hitpress": "hitpress.html", "Editorial Valenciana": "edval.html",
+              "Ediciones B": "edb.html", "Yermo": "yermo.html", "Cartem": "cartem.html",
+              "Producciones Editoriales": "ped.html"}
 # Editorial y sello de cada colección (tus dos datos distintos al normalizar): el sello es lo impreso en el ejemplar y
-# la editorial quien lo publica. Solo se rellena lo que se sabe con certeza; el resto se completa a mano al normalizar.
+# la editorial quien lo publica. Solo se rellena lo que se sabe con certeza (el nombre que da la propia web a cada
+# editorial); el resto se completa a mano al normalizar.
 EDITION_BY_PUBLISHER = {"Forum/Planeta": ("Planeta DeAgostini", "Forum"), "Panini": ("Panini Comics", ""),
-                        "Vértice": ("Ediciones Vértice", "")}
-PUBLISHER_BY_SITE = {"Forum": "Forum/Planeta", "Panini": "Panini", "Vértice": "Vértice"}   # cómo firma cada una su ficha
+                        "Vértice": ("Ediciones Vértice", ""), "Bruguera": ("Editorial Bruguera", ""),
+                        "Manhattan": ("Ediciones Manhattan", ""), "Ferma": ("Editorial Ferma", ""),
+                        "Laida": ("Editorial Laida", ""), "Novaro": ("Editorial Novaro", ""),
+                        "Montena": ("Editorial Montena", ""), "Distrinovel": ("Editorial Distrinovel", ""),
+                        "Surco": ("Ediciones Surco", ""), "Rasgos": ("Ediciones Rasgos", ""),
+                        "Zinco": ("Ediciones Zinco", ""), "Norma": ("Norma Editorial", ""),
+                        "Vid": ("Editorial Vid", ""), "Sword Studio": ("Sword Studio", ""),
+                        "Dolmen": ("Dolmen Editorial", ""), "Kraken": ("Kraken Editorial", ""),
+                        "ECC": ("ECC Ediciones", ""), "Diábolo": ("Diábolo Ediciones", ""),
+                        "Ediciones Recreativas": ("Ediciones Recreativas", ""), "Dronte": ("Ediciones Dronte", ""),
+                        "Toutain": ("Toutain Editor", ""), "Nueva Frontera": ("Ediciones Nueva Frontera", ""),
+                        "Ediprint": ("Ediprint", ""), "Hitpress": ("Hitpress", ""),
+                        "Editorial Valenciana": ("Editorial Valenciana", ""), "Ediciones B": ("Ediciones B", ""),
+                        "Yermo": ("Yermo Ediciones", ""), "Cartem": ("Cartem Comics", ""),
+                        "Producciones Editoriales": ("Producciones Editoriales", "")}
+# cómo firma cada una su ficha (el final del título: «… nº 1 - Forum»); la que no esté aquí se usa tal cual
+PUBLISHER_BY_SITE = {"Forum": "Forum/Planeta", "Panini": "Panini", "Vértice": "Vértice"}
 SCHEMA_VERSION = 1
 MIN_INTERVAL = 1.5          # segundos entre peticiones: es un servidor pequeño
 TIMEOUT = 20
@@ -351,14 +378,15 @@ class UniversoMarvelClient:
         self.index = index
         self.fetch = Fetcher().get if fetch is None else fetch
 
-    def _load(self, key: str, url: str, title: str, refresh: bool = False) -> tuple[list[SeriesIssue], list[Subpage]]:
+    def _load(self, key: str, url: str, title: str, refresh: bool = False,
+              allow_empty: bool = False) -> tuple[list[SeriesIssue], list[Subpage]]:
         """Los números (o, en series largas, las subpáginas por rangos) de una página de serie; se descarga una vez."""
         if not refresh and (known := self.index.issues_of(key)) is not None:
             return known, self.index.subpages_of(key)
         html = decode(self.fetch(url))
         issues = parse_series_page(html, url)
         subpages = [] if issues else parse_series_subpages(html, url)
-        if not issues and not subpages:
+        if not issues and not subpages and not allow_empty:
             raise UniversoMarvelError(f"La página de «{title}» no trae ningún número: ¿ha cambiado la web?")
         self.index.store_issues(key, issues, subpages)
         return issues, subpages
@@ -383,7 +411,8 @@ class UniversoMarvelClient:
         if hit := match(issues):
             return hit
         for sub in subpages_for(subpages, number):
-            if hit := match(self._load(sub.page, urljoin(BASE, sub.page), entry.title)[0]):
+            # una subpágina puede listar los números sin ficha (solo un listado): se guarda vacía y no hay «nº»
+            if hit := match(self._load(sub.page, urljoin(BASE, sub.page), entry.title, allow_empty=True)[0]):
                 return hit
         return None
 

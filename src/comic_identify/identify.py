@@ -154,7 +154,8 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
     series_title, number = split_ficha_title(ficha.title)
     name, volume = split_volume(series_title if number else entry.title)
     number = number or issue.label
-    publisher = entry.publisher or PUBLISHER_BY_SITE.get(ficha.publisher, "")   # una ficha abierta desde la web no lo trae
+    # una ficha abierta desde la web no trae la editorial del índice: se toma de cómo firma la ficha
+    publisher = entry.publisher or PUBLISHER_BY_SITE.get(ficha.publisher, ficha.publisher)
     editorial, brand = EDITION_BY_PUBLISHER.get(publisher, (publisher, ""))
     amount, currency = ficha.price
     details = [ficha.date_text, f"{ficha.pages} págs." if ficha.pages else "", f"{amount} {currency}" if amount else "",
