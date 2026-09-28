@@ -111,7 +111,7 @@ No tiene API ni volcado y es una web personal, así que la aplicación **no la r
    una sola vez: después sale de la base local) y aparece como candidato con su fecha, páginas, precio y formato; su
    página se ve en el panel de la derecha. Un especial suelto no necesita número.
 3. Con ese candidato elegido, **Normalizar nombre** parte de sus datos (nombre, volumen, 🇪🇸, año de la edición, sello y
-   editorial) y **Metadatos archivo** precarga año, mes, editorial, sello, web de la serie y los créditos de la edición
+   editorial) y **Metadatos archivo** precarga año, mes, editorial, sello, la web de su ficha y los créditos de la edición
    (rotulación, traducción, portada); con un solo archivo, también el título del cómic y el código de barras. Las
    páginas (`PageCount`) siempre se cuentan en el propio archivo, con o sin ficha. El contenido original lo sigues
    indicando tú.

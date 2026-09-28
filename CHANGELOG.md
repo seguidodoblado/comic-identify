@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-09-28
+
+### Fixed
+- Con una ficha de Universo Marvel elegida, el campo «Web» de los metadatos (y el «Web» de GCstar al transferir) llevaba
+  la página de la **serie**; ahora lleva la de la **ficha del ejemplar**, que es de lo que traen los datos.
+
 ## [0.22.0] - 2026-09-28
 
 ### Added
