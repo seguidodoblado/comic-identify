@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-09-28
+
+### Changed
+- **Créditos**: Ajustes y «Acerca de…» reconocen ahora a Universo Marvel y a Tebeosfera, con su icono, qué aportan y su enlace, igual
+  que a Comic Vine y GCD (la presentación pasa de «dos» a «cuatro comunidades de colaboradores»).
+
 ## [0.31.0] - 2026-09-28
 
 ### Added
