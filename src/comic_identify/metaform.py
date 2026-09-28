@@ -11,9 +11,10 @@ from dataclasses import replace
 from .comicinfo import CATEGORY_PREFIX as CATEGORY_LABEL
 from .comicinfo import FIELD_ORDER, category_of, with_category
 from .naming import Values, looks_normalized
+from .umficha import NOTE_HEADINGS
 
 SERIES_FIELDS = ("Series", "Volume", "Year", "Month", "Day", "Count", "Publisher", "Imprint", "LanguageISO", "Web",
-                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist", "Translator")   # créditos: por lote, no por número
+                 "Notes", "Writer", "Penciller", "Inker", "Colorist", "Letterer", "CoverArtist", "Translator", "Format")   # créditos: por lote, no por número
 LANGUAGES = {"🇪🇸": "es", "🇺🇸": "en"}
 GCD_SERIES_URL = "https://www.comics.org/series/{}/"
 NO_CATEGORY = ""        # «no cambiar»
@@ -52,12 +53,19 @@ def suggest_fields(values: Values, publisher: str = "", info=None) -> dict[str, 
 
 
 def append_block(existing: str, block: str) -> str:
-    """`block` debajo de lo que ya haya en las notas, sin repetirlo si ya está (volver a elegir la misma ficha no lo
-    duplica) y sin tocar lo que ya se había escrito."""
+    """`block` debajo de lo que ya haya en las notas. Si las notas ya llevan un bloque de este tipo (empieza por
+    «Contenido USA:», «Créditos por historia (USA):» o «Comentarios de la edición:» y llega hasta el final), se
+    refresca en vez de repetirlo; si detrás hay algo escrito a mano, no se toca nada."""
     block, existing = block.strip(), existing.strip()
-    if not block or block in existing:
+    if not block:
         return existing
-    return f"{existing}\n{block}" if existing else block
+    lines = existing.splitlines()
+    first = next((n for n, line in enumerate(lines) if line.strip() in NOTE_HEADINGS), None)
+    if first is None:
+        return f"{existing}\n{block}" if existing else block
+    if all(line.strip() in NOTE_HEADINGS or line.startswith("- ") for line in lines[first:]):
+        return "\n".join([*lines[:first], block]).strip()
+    return existing
 
 
 def common_value(infos: Sequence[Mapping[str, str]], key: str) -> tuple[str, bool]:

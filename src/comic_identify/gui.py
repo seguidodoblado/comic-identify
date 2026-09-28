@@ -1,4 +1,5 @@
 """Interfaz GTK4; coordina la selección de portada y presenta los candidatos."""
+import json
 import sys
 from pathlib import Path
 from threading import Event, Thread
@@ -34,6 +35,7 @@ from .identify import (
     MARVEL_METADATA,
     MARVEL_PER_ISSUE,
     Candidate,
+    attach_cover,
     identify,
     marvel_issue_candidate,
     search_gcd,
@@ -81,6 +83,7 @@ from .settings import (
     Settings,
 )
 from .sources import GROUPS, SOURCES, search_url
+from .umficha import compose_notes
 from .universomarvel import Entry as MarvelEntry
 from .universomarvel import UniversoMarvelClient, UniversoMarvelError, UniversoMarvelIndex
 from .universomarvel import build_index as build_marvel_index
@@ -1008,6 +1011,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección",
                       "cost": "Coste", "isbn": "ISBN"}
             prefill = {"category": category_of(info.get("Tags", "")),   # ya la conocemos por nuestra propia Categoría
+                      "format": info.get("Format", ""),   # el de ComicInfo.xml (p. ej. «Tomo tapa blanda» de la ficha)
                       "type": origin}   # Europeo/Americano/Manga, según la carpeta de Mi colección (ver ORIGIN_BY_FOLDER)
             if self.selected is not None and self.selected.source == "Universo Marvel":
                 # el precio no existe en ComicInfo.xml: solo se conoce por la ficha elegida (y se puede corregir aquí)
@@ -1584,6 +1588,9 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _start_metadata(self, where: Path, files: list[Path]):
             self.status.set_text(f"Leyendo los metadatos de {len(files)} archivo(s)…")
+            chosen = self.selected   # con una ficha de Universo Marvel y un solo archivo, también las fichas USA
+            wants_usa = (len(files) == 1 and chosen is not None and chosen.source == "Universo Marvel"
+                         and chosen.extra.get("level") == "issue")
 
             def read():   # en otro hilo: un RAR se lee lanzando `unrar`
                 infos, counts = [], {}
@@ -1593,10 +1600,21 @@ def run_gui(initial_image: Path | None = None) -> None:
                     except MetadataError as error:
                         infos.append((None, str(error)))
                     counts[path] = len(list_pages(path))   # las páginas del archivo real, no las de ninguna ficha
-                later(self._metadata_loaded, where, files, infos, counts)
+                usa, usa_error = None, ""
+                if wants_usa:   # guion, lápiz, tinta y color están en la ficha del original USA de cada historia
+                    try:
+                        refs = [tuple(ref) for ref in json.loads(chosen.extra.get("UsaRefs", "[]"))]
+                        if refs:
+                            client = UniversoMarvelClient(UniversoMarvelIndex(UNIVERSOMARVEL_DB))
+                            usa = client.usa_info(refs, chosen.extra.get("SpanishPage", ""),
+                                                  lambda message: later(self.status.set_text, message))
+                    except Exception as error:  # noqa: BLE001 - los créditos USA son un extra: el diálogo se abre igualmente
+                        usa_error = str(error)
+                later(self._metadata_loaded, where, files, infos, counts, usa, usa_error)
             Thread(target=read, daemon=True).start()
 
-        def _metadata_loaded(self, where: Path, files: list[Path], infos: list, counts: dict):
+        def _metadata_loaded(self, where: Path, files: list[Path], infos: list, counts: dict, usa=None,
+                             usa_error: str = ""):
             self.status.set_text(f"Metadatos leídos de {len(files)} archivo(s).")
             gcd = self._gcd()
             info = None
@@ -1617,10 +1635,27 @@ def run_gui(initial_image: Path | None = None) -> None:
                              if len(files) == 1 and self.selected.extra.get(key)}
                 if self.selected.brand:
                     extra["Imprint"] = self.selected.brand
-            self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue)
+            notice = ""
+            if usa is not None:
+                extra.update({key: value for key, value in usa.credits.items() if value})
+                if usa.story_lines:   # además de los campos (unión), el desglose de quién hizo qué en cada historia
+                    per_issue["NotesBlock"] = compose_notes(self.selected.extra.get("NotesUsa", ""), usa.story_lines,
+                                                            self.selected.extra.get("NotesComments", ""))
+                if any(usa.credits.values()):
+                    notice = ("Guion, lápiz, tinta y color: de las fichas USA de los originales que recoge este ejemplar"
+                              + (f" ({', '.join(str(year) for year in usa.years)})" if usa.years else "") + ".")
+                    if usa.approximate:
+                        notice += (" Revisa: de " + ", ".join(usa.approximate) + " no se pudo saber qué historias son "
+                                   "las de este ejemplar, y se han incluido todas.")
+                if usa.missing:
+                    unread = "No se pudo leer la ficha USA de: " + ", ".join(usa.missing) + "."
+                    notice = f"{notice} {unread}" if notice else unread
+            elif usa_error:
+                notice = f"No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): {usa_error}"
+            self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue, notice)
 
         def _open_metadata_dialog(self, where: Path, files: list[Path], infos: list, values: Values, publisher: str,
-                                  gcd_info, extra=None, counts=None, per_issue=None):
+                                  gcd_info, extra=None, counts=None, per_issue=None, notice: str = ""):
             good = [i for i, _error in infos if i is not None]
             suggested = suggest_fields(values, publisher, gcd_info)
             suggested.update({key: value for key, value in (extra or {}).items() if value})   # la ficha manda
@@ -1644,15 +1679,20 @@ def run_gui(initial_image: Path | None = None) -> None:
                 "uno); cada lote se puede deshacer desde Ajustes."))
             original.add_css_class("dim-label")
             box.append(original)
+            if notice:
+                note_label = Gtk.Label(xalign=0, wrap=True, label=notice)
+                note_label.add_css_class("warning" if "Revisa" in notice or "No se pudo" in notice else "dim-label")
+                box.append(note_label)
 
             labels = {"Series": ("Serie", "nombre de la serie"), "Volume": ("Volumen", "8"),
                       "Publisher": ("Editorial", "Panini, Planeta…"), "Imprint": ("Sello", "el impreso en el ejemplar"),
                       "Year": ("Año", "2000"), "Month": ("Mes", "opcional, 01-12"), "Day": ("Día", "opcional, 01-31"),
                       "Count": ("Total de números", "los que tiene la serie"),
-                      "LanguageISO": ("Idioma", "es, en…"), "Web": ("Web", "ficha de GCD u otra"),
+                      "LanguageISO": ("Idioma", "es, en…"), "Format": ("Formato", "Tomo tapa blanda, Grapa…"),
+                      "Web": ("Web", "ficha de GCD u otra"),
                       "Notes": ("Notas", "años del contenido original…")}
             layout = (("Series", "Volume"), ("Publisher", "Imprint"), ("Year", "Month", "Day", "Count"),
-                      ("LanguageISO",), ("Web",), ("Notes",))
+                      ("LanguageISO", "Format"), ("Web",), ("Notes",))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             entries: dict[str, Gtk.Entry] = {}
             for row, keys in enumerate(layout):
@@ -2001,6 +2041,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                                 series.extra["page"])
             self._marvel_request += 1
             request = self._marvel_request
+            image = self.image   # la portada abierta, para compararla con la de la ficha
             if webkit_available():   # mientras tanto, la propia web de la serie
                 self._show_web(series.url, "Serie en Universo Marvel")
             self.status.set_text("Consultando la ficha en Universo Marvel…" if entry.is_single_issue else
@@ -2014,7 +2055,13 @@ def run_gui(initial_image: Path | None = None) -> None:
                         later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} "
                               "en Universo Marvel (o no está catalogado todavía).")
                         return
-                    candidate = marvel_issue_candidate(entry, issue, client.ficha(issue.page))
+                    ficha = client.ficha(issue.page)
+                    candidate = marvel_issue_candidate(entry, issue, ficha)
+                    try:   # la portada: una petición más la primera vez; si falla, la ficha vale igual
+                        if ficha.cover_image:
+                            attach_cover(candidate, client.cover(ficha.cover_image), image)
+                    except (UniversoMarvelError, OSError):
+                        pass
                 except (UniversoMarvelError, OSError) as error:
                     later(self._marvel_resolved, request, series, None, f"No se pudo consultar Universo Marvel: {error}")
                 else:
@@ -2030,7 +2077,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             rest = [c for c in self.candidates if c is not series]
             self._show_candidates([candidate, *rest])
             self.results.select_row(self.results.get_row_at_index(0))
-            self.status.set_text(f"Ficha de Universo Marvel: {candidate.title} · {candidate.subtitle}")
+            match = f" · {candidate.similarity:.0%} de parecido con tu portada" if candidate.similarity is not None else ""
+            self.status.set_text(f"Ficha de Universo Marvel: {candidate.title} · {candidate.subtitle}{match}")
 
         def _open_preview(self, title: str, url: str, page: str, width: int = PREVIEW_WIDTH):
             if not self.preview.get_visible():   # la ventana crece para no aplastar la lista

@@ -1,3 +1,4 @@
+import io
 import json
 import sqlite3
 import zlib
@@ -262,6 +263,7 @@ def test_issue_candidate_carries_the_edition_data_and_feeds_normalization_and_me
     assert candidate.extra["Month"] == "6" and candidate.extra["Year"] == "2020" and candidate.extra["Volume"] == "2"
     assert candidate.extra["Translator"] == "Ra\xfal Sastre" and candidate.extra["Letterer"] == "Norma Cuadrat, Marina Ariza"
     assert candidate.extra["CoverArtist"] == "Patrick Gleason, Morry Hollowell"
+    assert candidate.extra["Format"] == "Tomo tapa blanda"                       # el formato de la ficha (si lo dice)
     assert candidate.extra["Web"] == candidate.url == "https://fichas.universomarvel.com/esp/alertap.html"   # la ficha del ejemplar
     assert candidate.extra["GTIN"] == "977000559000400001" and candidate.extra["Title"] == "\xa1El futuro comienza aqu\xed!"
     values = suggest_values(candidate)
@@ -328,3 +330,193 @@ def test_issue_candidate_carries_the_notes_block():
     candidate = marvel_issue_candidate(Entry("Forum/Planeta", "S", "Alpha Flight vol.1", "aphff_v1.html"),
                                        umficha.SeriesIssue("g", "1", "esp/aphff101.html"), ficha)
     assert candidate.extra["NotesBlock"].startswith("Contenido USA:\n- Alpha Flight vol.1 #1: https://")
+
+
+def _usa_story(title, credits, spanish, synopsis="-"):
+    heads = "".join(f"<TH><SMALL>{role}</SMALL></TH>" for role in credits)
+    values = "".join(f"<TD>{name}</TD>" for name in credits.values())
+    links = "".join(f'<LI><A HREF="../{page}">Edici\xf3n</A> - <A HREF="../panini.html">Panini</A> (1\xaa Historia)' for page in spanish)
+    return f"""<TR><TD COLSPAN="2"><A NAME="1"></A><TABLE>
+<TR><TH colspan="6"><I>"{title}"</I></TH></TR><TR><TH>Equipo Creativo</TH></TR>
+<TR>{heads}</TR><TR>{values}</TR>
+<TR><TH>Detalles</TH></TR><TR><TD>x</TD></TR>
+<TR><TH>Sinopsis</TH></TR><TR><TD>{synopsis}</TD></TR>
+<TR><TH>Ediciones Espa\xf1olas</TH><TH>Reimpresiones</TH></TR>
+<TR><TD>{links}</TD><TD><LI><A HREF="otra.html">Reedici\xf3n</A></TD></TR>
+</TABLE></TD></TR>"""
+
+
+USA = ("""<HTML><HEAD><TITLE>Two-Gun Kid vol.1 n\xba 60</TITLE></HEAD><BODY><TABLE><TR><TD><TABLE>
+<TR><TH>Datos Generales</TH><TH>\xcdndice</TH></TR>
+<TR><TD><TABLE><TR><TH><A HREF="../fechas/1962_noviembre.html">Noviembre 1962</A></TH></TR>
+<TR><TH><B>12\xa2</B></TH></TR></TABLE></TD><TD></TD></TR>""" +
+       _usa_story("Uno", {"Argumento": "Stan Lee - Larry Lieber", "Gui\xf3n": "Stan Lee", "L\xe1piz": "Jack Kirby",
+                          "Tinta": "Dick Ayers", "Color": "Stan Goldberg", "Rotulaci\xf3n": "Artie Simek"},
+                  ["esp/2piskidv101.html", "esp/otro.html"], "Una sinopsis larga.") +
+       _usa_story("Dos", {"Gui\xf3n": "Stan Lee", "L\xe1piz": "Don Heck", "Tinta": "Don Heck", "Color": "Stan Goldberg"},
+                  ["esp/2piskidv103.html"]) + "</TABLE></TD></TR></TABLE></BODY></HTML>")
+USA_URL = "https://fichas.universomarvel.com/usa/twogk1060.html"
+
+
+def test_usa_ficha_reads_cover_date_credits_spanish_editions_and_synopsis():
+    ficha = _ficha(USA, USA_URL)
+    assert (ficha.year, ficha.month, ficha.date_text) == (1962, 11, "Noviembre 1962")      # «fechas/», no «fechases/»
+    one, two = ficha.stories
+    assert one.credits["Argumento"] == "Stan Lee - Larry Lieber" and one.credits["Gui\xf3n"] == "Stan Lee"
+    assert (one.spanish, two.spanish) == (["esp/2piskidv101.html", "esp/otro.html"], ["esp/2piskidv103.html"])
+    assert one.synopsis == "Una sinopsis larga." and two.synopsis == ""                    # «-» es «sin sinopsis»
+
+
+def _usa_client(tmp_path, pages):
+    calls = []
+
+    def fetch(url):
+        calls.append(url.replace(um.BASE, ""))
+        page = pages.get(calls[-1])
+        if page is None:
+            raise UniversoMarvelError("HTTP Error 404: Not Found")
+        return page.encode("cp1252")
+    index = UniversoMarvelIndex(tmp_path / "um.db")
+    build_index(index.path, {"F": "forum.html"}, lambda url: b'<H2>S</H2><option value="a_v1.html">A vol.1</option>')
+    client = UniversoMarvelClient(index, fetch)
+    client.calls = calls
+    return client
+
+
+def test_usa_info_keeps_only_the_stories_that_link_to_this_edition(tmp_path):
+    client = _usa_client(tmp_path, {"usa/twogk1060.html": USA})
+    only_two = client.usa_info([("usa/twogk1060.html", "Two-Gun Kid #60")], "esp/2piskidv103.html")
+    assert only_two.credits == {"Writer": "Stan Lee", "Penciller": "Don Heck", "Inker": "Don Heck", "Colorist": "Stan Goldberg"}
+    assert only_two.years == [1962] and only_two.missing == [] and only_two.approximate == []
+    only_one = client.usa_info([("usa/twogk1060.html", "Two-Gun Kid #60")], "esp/2piskidv101.html")
+    assert only_one.credits["Writer"] == "Stan Lee, Larry Lieber"     # el argumento cuenta como guion, sin repetir a Stan Lee
+    assert only_one.credits["Penciller"] == "Jack Kirby"
+    assert client.calls == ["usa/twogk1060.html"]                     # una sola descarga: la segunda vez sale de la base
+
+
+def test_usa_info_falls_back_to_all_stories_and_says_so_when_the_edition_is_not_linked(tmp_path):
+    client = _usa_client(tmp_path, {"usa/twogk1060.html": USA})
+    info = client.usa_info([("usa/twogk1060.html", "Two-Gun Kid #60")], "esp/no-enlazada.html")
+    assert info.credits["Penciller"] == "Jack Kirby, Don Heck" and info.approximate == ["Two-Gun Kid #60"]
+
+
+def test_usa_info_survives_broken_links_and_merges_several_originals_without_repeats(tmp_path):
+    client = _usa_client(tmp_path, {"usa/twogk1060.html": USA})
+    refs = [("usa/twogk1060.html", "A"), ("usa/roto.html", "Incoming!"), ("usa/twogk1060.html", "A otra vez")]
+    info = client.usa_info(refs, "esp/2piskidv101.html", progress=(seen := []).append)
+    assert info.missing == ["Incoming!"] and info.credits["Penciller"] == "Jack Kirby"
+    assert len(seen) == 2 and "Incoming!" in seen[1]                  # una l\xednea de progreso por original distinto
+    nothing = client.usa_info([("usa/roto.html", "X")], "esp/y.html")
+    assert nothing.credits == {"Writer": "", "Penciller": "", "Inker": "", "Colorist": ""} and nothing.years == []
+
+
+def test_split_names():
+    assert umficha.split_names("Fiona Avery - J. Michael Straczynski") == ["Fiona Avery", "J. Michael Straczynski"]
+    assert umficha.split_names("A, B y C") == ["A", "B", "C"] and umficha.split_names("-") == [] and umficha.split_names("") == []
+
+
+def test_issue_candidate_lists_its_usa_originals_and_the_spanish_page_for_the_credits_lookup():
+    from comic_identify.identify import marvel_issue_candidate
+    candidate = marvel_issue_candidate(Entry("Forum/Planeta", "S", "Alpha Flight vol.1", "aphff_v1.html"),
+                                       umficha.SeriesIssue("g", "1", "esp/aphff101.html"), _ficha(OLD))
+    assert json.loads(candidate.extra["UsaRefs"]) == [["usa/aphf1001.html", "Alpha Flight vol.1 #1"]]
+    assert candidate.extra["SpanishPage"] == "esp/aphff101.html"
+
+
+def test_usa_info_gives_one_line_per_matching_story_with_who_did_what(tmp_path):
+    client = _usa_client(tmp_path, {"usa/twogk1060.html": USA})
+    lines = client.usa_info([("usa/twogk1060.html", "Two-Gun Kid vol.1 #60")], "esp/2piskidv101.html").story_lines
+    assert lines == [("- \xabUno\xbb (Two-Gun Kid vol.1 #60): Argumento Stan Lee, Larry Lieber \xb7 Gui\xf3n Stan Lee \xb7 "
+                      "L\xe1piz Jack Kirby \xb7 Tinta Dick Ayers \xb7 Color Stan Goldberg")]   # la rotulaci\xf3n USA no cuenta
+    both = client.usa_info([("usa/twogk1060.html", "Two-Gun Kid vol.1 #60")], "esp/desconocida.html").story_lines
+    assert [line.split("\xbb")[0] for line in both] == ["- \xabUno", "- \xabDos"]                   # aproximado: todas las historias
+    assert "Argumento" not in both[1] and "L\xe1piz Don Heck" in both[1]
+
+
+def test_compose_notes_orders_usa_credits_and_comments_and_skips_empty_parts():
+    usa, comments = "Contenido USA:\n- A: https://x/a", "Comentarios de la edici\xf3n:\n- algo"
+    assert umficha.compose_notes(usa, ["- L1", "- L2"], comments) == (
+        "Contenido USA:\n- A: https://x/a\nCr\xe9ditos por historia (USA):\n- L1\n- L2\nComentarios de la edici\xf3n:\n- algo")
+    assert umficha.compose_notes(usa, [], comments) == usa + "\n" + comments       # sin desglose: como antes
+    assert umficha.compose_notes("", [], "") == ""
+    ficha = _ficha(OLD)
+    assert umficha.edition_notes(ficha, "https://h/", ["- L"]).index("Cr\xe9ditos") < umficha.edition_notes(
+        ficha, "https://h/", ["- L"]).index("Comentarios")
+
+
+def test_append_block_refreshes_a_previous_block_but_never_touches_hand_written_text():
+    from comic_identify.metaform import append_block
+    old = "Contenido original: 1983\nContenido USA:\n- A: https://x/a\nComentarios de la edici\xf3n:\n- algo"
+    new = ("Contenido USA:\n- A: https://x/a\nCr\xe9ditos por historia (USA):\n- L1\nComentarios de la edici\xf3n:\n- algo")
+    refreshed = append_block(old, new)
+    assert refreshed == "Contenido original: 1983\n" + new                        # el bloque viejo se sustituye, no se duplica
+    assert append_block(refreshed, new) == refreshed                              # y repetirlo no cambia nada
+    written_after = old + "\nMi nota al final"
+    assert append_block(written_after, new) == written_after                     # hay algo tuyo debajo: no se toca
+    assert append_block("Solo mi nota", new) == "Solo mi nota\n" + new
+
+
+def test_attach_cover_gives_a_thumbnail_and_the_same_kind_of_similarity_as_comicvine(tmp_path):
+    from conftest import jpeg, make_cover
+
+    from comic_identify.identify import Candidate, attach_cover
+    mine = tmp_path / "mia.jpg"
+    mine.write_bytes(jpeg(make_cover(1)))
+    same, other = Candidate("a", "Universo Marvel"), Candidate("b", "Universo Marvel")
+    attach_cover(same, jpeg(make_cover(1), quality=30), mine)          # la misma portada, otra calidad de imagen
+    attach_cover(other, jpeg(make_cover(2)), mine)
+    assert same.similarity > 0.9 and same.is_match and same.cover                # «Coincidencia probable»
+    assert other.similarity < 0.75 and not other.is_match and other.cover        # «Poco parecida»
+
+
+def test_attach_cover_without_an_open_comic_or_with_bad_data_never_raises(tmp_path):
+    from conftest import jpeg, make_cover
+
+    from comic_identify.identify import Candidate, attach_cover
+    lonely = Candidate("a", "Universo Marvel")
+    attach_cover(lonely, jpeg(make_cover(1)), None)
+    assert lonely.similarity is None and lonely.cover                              # sin portada abierta: solo la miniatura
+    broken = Candidate("b", "Universo Marvel")
+    attach_cover(broken, b"no soy una imagen", tmp_path / "no-existe.jpg")
+    assert broken.similarity is None and broken.cover is None
+    unreadable = tmp_path / "rota.jpg"
+    unreadable.write_bytes(b"tampoco")
+    fine = Candidate("c", "Universo Marvel")
+    attach_cover(fine, jpeg(make_cover(1)), unreadable)
+    assert fine.similarity is None and fine.cover                                  # la portada abierta no se puede leer
+
+
+def test_client_downloads_a_cover_once_and_refuses_what_is_not_an_image(tmp_path):
+    from conftest import jpeg, make_cover
+    data = jpeg(make_cover(3))
+    calls = []
+
+    def fetch(url):
+        calls.append(url)
+        return data if url.endswith("ok.jpg") else b"<html>no soy una imagen</html>"
+    index = UniversoMarvelIndex(tmp_path / "um.db")
+    build_index(index.path, {"F": "forum.html"}, lambda url: b'<H2>S</H2><option value="a_v1.html">A vol.1</option>')
+    client = UniversoMarvelClient(index, fetch)
+    stored = client.cover("esp/portadas/ok.jpg")
+    assert client.cover("esp/portadas/ok.jpg") == stored
+    assert calls == [um.BASE + "esp/portadas/ok.jpg"]                              # una sola petici\xf3n
+    from PIL import Image
+
+    from comic_identify.hashing import dhash_bytes, dhash_variants, similarity
+    with Image.open(io.BytesIO(stored)) as small, Image.open(io.BytesIO(data)) as big:
+        assert max(small.size) <= um.COVER_SIDE < max(big.size)                    # se guarda reducida
+        assert similarity(dhash_variants(big), dhash_bytes(stored)) > 0.95         # y la huella sigue siendo la misma
+    assert len(stored) < len(data)
+    with pytest.raises(UniversoMarvelError, match="no es una imagen"):
+        client.cover("esp/portadas/mala.jpg")
+    assert index.get_cover("esp/portadas/mala.jpg") is None                       # lo que no es una imagen no se guarda
+
+
+def test_a_database_created_before_covers_existed_gets_the_table_when_first_needed(tmp_path):
+    index = UniversoMarvelIndex(tmp_path / "um.db")
+    build_index(index.path, {"F": "forum.html"}, lambda url: b'<H2>S</H2><option value="a_v1.html">A vol.1</option>')
+    with closing(sqlite3.connect(index.path)) as db, db:
+        db.execute("DROP TABLE covers")
+    assert index.get_cover("esp/portadas/x.jpg") is None
+    index.store_cover("esp/portadas/x.jpg", b"datos")
+    assert index.get_cover("esp/portadas/x.jpg") == b"datos"

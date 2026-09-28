@@ -21,6 +21,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 from . import __version__
+from .covers import thumbnail_bytes
 from .gcd import fold
 from .umficha import (
     PARSER_VERSION,
@@ -32,6 +33,7 @@ from .umficha import (
     parse_ficha,
     parse_series_page,
     parse_series_subpages,
+    split_names,
     subpages_for,
 )
 
@@ -46,6 +48,7 @@ SCHEMA_VERSION = 1
 MIN_INTERVAL = 1.5          # segundos entre peticiones: es un servidor pequeño
 TIMEOUT = 20
 MAX_BYTES = 5_000_000
+COVER_SIDE = 500          # lado mayor, en píxeles, de las portadas que se guardan
 USER_AGENT = f"comic-identify/{__version__} (herramienta personal de catalogación; consultas puntuales)"
 # `series` se rehace al volver a descargar el índice; lo demás (números y fichas ya consultados) se conserva siempre.
 _SCHEMA = """
@@ -58,6 +61,7 @@ CREATE TABLE IF NOT EXISTS series_subpages (series_page TEXT, position INTEGER, 
 CREATE TABLE IF NOT EXISTS series_fetched (series_page TEXT PRIMARY KEY, fetched_at TEXT);
 CREATE TABLE IF NOT EXISTS fichas (page TEXT PRIMARY KEY, fetched_at TEXT, parser_version INTEGER, html BLOB,
                                    data TEXT, barcode TEXT);
+CREATE TABLE IF NOT EXISTS covers (image TEXT PRIMARY KEY, fetched_at TEXT, data BLOB);
 CREATE INDEX IF NOT EXISTS fichas_barcode ON fichas (barcode) WHERE barcode <> '';
 """
 _SECTION_OR_OPTION = re.compile(r"<H2[^>]*>(.*?)</H2>|<option([^>]*)>(.*?)</option>", re.DOTALL | re.IGNORECASE)
@@ -263,6 +267,20 @@ class UniversoMarvelIndex:
                        (page, datetime.now().astimezone().isoformat(timespec="seconds"), PARSER_VERSION,
                         zlib.compress(raw), json.dumps(asdict(ficha), ensure_ascii=False), ficha.barcode))
 
+    def get_cover(self, image: str) -> bytes | None:
+        """La portada guardada de una ficha (ruta relativa a la web, «esp/portadas/x.jpg»); None si aún no está."""
+        with closing(sqlite3.connect(self.path)) as db:
+            db.executescript(_SCHEMA)   # las bases creadas con una versión anterior no tienen esta tabla
+            row = db.execute("SELECT data FROM covers WHERE image = ?", (image,)).fetchone()
+            return row[0] if row else None
+
+    def store_cover(self, image: str, data: bytes) -> None:
+        with closing(sqlite3.connect(self.path)) as db:
+            db.executescript(_SCHEMA)
+            with db:
+                db.execute("INSERT OR REPLACE INTO covers VALUES (?, ?, ?)",
+                           (image, datetime.now().astimezone().isoformat(timespec="seconds"), data))
+
     def by_barcode(self, code: str) -> list[str]:
         """Páginas de las fichas ya guardadas con ese código de barras (solo dígitos)."""
         digits = re.sub(r"\D", "", code)
@@ -298,6 +316,22 @@ class UniversoMarvelIndex:
                     starts = 0 if folded.startswith(variant[0]) else 1
                     found.setdefault((pub, title, page), (starts, len(title), Entry(pub, section, title, page)))
         return [item[2] for item in sorted(found.values(), key=lambda item: item[:2])][:limit]
+
+
+# Créditos de las fichas USA -> campo de ComicInfo (el argumento cuenta como guion; la rotulación se toma de la ficha
+# española, que es la del ejemplar que tienes, no la del original)
+STORY_ROLES = ("Argumento", "Guión", "Guion", "Lápiz", "Lápices", "Tinta", "Tintas", "Color", "Colores")
+USA_CREDITS = {"Writer": ("Guión", "Guion", "Argumento"), "Penciller": ("Lápiz", "Lápices"),
+               "Inker": ("Tinta", "Tintas"), "Colorist": ("Color", "Colores")}
+
+
+@dataclass
+class UsaInfo:
+    credits: dict[str, str]     # campo de ComicInfo -> nombres separados por coma
+    years: list[int]            # años de portada de los originales consultados
+    missing: list[str]          # originales cuya ficha no se pudo leer (enlace roto, sin red…)
+    approximate: list[str]      # originales en los que no se pudo saber qué historias son las de este ejemplar
+    story_lines: list[str]      # una línea por historia USA: «- «Título» (Serie #N): Guión X · Lápiz Y · Tinta Z · Color W»
 
 
 class UniversoMarvelClient:
@@ -343,6 +377,18 @@ class UniversoMarvelClient:
                 return hit
         return None
 
+    def cover(self, image: str, refresh: bool = False) -> bytes:
+        """La portada de una ficha (ruta relativa a la web), reducida a `COVER_SIDE` px: se descarga una vez y queda
+        en la base local. Para la huella y la miniatura no hace falta más, y las originales (~200 KB) engordarían
+        la base y cada copia de seguridad."""
+        if not refresh and (known := self.index.get_cover(image)) is not None:
+            return known
+        small = thumbnail_bytes(self.fetch(urljoin(BASE, image)), COVER_SIDE)
+        if small is None:
+            raise UniversoMarvelError(f"«{image}» no es una imagen válida.")
+        self.index.store_cover(image, small)
+        return small
+
     def ficha(self, page: str, refresh: bool = False) -> Ficha:
         if not refresh and (known := self.index.get_ficha(page)) is not None:
             return known
@@ -353,3 +399,41 @@ class UniversoMarvelClient:
             raise UniversoMarvelError(f"«{page}» no parece una ficha: ¿ha cambiado la web?")
         self.index.store_ficha(page, raw, ficha)
         return ficha
+
+    def usa_info(self, refs: list[tuple[str, str]], spanish_page: str,
+                 progress: Callable[[str], None] = lambda _: None) -> UsaInfo:
+        """Guion, lápiz, tinta y color de los originales USA que recoge un ejemplar español. De cada ficha USA solo
+        cuentan las historias que enlazan a `spanish_page` (un número USA trae varias y el español puede recoger solo
+        alguna); si ninguna lo hace se usan todas y se avisa en `approximate`. Un original que no se pueda leer no
+        impide los demás. Cada ficha USA se descarga una vez y queda en la base."""
+        names: dict[str, dict[str, None]] = {field: {} for field in USA_CREDITS}
+        years: dict[int, None] = {}
+        missing, approximate, story_lines = [], [], []
+        unique: dict[str, str] = {}
+        for page, text in refs:   # cada original una vez, en el orden en que aparece
+            unique.setdefault(page, text)
+        wanted = list(unique.items())
+        for number, (page, text) in enumerate(wanted, 1):
+            progress(f"Consultando la ficha USA «{text}» ({number}/{len(wanted)})…")
+            try:
+                ficha = self.ficha(page)
+            except UniversoMarvelError:
+                missing.append(text)
+                continue
+            stories = [story for story in ficha.stories if spanish_page in story.spanish]
+            if not stories:
+                approximate.append(text)
+                stories = ficha.stories
+            if ficha.year:
+                years.setdefault(ficha.year, None)
+            for story in stories:
+                shown = " · ".join(f"{role} {', '.join(split_names(story.credits[role]))}" for role in STORY_ROLES
+                                   if split_names(story.credits.get(role, "")))
+                if shown:   # el desglose que los campos, con una sola lista por rol, no pueden dar
+                    story_lines.append(f"- «{story.title}» ({text}): {shown}")
+                for field, roles in USA_CREDITS.items():
+                    for role in roles:
+                        for name in split_names(story.credits.get(role, "")):
+                            names[field].setdefault(name, None)
+        return UsaInfo({field: ", ".join(found) for field, found in names.items()}, sorted(years), missing,
+                       approximate, story_lines)

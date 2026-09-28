@@ -126,3 +126,13 @@ def test_append_block_goes_below_existing_notes_once():
     assert append_block("", block) == block and append_block("  ", block) == block
     assert append_block("Mi nota", "") == "Mi nota" and append_block("", "") == ""
     assert append_block("Mi nota\n" + block + "\nY otra cosa mía", block).count("Contenido USA:") == 1
+
+
+def test_format_is_a_series_field_and_is_kept_or_cleared_like_the_others():
+    from comic_identify.metaform import SERIES_FIELDS, initial_form, series_changes
+    assert "Format" in SERIES_FIELDS
+    texts, baseline = initial_form([{"Format": "Grapa"}], {"Format": "Tomo tapa blanda"})
+    assert texts["Format"] == "Grapa"                                    # lo que el archivo ya tiene manda
+    texts["Format"] = ""
+    assert series_changes(texts, baseline)["Format"] == ""               # vaciarlo lo borra
+    assert initial_form([{}], {"Format": "Tomo tapa blanda"})[0]["Format"] == "Tomo tapa blanda"

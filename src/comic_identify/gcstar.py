@@ -35,7 +35,7 @@ ORIGIN_BY_FOLDER = {"europa": "Europeo", "usa": "Americano", "japón": "Manga"}
 # (Blake y Mortimer #1, #2… con volume="1", volume="2"); nuestro Volumen (reinicio de numeración) no tiene hueco
 # propio en GCstar, así que se incluye como texto dentro de `series`.
 FIELD_MAP = {"Writer": "writer", "Penciller": "illustrator", "Inker": "inker", "Colorist": "colourist",
-            "Letterer": "letterer", "Web": "webPage"}
+            "Letterer": "letterer", "CoverArtist": "artist", "Web": "webPage"}   # «artist» es su «Cover Artist»
 
 
 class GCstarError(Exception):

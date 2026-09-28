@@ -1,4 +1,5 @@
 """Pipeline de identificación: colección → código de barras → GCD → ComicVine + comparación de portadas."""
+import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -10,7 +11,7 @@ from .covers import read_cover, thumbnail_bytes
 from .gcd import GcdHit, GcdIndex, fold
 from .hashing import dhash_bytes, dhash_file, similarity
 from .library import Library
-from .umficha import Ficha, SeriesIssue, edition_notes
+from .umficha import Ficha, SeriesIssue, comments_section, edition_notes, usa_section
 from .universomarvel import (
     BASE,
     EDITION_BY_PUBLISHER,
@@ -26,7 +27,7 @@ MATCH_THRESHOLD = 0.80
 MAX_VOLUMES = 3
 MAX_GCD = 12
 MAX_MARVEL = 8
-MARVEL_METADATA = ("Volume", "Year", "Month", "Web", "Translator", "Letterer", "CoverArtist")   # por serie o lote
+MARVEL_METADATA = ("Volume", "Year", "Month", "Web", "Translator", "Letterer", "CoverArtist", "Format")   # por serie o lote
 MARVEL_PER_ISSUE = ("GTIN", "Title", "NotesBlock")   # de un solo ejemplar: solo al etiquetar un archivo suelto
 
 Progress = Callable[[str], None]
@@ -113,6 +114,15 @@ def _marvel_candidate(entry: Entry) -> Candidate:
                                                        "section": entry.section})
 
 
+def usa_refs(ficha: Ficha) -> list[list[str]]:
+    """Los ejemplares USA que recoge una ficha española, sin repetir: [[página, texto]…]."""
+    seen: dict[str, str] = {}
+    for story in ficha.stories:
+        for ref in story.usa:
+            seen.setdefault(ref.page, ref.text)
+    return [[page, text] for page, text in seen.items()]
+
+
 def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Candidate:
     """El número concreto de una serie, a partir de su ficha: con lo que un ejemplar lleva de verdad (fecha, páginas,
     precio, créditos de la edición) y los campos de ComicInfo que de ahí salen."""
@@ -125,12 +135,27 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
                ficha.format, ficha.comic_title]
     extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": BASE + issue.page,
              "Translator": ficha.credit("Traducción"), "Letterer": ficha.credit("Rotulación"),
-             "CoverArtist": ficha.cover_credits, "GTIN": ficha.isbn or ficha.barcode, "Title": ficha.comic_title,
-             "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE), "level": "issue", "page": issue.page,
+             "CoverArtist": ficha.cover_credits, "Format": ficha.format, "GTIN": ficha.isbn or ficha.barcode, "Title": ficha.comic_title,
+             "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": edition_notes(ficha, BASE),
+             "NotesUsa": usa_section(ficha, BASE), "NotesComments": comments_section(ficha),
+             "UsaRefs": json.dumps(usa_refs(ficha), ensure_ascii=False), "SpanishPage": issue.page, "level": "issue", "page": issue.page,
              "index_publisher": entry.publisher}
     return Candidate(f"{name} #{number}" if number else name, "Universo Marvel", subtitle=" · ".join(d for d in details if d),
                      url=BASE + issue.page, series=name, issue_name=ficha.comic_title, number=number,
                      year=str(ficha.year or ""), publisher=editorial, brand=brand, country="es", extra=extra)
+
+
+def attach_cover(candidate: Candidate, cover: bytes, image: Path | None) -> None:
+    """Pone la miniatura de la portada de la ficha y, si hay una portada abierta con la que compararla, el parecido
+    (la misma huella y el mismo porcentaje que en las sugerencias de ComicVine). Una imagen ilegible se ignora."""
+    candidate.cover = thumbnail_bytes(cover)
+    remote = dhash_bytes(cover)
+    if image is None or remote is None:
+        return
+    try:
+        candidate.similarity = similarity(dhash_file(image), remote)
+    except (OSError, ValueError):
+        return
 
 
 def search_marvel(index: UniversoMarvelIndex, text: str, publisher: str = "") -> list[Candidate]:

@@ -5,11 +5,12 @@ tolerante y se buscan las cosas por lo que dicen (fecha, «Páginas», «Rotulac
 plantilla algo distinta no debería romperlo. Lo que no se reconoce se ignora; nunca se inventa un dato.
 """
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
-PARSER_VERSION = 1
+PARSER_VERSION = 2   # 2: fecha también en las fichas USA (fechas/), «Ediciones Españolas» y sinopsis por historia
 PESETAS_PER_EURO = 166.386   # cambio oficial fijado en 1999
 _VOID = {"img", "br", "hr", "meta", "link", "input", "area", "base", "col", "param", "wbr"}
 _TRANSPARENT = {"font", "small", "b", "i", "u", "big", "center", "span", "strong", "em", "a", "p"}
@@ -139,6 +140,11 @@ def _site_path(href: str, page_url: str) -> str:
 
 # ---- Ficha de un ejemplar ------------------------------------------------------------------------------------------
 
+def split_names(text: str) -> list[str]:
+    """«Fiona Avery - J. Michael Straczynski» -> [«Fiona Avery», «J. Michael Straczynski»]; también con coma o «y»."""
+    return [name.strip() for name in re.split(r"\s*(?:,| - | y )\s*", text) if name.strip(" -–—")]
+
+
 @dataclass
 class UsaRef:
     text: str        # «Alpha Flight vol.1 #1»
@@ -151,6 +157,8 @@ class Story:
     pages: str = ""
     credits: dict[str, str] = field(default_factory=dict)   # «Rotulación» -> «Marcelino Hernández»
     usa: list[UsaRef] = field(default_factory=list)
+    spanish: list[str] = field(default_factory=list)   # fichas USA: páginas españolas («esp/…») que publican esta historia
+    synopsis: str = ""                                  # fichas USA: la sinopsis, si la hay
 
 
 @dataclass
@@ -178,9 +186,8 @@ class Ficha:
         names: dict[str, None] = {}
         for story in self.stories:
             for role in roles:
-                for name in re.split(r"\s*(?:,| - | y )\s*", story.credits.get(role, "")):
-                    if name.strip():
-                        names.setdefault(name.strip(), None)
+                for name in split_names(story.credits.get(role, "")):
+                    names.setdefault(name, None)
         return ", ".join(names)
 
     @property
@@ -214,21 +221,33 @@ def _price_in_euros(amount: str, currency: str) -> str:
     return f"{value:.2f}" if currency in ("pts", "\u20ac") else ""
 
 
-def edition_notes(ficha: Ficha, base_url: str) -> str:
-    """Lo que la ficha dice de la edición, para las Notas (y de ahí al comentario de GCstar): los ejemplares USA que
-    recoge, con su enlace, y los comentarios de la edición. Vacío si la ficha no trae ninguna de las dos cosas."""
+USA_HEADING, CREDITS_HEADING, COMMENTS_HEADING = "Contenido USA:", "Créditos por historia (USA):", "Comentarios de la edición:"
+NOTE_HEADINGS = (USA_HEADING, CREDITS_HEADING, COMMENTS_HEADING)
+
+
+def usa_section(ficha: Ficha, base_url: str) -> str:
+    """«Contenido USA:» y un ejemplar por línea, con el enlace a su ficha; vacío si la ficha no cita ninguno."""
     seen: dict[str, str] = {}
     for story in ficha.stories:
         for ref in story.usa:
             seen.setdefault(ref.page, ref.text)
-    lines = []
-    if seen:
-        lines.append("Contenido USA:")
-        lines += [f"- {text}: {urljoin(base_url, page)}" for page, text in seen.items()]
-    if ficha.comments:
-        lines.append("Comentarios de la edición:")
-        lines += [f"- {comment}" for comment in ficha.comments]
-    return "\n".join(lines)
+    return "\n".join([USA_HEADING, *(f"- {text}: {urljoin(base_url, page)}" for page, text in seen.items())]) if seen else ""
+
+
+def comments_section(ficha: Ficha) -> str:
+    return "\n".join([COMMENTS_HEADING, *(f"- {comment}" for comment in ficha.comments)]) if ficha.comments else ""
+
+
+def compose_notes(usa: str, credit_lines: Sequence[str], comments: str) -> str:
+    """Las tres partes que la ficha aporta a las Notas, en este orden y sin huecos: los ejemplares USA, los créditos
+    de cada historia (si se conocen) y los comentarios de la edición."""
+    credits = "\n".join([CREDITS_HEADING, *credit_lines]) if credit_lines else ""
+    return "\n".join(part for part in (usa, credits, comments) if part)
+
+
+def edition_notes(ficha: Ficha, base_url: str, credit_lines: Sequence[str] = ()) -> str:
+    """Lo que la ficha dice de la edición, para las Notas (y de ahí al comentario de GCstar). Vacío si no trae nada."""
+    return compose_notes(usa_section(ficha, base_url), credit_lines, comments_section(ficha))
 
 
 _PRICE = re.compile(r"^\d+(?:[.,]\d+)?\s*(?:pts?\.?|ptas\.?|pesetas|€|euros?)?$", re.IGNORECASE)
@@ -236,7 +255,8 @@ _PAGES = re.compile(r"(\d+)\s*p[aá]ginas?", re.IGNORECASE)
 _SIZE = re.compile(r"\d[\d.,]*\s*x\s*\d[\d.,]*\s*cm", re.IGNORECASE)
 _COLOR = re.compile(r"^(color|b/?n|blanco y negro|bicolor|blanco/negro|tricolor)$", re.IGNORECASE)
 _EDITORIAL = re.compile(r"\s+-\s+([^-]+)$")
-_ROLES = {"rotulación", "traducción", "adaptación", "guion", "guión", "dibujo", "lápiz", "lápices", "tinta", "tintas",
+_ROLES = {"rotulación", "traducción", "adaptación", "guion", "guión", "argumento", "dibujo", "lápiz", "lápices", "tinta",
+          "tintas",
           "color", "colores", "portada", "edición", "retoque", "supervisión", "coordinación", "maquetación",
           "producción", "editor", "textos"}
 
@@ -303,7 +323,7 @@ def _read_general_data(tree: Node, ficha: Ficha) -> None:
         if not text:
             continue
         link = cell.find("a")
-        if link is not None and "fechases" in link.attrs.get("href", ""):
+        if link is not None and "fechas" in link.attrs.get("href", ""):   # «fechases/» (España) y «fechas/» (USA)
             ficha.date_text = text
             words = text.lower().split()
             ficha.month = next((MONTHS[w] for w in words if w in MONTHS), None)
@@ -347,6 +367,13 @@ def _read_stories(tree: Node, page_url: str) -> list[Story]:
             if headers and all(h.lower() in _ROLES for h in headers) and number + 1 < len(rows):
                 values = [c.text() for c in rows[number + 1].children if isinstance(c, Node) and c.tag in ("td", "th")]
                 story.credits.update({h: v for h, v in zip(headers, values, strict=False) if v.strip(" -–—")})
+        story.spanish = _spanish_editions(table, page_url)
+        for cell in table.find_all("th"):
+            if cell.text().lower() == "sinopsis":
+                following = cell.parent.parent.find_all("tr")
+                position = following.index(cell.parent)
+                text = following[position + 1].text() if position + 1 < len(following) else ""
+                story.synopsis = "" if text.strip(" -–—") == "" else text
         usa_header = next((t for t in table.find_all("th") if t.text().lower().startswith("contenido usa")), None)
         if usa_header is not None:
             for link in usa_header.parent.parent.find_all("a"):
@@ -355,6 +382,24 @@ def _read_stories(tree: Node, page_url: str) -> list[Story]:
                     story.usa.append(UsaRef(link.text(), _site_path(href, page_url)))
         stories.append(story)
     return stories
+
+
+def _spanish_editions(table: Node, page_url: str) -> list[str]:
+    """En una ficha USA, las fichas españolas (`esp/…`) enlazadas bajo «Ediciones Españolas» de una historia."""
+    header = next((t for t in table.find_all("th") if t.text().lower() == "ediciones españolas"), None)
+    if header is None:
+        return []
+    rows = header.parent.parent.find_all("tr")
+    position = rows.index(header.parent)
+    if position + 1 >= len(rows):
+        return []
+    heads = [c for c in header.parent.children if isinstance(c, Node) and c.tag == "th"]
+    cells = [c for c in rows[position + 1].children if isinstance(c, Node) and c.tag in ("td", "th")]
+    cell = cells[heads.index(header)] if heads.index(header) < len(cells) else None
+    if cell is None:
+        return []
+    return [_site_path(a.attrs["href"], page_url) for a in cell.find_all("a")
+            if "esp/" in a.attrs.get("href", "") and a.attrs["href"].endswith(".html")]
 
 
 def _read_comments(tree: Node) -> list[str]:

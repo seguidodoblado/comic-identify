@@ -122,13 +122,14 @@ def test_build_attrs_maps_our_fields_to_gcstars_and_number_becomes_volume():
     fields = {"Series": "Blake y Mortimer", "Number": "1", "Title": "El secreto del espadón I",
               "Writer": "Edgar P. Jacobs", "Penciller": "Edgar P. Jacobs", "Publisher": "Norma Editorial",
               "Year": "1946", "Summary": "Resumen", "Notes": "Nota personal", "Volume": "",
-              "Web": "https://www.comics.org/series/1234/"}
+              "Web": "https://www.comics.org/series/1234/", "CoverArtist": "Rafael L\xf3pez Esp\xed"}
     attrs = build_attrs(fields, {"type": "Serie", "category": "Franco-Belga"}, Path("/c/01.cbr"), 64, None, None,
                         Path("/gcs"))
     assert attrs["series"] == "Blake y Mortimer" and attrs["volume"] == "1"           # el Nº, no nuestro Volumen
     assert attrs["writer"] == attrs["illustrator"] == "Edgar P. Jacobs"
     assert attrs["publisher"] == "Norma Editorial" and attrs["publishdate"] == "01/01/1946"
     assert attrs["webPage"] == "https://www.comics.org/series/1234/"
+    assert attrs["artist"] == "Rafael L\xf3pez Esp\xed"                  # el autor de la portada va a su «Cover Artist»
     assert attrs["synopsis"] == "Resumen" and attrs["comment"] == "Nota personal"
     assert attrs["type"] == "Serie" and attrs["category"] == "Franco-Belga"
     assert attrs["numberboards"] == "64" and attrs["file"] == "/c/01.cbr" and attrs["borrower"] == "none"
@@ -327,3 +328,10 @@ def test_isbn_and_cost_go_to_their_gcstar_fields_and_a_barcode_is_not_taken_for_
 def test_cost_text_keeps_only_a_real_number():
     assert cost_text("0.60") == "0.60" and cost_text("8") == "8" and cost_text(" 275,5 ptas ") == "275.5"
     assert cost_text("") == "" and cost_text("gratis") == "" and cost_text("1.2.3") == "" and isbn_text("", "") == ""
+
+
+def test_format_from_comicinfo_reaches_the_gcstar_formato_field_via_the_dialog_value():
+    attrs = build_attrs({"Series": "X", "Format": "Tomo tapa blanda"}, {"format": "Tomo tapa blanda"},
+                        Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
+    assert attrs["format"] == "Tomo tapa blanda"
+    assert "format" not in build_attrs({"Series": "X"}, {"format": ""}, Path("/c/01.cbr"), 0, None, None, Path("/gcs"))
