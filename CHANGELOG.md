@@ -5,6 +5,14 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-09-28
+
+### Changed
+- **Sin cookies en el panel web**: Universo Marvel no deja ninguna, a Tebeosfera se le bloquean todas y GCD deja solo
+  `cf_clearance`, la de la comprobación anti-robots de Cloudflare (sin ella la página se queda en «Un momento…», lo he
+  comprobado), que ya solo vive en memoria y se pierde al cerrar la aplicación. Se revierte el guardado de cookies en disco de
+  la 0.33.0 (`cookies.sqlite`, que además se borra al arrancar) y se quita de GCD la medición de visitas de Cloudflare.
+
 ## [0.33.0] - 2026-09-28
 
 ### Changed

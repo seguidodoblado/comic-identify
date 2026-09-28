@@ -301,14 +301,16 @@ Al hacer clic en una sugerencia de GCD, su ficha de comics.org se abre en un pan
 se abre el ejemplar; sin número, la galería de portadas de la serie (GCD la pagina de 50 en 50). Se carga una sola
 página por clic y la aplicación no extrae ni guarda ninguna imagen: es una vista de comics.org tal como la ve un
 navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
-`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. Las cookies sí se guardan en disco
-(`cookies.sqlite`), así que la comprobación de Cloudflare de GCD no se repite en cada arranque.
+`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. El panel no guarda cookies en disco: Universo Marvel no deja ninguna,
+Tebeosfera tampoco (se le bloquean) y GCD deja una sola, `cf_clearance`, la de la comprobación anti-robots de Cloudflare
+(sin ella la página se queda en «Un momento…»), que vive solo en memoria y se pierde al cerrar la aplicación.
 
 En las fichas de **Tebeosfera** el panel bloquea lo que no es de la ficha: los servicios de medición y publicidad de
 terceros (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, el compilador de estilos Tailwind por CDN) y las
 imágenes de anuncios propios de la web (asociarse, colaborar…). Sin ellos la ficha baja de unos 6 MB a algo más de 1 MB,
-no se instalan cookies de seguimiento y su aviso de cookies (que pregunta por esas mismas) no se muestra. Solo afecta a
-las páginas de Tebeosfera; GCD y Universo Marvel se ven tal cual. Las reglas están en `webfilter.py`.
+no se instalan cookies y su aviso de cookies (que pregunta por esas mismas) no se muestra. Los servicios de terceros y las
+imágenes de anuncios solo se bloquean en Tebeosfera; de GCD solo se quita la medición de visitas de Cloudflare. Las reglas
+están en `webfilter.py`.
 
 - **Identificar**: abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada, busca y elige.
 - **Mi colección**: añade carpetas e indexa. Se recorren con subcarpetas y las siguientes veces solo se
