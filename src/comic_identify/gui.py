@@ -118,6 +118,8 @@ META_MAX_HEIGHT = 260   # alto máximo del panel del ComicInfo.xml; si hay más 
 WINDOW_WIDTH = 1500   # ancho por defecto: los siete botones de arriba caben en una línea
 PREVIEW_WIDTH = 520
 ASSISTANT_WIDTH = 760   # el terminal necesita ~80 columnas
+MIN_PANEL_WIDTH = 420   # lo mínimo que se le deja al panel derecho si la pantalla no da para más
+PANEL_FRAME = 40   # lo que ocupan el separador y los márgenes junto al panel derecho (~27 px), con holgura
 # Fuente de cada resultado -> (web de la que se toma el icono, clase CSS de su color)
 SOURCE_STYLES = {"GCD": (GCD_HOST, "source-gcd"), "Universo Marvel": ("fichas.universomarvel.com", "source-marvel"),
                  "ComicVine": (COMICVINE_HOST, "source-comicvine")}
@@ -475,7 +477,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             cover.set_size_request(COVER_WIDTH, -1)   # ancho fijo: una portada es vertical y solo gana con el alto
             for widget in (self.cover_overlay, cover_actions, self.page_nav, self.meta_box):   # la portada se queda con el alto que sobra
                 cover.append(widget)
-            body = Gtk.Box(spacing=12, margin_end=12)   # aire entre esto y el panel de la derecha
+            body = self.body = Gtk.Box(spacing=12, margin_end=12)   # aire entre esto y el panel de la derecha
             body.append(cover)
             body.append(side)
             paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL, vexpand=True, shrink_start_child=False,
@@ -2177,12 +2179,36 @@ def run_gui(initial_image: Path | None = None) -> None:
             match = f" · {candidate.similarity:.0%} de parecido con tu portada" if candidate.similarity is not None else ""
             self.status.set_text(f"Ficha de Universo Marvel: {candidate.title} · {candidate.subtitle}{match}")
 
+        def _screen_width(self) -> int | None:
+            monitor = Gdk.Display.get_default().get_monitor_at_surface(self.get_surface()) if self.get_surface() else None
+            return monitor.get_geometry().width if monitor is not None else None
+
+        def _panel_room(self, wanted: int) -> int:
+            """El ancho que puede tener el panel derecho sin que la ventana se salga de la pantalla: lo que se pide, o lo
+            que quede tras lo mínimo que necesita la parte izquierda (con tu tamaño de letra puede ser más que aquí)."""
+            screen = self._screen_width()
+            if screen is None:
+                return wanted
+            left_minimum = self.body.measure(Gtk.Orientation.HORIZONTAL, -1)[0]
+            return max(MIN_PANEL_WIDTH, min(wanted, screen - left_minimum - PANEL_FRAME))
+
+        def _resize_for_panel(self, delta: int):
+            """La ventana crece o se encoge lo que el panel, pero nunca pasa del ancho de la pantalla y, si está maximizada
+            o a pantalla completa, no se toca: el panel se reparte el ancho que ya hay."""
+            if self.is_maximized() or self.is_fullscreen():
+                return
+            width = self.get_width() + delta
+            if (screen := self._screen_width()) is not None:
+                width = min(width, screen)
+            self.set_default_size(max(width, WINDOW_WIDTH if delta < 0 else 0), self.get_height())
+
         def _open_preview(self, title: str, url: str, page: str, width: int = PREVIEW_WIDTH):
+            width = self._panel_room(width)
             if not self.preview.get_visible():   # la ventana crece para no aplastar la lista
-                self.set_default_size(self.get_width() + width, self.get_height())
+                self._resize_for_panel(width)
                 self.preview.set_visible(True)
             elif width != self._panel_width:
-                self.set_default_size(self.get_width() + width - self._panel_width, self.get_height())
+                self._resize_for_panel(width - self._panel_width)
             self._panel_width = width
             self.preview.set_size_request(width, -1)
             self.preview_title.set_text(title)
@@ -2261,7 +2287,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _close_preview(self, _button):
             if self.preview.get_visible():
-                self.set_default_size(max(self.get_width() - self._panel_width, WINDOW_WIDTH), self.get_height())
+                self._resize_for_panel(-self._panel_width)
                 self.preview.set_visible(False)
             self._drop_assistant()
             if self.webview is not None:   # libera los procesos de WebKit
