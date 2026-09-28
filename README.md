@@ -24,8 +24,7 @@ El título lo escribes tú: el OCR se descartó porque no lee los logotipos de l
 reales devolvía texto sin sentido).
 
 1. **Búsqueda mientras escribes** en el índice local de **Grand Comics Database (GCD)** (ediciones en
-   español, España primero), por título y número, en el de **Universo Marvel** (series de Forum/Planeta, Panini y
-   Vértice) y en el de **Tebeosfera** (todas las colecciones, de cualquier editorial). Es local: sin red ni límites.
+   español, España primero), por título y número, en el de **Universo Marvel** (series de todas sus editoriales) y en el de **Tebeosfera** (todas las colecciones, de cualquier editorial). Es local: sin red ni límites.
 2. **Tu colección**: compara la portada con un índice local de las primeras páginas de tus CBZ/CBR/CB7
    y te dice qué archivo es, sin red.
 3. **Código de barras** (`zbarimg`): coincidencia exacta en GCD y número de ejemplar del complemento.
@@ -128,13 +127,13 @@ desde entonces. La ruta al `.gcs` se configura una vez en Ajustes.
 ## Universo Marvel
 
 [fichas.universomarvel.com](https://fichas.universomarvel.com/) es el catálogo más completo de las ediciones españolas de
-Marvel (hoy la aplicación usa Forum/Planeta, Panini y Vértice), con fecha, precio, páginas, formato, créditos, comentarios
+Marvel (la aplicación usa sus 31 editoriales: Forum/Planeta, Panini, Vértice, Bruguera, Zinco, Norma, ECC, Ediciones B…), con fecha, precio, páginas, formato, créditos, comentarios
 y el ejemplar USA original de cada número. No tiene API ni volcado y es una web personal, así que la aplicación **no la
 rastrea**: descarga una página cada vez, con pausa entre peticiones y el nombre `comic-identify` como identificación.
 
 **Cómo se usa**
 
-1. En **Ajustes**, «Descargar el índice de Universo Marvel» baja solo las tres páginas de índice y crea
+1. En **Ajustes**, «Descargar el índice de Universo Marvel» baja solo las páginas de índice de cada editorial (31 peticiones espaciadas, casi un minuto) y crea
    `~/.local/share/comic-identify/universomarvel.db`. Con él, las series salen entre las sugerencias al escribir el
    título (sin tildes ni mayúsculas: «spider man» encuentra «Spiderman»).
 2. Al elegir una serie **con el número escrito** se consulta la ficha de ese ejemplar (y su portada): una o dos peticiones,
@@ -346,7 +345,7 @@ sudo apt install ../comic-identify_<versión>-1_all.deb
   sintéticas; conviene ajustarlo con portadas reales.
 - La lectura del código de barras depende de `zbarimg` y de que el código sea legible en la imagen.
 - ComicVine limita las peticiones; cada identificación hace unas pocas consultas.
-- Universo Marvel: solo se usan Forum/Planeta, Panini y Vértice (la web tiene unas 25 editoriales más), y el lector
+- Universo Marvel: el lector
   depende del HTML de esa web, que es antiguo y de varias épocas: si cambia o una ficha es distinta, puede faltar algún
   dato (se avisa, nunca se inventa). Los créditos USA pueden incluir de más cuando la ficha del original no enlaza a tu
   ejemplar (se avisa con «Revisa»). Hay enlaces rotos en la propia web.

@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-09-28
+
+### Added
+- **Universo Marvel con todas sus editoriales**: además de Forum/Planeta, Panini y Vértice, el índice recoge Bruguera y otras
+  27 (Manhattan, Ferma, Laida, Novaro, Montena, Distrinovel, Surco, Rasgos, Zinco, Norma, Vid, Sword Studio, Dolmen, Kraken, ECC,
+  Diábolo, Ediciones Recreativas, Dronte, Toutain, Nueva Frontera, Ediprint, Hitpress, Editorial Valenciana, Ediciones B, Yermo,
+  Cartem y Producciones Editoriales), cada una con su editorial tal como la nombra la web. **Hay que volver a descargar el
+  índice** (Ajustes: 31 peticiones, casi un minuto); las fichas ya consultadas no se pierden.
+
 ## [0.30.0] - 2026-09-28
 
 ### Changed
