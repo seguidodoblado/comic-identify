@@ -5,12 +5,15 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import tebeosfera as tb
 from .barcode import read_barcode
 from .comicvine import ComicVineClient, ComicVineError
 from .covers import read_cover, thumbnail_bytes
 from .gcd import GcdHit, GcdIndex, fold
 from .hashing import dhash_bytes, dhash_file, similarity
 from .library import Library
+from .tbficha import TbFicha
+from .tbficha import edition_notes as tb_edition_notes
 from .umficha import Ficha, SeriesIssue, comments_section, edition_notes, usa_section
 from .universomarvel import (
     BASE,
@@ -28,8 +31,14 @@ MATCH_THRESHOLD = 0.80
 MAX_VOLUMES = 3
 MAX_GCD = 12
 MAX_MARVEL = 8
-MARVEL_METADATA = ("Volume", "Year", "Month", "Web", "Translator", "Letterer", "CoverArtist", "Format")   # por serie o lote
+MAX_TEBEOSFERA = 8
+CATALOG_SOURCES = ("Universo Marvel", "Tebeosfera")   # catálogos de ediciones españolas: series → ficha de un ejemplar
+# campos de ComicInfo que traen las fichas de un ejemplar (Tebeosfera da todos los créditos; Universo Marvel, los de la edición)
+MARVEL_METADATA = ("Volume", "Year", "Month", "Day", "Count", "Web", "Translator", "Letterer", "CoverArtist", "Format",
+                   "Writer", "Penciller", "Inker", "Colorist", "Editor", "Genre", "Characters", "LanguageISO")
 MARVEL_PER_ISSUE = ("GTIN", "Title", "NotesBlock", "BlackAndWhite")   # de un solo ejemplar: solo al etiquetar un archivo suelto
+
+SOURCE_ORDER = {"Mi colección": 0, "Tebeosfera": 1, "Universo Marvel": 2, "GCD": 3}   # a igual parecido, el primero gana
 
 Progress = Callable[[str], None]
 
@@ -37,7 +46,7 @@ Progress = Callable[[str], None]
 @dataclass
 class Candidate:
     title: str
-    source: str                     # "Mi colección" | "ComicVine" | "GCD" | "Universo Marvel"
+    source: str                     # "Mi colección" | "ComicVine" | "GCD" | "Universo Marvel" | "Tebeosfera"
     similarity: float | None = None
     subtitle: str = ""
     url: str = ""                   # ficha en ComicVine
@@ -61,10 +70,12 @@ class Candidate:
         return self.similarity is not None and self.similarity >= MATCH_THRESHOLD
 
     @property
-    def rank(self) -> tuple[int, float]:
-        """Orden: código de barras exacto, portada parecida, texto de GCD y el resto."""
-        tier = 0 if self.exact else 1 if self.is_match else 2 if self.source in ("GCD", "Universo Marvel") else 3
-        return tier, -(self.similarity or 0)
+    def rank(self) -> tuple[int, float, int]:
+        """Orden: tu colección y el código de barras exacto, portada parecida, texto de los catálogos y el resto; a
+        igualdad, tu colección, Tebeosfera, Universo Marvel y GCD, por este orden."""
+        tier = 0 if self.exact or self.source == "Mi colección" else 1 if self.is_match else \
+            2 if self.source in ("GCD", *CATALOG_SOURCES) else 3
+        return tier, -(self.similarity or 0), SOURCE_ORDER.get(self.source, len(SOURCE_ORDER))
 
 
 @dataclass
@@ -160,6 +171,66 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
                      year=str(ficha.year or ""), publisher=editorial, brand=brand, country="es", extra=extra)
 
 
+# ---- Tebeosfera ---------------------------------------------------------------------------------------------------
+
+def _tebeosfera_candidate(entry: tb.Entry) -> Candidate:
+    """Una colección del catálogo (aún sin número): al elegirla con un número escrito se consulta su ficha."""
+    name = entry.title.split(" (")[0]
+    where = " · ".join(part for part in (entry.publisher, entry.year, "Número único" if entry.single else "") if part)
+    return Candidate(entry.title, "Tebeosfera", subtitle=where, url=entry.url, series=name, publisher=entry.publisher,
+                     country="es", extra={"level": "series", "slug": entry.slug, "page": entry.page,
+                                          "single": "1" if entry.single else "", "year": entry.year,
+                                          "index_publisher": entry.publisher, "title": entry.title})
+
+
+def tebeosfera_entry(candidate: Candidate) -> tb.Entry:
+    """La colección que representa un candidato de Tebeosfera de nivel «series»."""
+    extra = candidate.extra
+    return tb.Entry(extra["slug"], extra.get("title") or candidate.title, extra.get("year", ""),
+                    extra.get("index_publisher", ""), bool(extra.get("single")))
+
+
+def tebeosfera_page_candidate(title: str, page: str) -> Candidate:
+    """Una ficha de número a la que se llegó navegando por la web (sin colección de índice conocida)."""
+    return _tebeosfera_candidate(tb.Entry(tb.page_slug(page), title, single=True))
+
+
+def tebeosfera_alternative(entry: tb.Entry, issue: tb.Issue) -> Candidate:
+    """Un número de la colección para elegir a mano cuando no está el escrito; como cualquier ficha suelta, se consulta
+    al seleccionarlo."""
+    return _tebeosfera_candidate(tb.Entry(tb.page_slug(issue.page), f"{entry.title} · nº {issue.label}", entry.year,
+                                          entry.publisher, single=True))
+
+
+def tebeosfera_issue_candidate(entry: tb.Entry, issue: tb.Issue, ficha: TbFicha) -> Candidate:
+    """El número concreto, a partir de su ficha: con lo que un ejemplar lleva de verdad (fecha, páginas, precio, todos sus
+    créditos, géneros, ISBN…) y los campos de ComicInfo que de ahí salen."""
+    name = ficha.series or entry.title.split(" (")[0]
+    number = ficha.number or issue.label
+    details = [ficha.date_label, f"{ficha.pages} págs." if ficha.pages else "", ficha.price_label, ficha.format,
+               ficha.issue_title]
+    credits = ficha.credits
+    extra = {"Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Day": str(ficha.day or ""),
+             "Count": str(ficha.count or ""), "Web": tb.BASE + issue.page, "LanguageISO": ficha.language,
+             "Translator": credits.get("Translator", ""), "Letterer": credits.get("Letterer", ""),
+             "CoverArtist": credits.get("CoverArtist", ""), "Writer": credits.get("Writer", ""),
+             "Penciller": credits.get("Penciller", ""), "Inker": credits.get("Inker", ""),
+             "Colorist": credits.get("Colorist", ""), "Editor": credits.get("Editor", ""),
+             "Genre": ", ".join(ficha.genres), "Characters": ", ".join(ficha.sagas), "Format": ficha.format,
+             "GTIN": ficha.isbn or ficha.gtin, "Title": ficha.issue_title, "BlackAndWhite": ficha.black_and_white,
+             "ISBN": ficha.isbn, "Cost": ficha.price_euros, "NotesBlock": tb_edition_notes(ficha),
+             "SpanishPage": issue.page, "level": "issue", "page": issue.page, "slug": ficha.slug}
+    return Candidate(f"{name} #{number}" if number else name, "Tebeosfera", subtitle=" · ".join(d for d in details if d),
+                     url=tb.BASE + issue.page, series=name, issue_name=ficha.issue_title, number=number,
+                     year=str(ficha.year or ""), publisher=ficha.publisher or entry.publisher, brand=ficha.imprint,
+                     country="es", extra=extra)
+
+
+def search_tebeosfera(index: tb.TebeosferaIndex, text: str, publisher: str = "") -> list[Candidate]:
+    """Colecciones de Tebeosfera (índice local) cuyo título encaja; sin números ni portadas."""
+    return [_tebeosfera_candidate(entry) for entry in index.search(text, limit=MAX_TEBEOSFERA, publisher=publisher)]
+
+
 def attach_cover(candidate: Candidate, cover: bytes, image: Path | None) -> None:
     """Pone la miniatura de la portada de la ficha y, si hay una portada abierta con la que compararla, el parecido
     (la misma huella y el mismo porcentaje que en las sugerencias de ComicVine). Una imagen ilegible se ignora."""
@@ -181,7 +252,7 @@ def search_marvel(index: UniversoMarvelIndex, text: str, publisher: str = "") ->
 def identify(image: Path, library: Library | None, client: ComicVineClient | None,
              query: str = "", issue_number: str = "", progress: Progress = lambda _: None,
              gcd: GcdIndex | None = None, publisher: str = "", year: str = "",
-             marvel: UniversoMarvelIndex | None = None) -> Outcome:
+             marvel: UniversoMarvelIndex | None = None, tebeosfera: tb.TebeosferaIndex | None = None) -> Outcome:
     """Identifica una portada. El título lo escribe el usuario: el OCR no lee los logotipos de cómic."""
     outcome = Outcome(query=query)
     variants = dhash_file(image)
@@ -206,7 +277,9 @@ def identify(image: Path, library: Library | None, client: ComicVineClient | Non
         _add_gcd(gcd, query, barcode, outcome, publisher, year)
     if marvel is not None and query:
         outcome.candidates += search_marvel(marvel, query, publisher)
-    if client is None and gcd is None and marvel is None:
+    if tebeosfera is not None and query:
+        outcome.candidates += search_tebeosfera(tebeosfera, query, publisher)
+    if client is None and gcd is None and marvel is None and tebeosfera is None:
         outcome.notes.append("Configura la clave de ComicVine o importa el volcado de GCD (pestaña Ajustes).")
     elif not query:
         outcome.notes.append("Escribe el título del cómic para buscarlo.")

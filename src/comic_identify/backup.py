@@ -50,7 +50,7 @@ class RestoreResult:
 def default_sources() -> dict[str, Path]:
     """Qué se copia (nombre dentro del zip -> dónde vive). La caché de WebKit no: es desechable."""
     return {"config.json": settings.CONFIG_FILE, "library.db": settings.LIBRARY_DB, "gcd_es.db": settings.GCD_DB,
-            "universomarvel.db": settings.UNIVERSOMARVEL_DB,
+            "universomarvel.db": settings.UNIVERSOMARVEL_DB, "tebeosfera.db": settings.TEBEOSFERA_DB,
             "renames.log": settings.RENAME_LOG, "metadata.log": settings.METADATA_LOG,
             "gcstar.log": settings.GCSTAR_LOG}
 

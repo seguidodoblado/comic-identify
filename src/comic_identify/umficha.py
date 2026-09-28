@@ -232,7 +232,9 @@ def _price_in_euros(amount: str, currency: str) -> str:
 
 USA_HEADING, CREDITS_HEADING, COMMENTS_HEADING = "Contenido USA:", "Créditos por historia (USA):", "Comentarios de la edición:"
 GCD_CREDITS_HEADING = "Créditos por historia (GCD):"
-NOTE_HEADINGS = (USA_HEADING, CREDITS_HEADING, COMMENTS_HEADING, GCD_CREDITS_HEADING)
+TB_EDITION_HEADING, TB_RELATED_HEADING = "Datos de la edición (Tebeosfera):", "Ediciones relacionadas (Tebeosfera):"
+NOTE_HEADINGS = (USA_HEADING, CREDITS_HEADING, COMMENTS_HEADING, GCD_CREDITS_HEADING, TB_EDITION_HEADING,
+                 TB_RELATED_HEADING)
 
 
 def usa_section(ficha: Ficha, base_url: str) -> str:

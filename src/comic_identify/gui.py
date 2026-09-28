@@ -7,6 +7,7 @@ from threading import Event, Thread
 
 from . import __version__
 from . import backup as backup_module
+from . import tebeosfera as tebeosfera_site
 from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
 from .collection import build_series, ranges
 from .comicinfo import CATEGORIES, MetadataError, build_xml, category_of, read_info
@@ -33,6 +34,7 @@ from .gcstar import transfer as gcstar_transfer
 from .gcstar import undo_last as undo_gcstar
 from .icons import ensure_icons, icon_file
 from .identify import (
+    CATALOG_SOURCES,
     MARVEL_METADATA,
     MARVEL_PER_ISSUE,
     Candidate,
@@ -43,6 +45,11 @@ from .identify import (
     page_candidate,
     search_gcd,
     search_marvel,
+    search_tebeosfera,
+    tebeosfera_alternative,
+    tebeosfera_entry,
+    tebeosfera_issue_candidate,
+    tebeosfera_page_candidate,
 )
 from .library import Library
 from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key, publisher_slug, short_name, user_logo
@@ -85,10 +92,13 @@ from .settings import (
     LOGO_DIR,
     METADATA_LOG,
     RENAME_LOG,
+    TEBEOSFERA_DB,
     UNIVERSOMARVEL_DB,
     Settings,
 )
 from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
+from .tebeosfera import TebeosferaClient, TebeosferaError, TebeosferaIndex
+from .tebeosfera import build_index as build_tebeosfera_index
 from .theming import icon_choice, is_dark_theme, theme_variant
 from .umficha import GCD_CREDITS_HEADING, compose_notes
 from .universomarvel import Entry as MarvelEntry
@@ -130,11 +140,13 @@ MIN_PANEL_WIDTH = 420   # lo mínimo que se le deja al panel derecho si la panta
 PANEL_FRAME = 40   # lo que ocupan el separador y los márgenes junto al panel derecho (~27 px), con holgura
 # Fuente de cada resultado -> (web de la que se toma el icono, clase CSS de su color)
 SOURCE_STYLES = {"GCD": (GCD_HOST, "source-gcd"), "Universo Marvel": ("fichas.universomarvel.com", "source-marvel"),
+                 "Tebeosfera": ("www.tebeosfera.com", "source-tebeosfera"),
                  "ComicVine": (COMICVINE_HOST, "source-comicvine")}
 CSS = b"""
 .source-chip { color: white; font-weight: bold; font-size: 0.85em; border-radius: 9px; padding: 1px 9px; }
 .source-gcd { background-color: #7e57c2; }
 .source-marvel { background-color: #d32f2f; }
+.source-tebeosfera { background-color: #ef6c00; }
 .source-comicvine { background-color: #2e7d32; }
 .publisher-badge { background-color: alpha(currentColor, 0.12); border-radius: 9px; padding: 1px 9px; font-size: 0.85em; }
 """
@@ -524,7 +536,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             datos, lo escrito en los campos; con la casilla desmarcada, sin editorial ni año."""
             title, number, publisher, year = self._fields()
             chosen = self.selected
-            if chosen is not None and chosen.source in ("Universo Marvel", "GCD") and chosen.series:
+            if chosen is not None and chosen.source in ("GCD", *CATALOG_SOURCES) and chosen.series:
                 title, number = chosen.series, chosen.number or number
                 publisher, year = chosen.brand or chosen.publisher or publisher, chosen.year or year
             if not self.web_extra.get_active():
@@ -871,7 +883,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _reset(self, _button=None):
             """Vuelve al estado inicial: sin campos, resultados, portada, ficha ni sesión de IA."""
             self._generation += 1
-            self._marvel_request += 1   # lo que aún venga de Universo Marvel ya no interesa
+            self._marvel_request += 1   # lo que aún venga de Universo Marvel o Tebeosfera ya no interesa
             self.busy = False
             self._stop_search_progress()
             if self._live_timer:
@@ -935,7 +947,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 outcome = identify(image, library, client, query, number,
                                    progress=lambda message: later(self._progress, message, generation), gcd=gcd,
-                                   publisher=publisher, year=year, marvel=self._marvel())
+                                   publisher=publisher, year=year, marvel=self._marvel(),
+                                   tebeosfera=self._tebeosfera())
             except Exception as error:  # noqa: BLE001 - se muestra al usuario, no debe cerrar la app
                 later(self._failed, error, generation)
             else:
@@ -971,7 +984,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.status.set_text(" · ".join(summary))
 
         def _add_panel_hint(self, summary, candidates):
-            if any(c.source == "ComicVine" or (c.source in ("GCD", "Universo Marvel") and webkit_available())
+            if any(c.source == "ComicVine" or (c.source in ("GCD", *CATALOG_SOURCES) and webkit_available())
                    for c in candidates):
                 summary.append("Haz clic en una sugerencia para ver su ficha a la derecha.")
 
@@ -994,6 +1007,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             index = UniversoMarvelIndex(UNIVERSOMARVEL_DB)
             return index if index.is_ready() else None
 
+        @staticmethod
+        def _tebeosfera():
+            index = TebeosferaIndex(TEBEOSFERA_DB)
+            return index if index.is_ready() else None
+
         def _set_fields(self, query=None, number=None, publisher=None, year=None):
             self._quiet = True
             for entry, text in ((self.query, query), (self.number, number),
@@ -1012,22 +1030,25 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _live_search(self):
             self._live_timer = 0
             query, number, publisher, year = self._fields()
-            gcd, marvel = self._gcd(), self._marvel()
-            if gcd is None and marvel is None:
-                self.status.set_text("Importa el volcado de GCD o descarga el índice de Universo Marvel (pestaña "
-                                     "Ajustes) para buscar mientras escribes; «Buscar en ComicVine» consulta ComicVine.")
+            gcd, marvel, tebeosfera = self._gcd(), self._marvel(), self._tebeosfera()
+            if gcd is None and marvel is None and tebeosfera is None:
+                self.status.set_text("Importa el volcado de GCD o descarga el índice de Universo Marvel o de Tebeosfera "
+                                     "(pestaña Ajustes) para buscar mientras escribes; «Buscar en ComicVine» consulta ComicVine.")
             elif len(query) < 2:
                 self._show_candidates(self.library_matches)
             else:
                 hits = search_gcd(gcd, query, number, publisher, year) if gcd is not None else []
                 marvel_hits = search_marvel(marvel, query, publisher) if marvel is not None else []
-                self._show_candidates(self.library_matches + hits + marvel_hits)
+                tebeosfera_hits = search_tebeosfera(tebeosfera, query, publisher) if tebeosfera is not None else []
+                catalog_hits = marvel_hits + tebeosfera_hits
+                self._show_candidates(self.library_matches + tebeosfera_hits + marvel_hits + hits)
                 found = ([f"{len(hits)} de GCD"] if gcd is not None else []) + (
-                    [f"{len(marvel_hits)} de Universo Marvel"] if marvel is not None else [])
-                summary = [f"Sugerencias para «{query}»: {', '.join(found)}" if hits or marvel_hits
+                    [f"{len(marvel_hits)} de Universo Marvel"] if marvel is not None else []) + (
+                    [f"{len(tebeosfera_hits)} de Tebeosfera"] if tebeosfera is not None else [])
+                summary = [f"Sugerencias para «{query}»: {', '.join(found)}" if hits or catalog_hits
                            else f"Sin resultados para «{query}»"]
                 summary.append("«Buscar en ComicVine» lo consulta también.")
-                self._add_panel_hint(summary, hits + marvel_hits)
+                self._add_panel_hint(summary, hits + catalog_hits)
                 self.status.set_text(" · ".join(summary))
             return GLib.SOURCE_REMOVE
 
@@ -1131,7 +1152,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             prefill = {"category": category_of(info.get("Tags", "")),   # ya la conocemos por nuestra propia Categoría
                       "format": info.get("Format", ""),   # el de ComicInfo.xml (p. ej. «Tomo tapa blanda» de la ficha)
                       "type": origin}   # Europeo/Americano/Manga, según la carpeta de Mi colección (ver ORIGIN_BY_FOLDER)
-            if self.selected is not None and self.selected.source == "Universo Marvel":
+            if self.selected is not None and self.selected.source in CATALOG_SOURCES:
                 # el precio no existe en ComicInfo.xml: solo se conoce por la ficha elegida (y se puede corregir aquí)
                 prefill["cost"] = self.selected.extra.get("Cost", "")
                 prefill["isbn"] = self.selected.extra.get("ISBN", "")
@@ -1744,7 +1765,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             if gcd is not None and self.selected is not None and self.selected.series_id:
                 info = gcd.series_info(self.selected.series_id)
             title, _number, publisher, _year = self._fields()
-            catalog = self.selected is not None and self.selected.source == "Universo Marvel"
+            catalog = self.selected is not None and self.selected.source in CATALOG_SOURCES
             values = merge_values(parse_name(where.stem if where.is_file() else where.name),
                                   suggest_values(self.selected) if catalog else
                                   series_values(info) if info is not None else None, title)
@@ -2129,7 +2150,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
             self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label="Abrir en el navegador")
             self.use_ficha = Gtk.Button(label="Usar esta ficha", visible=False, css_classes=["suggested-action"], tooltip_text=(
-                "Es la ficha de un ejemplar de Universo Marvel: la usa para rellenar los metadatos"))
+                "Es la ficha de un ejemplar de Universo Marvel o Tebeosfera: la usa para rellenar los metadatos"))
             self.use_ficha.connect("clicked", self._use_web_ficha)
             close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text="Cerrar el panel")
             close.connect("clicked", self._close_preview)
@@ -2172,56 +2193,88 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._update_normalize()
             if candidate.source == "ComicVine":
                 self._show_native(candidate)
-            elif candidate.source == "Universo Marvel" and candidate.extra.get("level") == "series" and (
-                    candidate.extra["page"].startswith("esp/") or self.number.get_text().strip()):
-                self._resolve_marvel(candidate)
+            elif candidate.source in CATALOG_SOURCES and candidate.extra.get("level") == "series" and (
+                    self._is_single_issue(candidate) or self.number.get_text().strip()):
+                self._resolve_catalog(candidate)
             elif (candidate.source == "GCD" and candidate.url.startswith(GCD_SITE)) or (
-                    candidate.source == "Universo Marvel" and candidate.url):
+                    candidate.source in CATALOG_SOURCES and candidate.url):
                 if webkit_available():
-                    self._show_web(candidate.url, "Ficha de Universo Marvel" if candidate.source == "Universo Marvel"
+                    self._show_web(candidate.url, f"Ficha de {candidate.source}" if candidate.source in CATALOG_SOURCES
                                    else "Ficha de Grand Comics Database")
                 else:   # sin WebKit no hay panel para esas webs: se abre en el navegador
                     Gtk.UriLauncher.new(candidate.url).launch(self, None, lambda *_: None)
 
-        def _resolve_marvel(self, series: Candidate):
+        @staticmethod
+        def _is_single_issue(series: Candidate) -> bool:
+            """Un candidato de nivel «serie» que ya es la ficha de un número (un especial, un libro): no pide número."""
+            if series.source == "Tebeosfera":
+                return bool(series.extra.get("single"))
+            return series.extra["page"].startswith("esp/")
+
+        def _resolve_catalog(self, series: Candidate):
             """Consulta (una sola vez: luego queda en la base local) la ficha del número escrito de una serie de
-            Universo Marvel, y la pone entre los resultados como un candidato con sus datos."""
+            Universo Marvel o Tebeosfera, y la pone entre los resultados como un candidato con sus datos."""
             number = self.number.get_text().strip()
-            entry = MarvelEntry(series.extra.get("index_publisher", ""), series.extra.get("section", ""), series.title,
-                                series.extra["page"])
+            site = series.source
+            single = self._is_single_issue(series)
             self._marvel_request += 1
             request = self._marvel_request
             self._start_search_progress("marvel")
             image = self.image   # la portada abierta, para compararla con la de la ficha
             if webkit_available() and not (self.webview and self.webview.get_uri() == series.url):
-                self._show_web(series.url, "Serie en Universo Marvel")   # mientras tanto, la propia web
-            self.status.set_text("Consultando la ficha en Universo Marvel…" if entry.is_single_issue else
-                                 f"Buscando el nº {number} de «{series.title}» en Universo Marvel…")
+                self._show_web(series.url, f"Serie en {site}")   # mientras tanto, la propia web
+            self.status.set_text(f"Consultando la ficha en {site}…" if single else
+                                 f"Buscando el nº {number} de «{series.title}» en {site}…")
 
             def run():
                 try:
-                    client = UniversoMarvelClient(UniversoMarvelIndex(UNIVERSOMARVEL_DB))
-                    issue = client.find_issue(entry, number)
-                    if issue is None:
-                        # una serie que lista sus fichas por título (Amalgam…) no tiene «nº 1»: se ofrecen tal cual
-                        others = [i for i in client.series_issues(entry) if i.page.startswith("esp/")][:MAX_ALTERNATIVES]
-                        later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} "
-                              "en Universo Marvel (o no está catalogado todavía)." + (
-                                  " Elige una de sus fichas en la lista." if others else ""),
-                              [alternative_candidate(entry, i) for i in others])
-                        return
-                    ficha = client.ficha(issue.page)
-                    candidate = marvel_issue_candidate(entry, issue, ficha)
-                    try:   # la portada: una petición más la primera vez; si falla, la ficha vale igual
-                        if ficha.cover_image:
-                            attach_cover(candidate, client.cover(ficha.cover_image), image)
-                    except (UniversoMarvelError, OSError):
-                        pass
-                except (UniversoMarvelError, OSError) as error:
-                    later(self._marvel_resolved, request, series, None, f"No se pudo consultar Universo Marvel: {error}")
+                    candidate, others = (self._fetch_tebeosfera if site == "Tebeosfera" else self._fetch_marvel)(
+                        series, number, image)
+                except (UniversoMarvelError, TebeosferaError, OSError) as error:
+                    later(self._marvel_resolved, request, series, None, f"No se pudo consultar {site}: {error}")
+                    return
+                if candidate is None:
+                    later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} en "
+                          f"{site} (o no está catalogado todavía)." + (" Elige una de sus fichas en la lista." if others else ""),
+                          others)
                 else:
                     later(self._marvel_resolved, request, series, candidate, "")
             Thread(target=run, daemon=True).start()
+
+        @staticmethod
+        def _fetch_marvel(series: Candidate, number: str, image) -> tuple[Candidate | None, list[Candidate]]:
+            entry = MarvelEntry(series.extra.get("index_publisher", ""), series.extra.get("section", ""), series.title,
+                                series.extra["page"])
+            client = UniversoMarvelClient(UniversoMarvelIndex(UNIVERSOMARVEL_DB))
+            issue = client.find_issue(entry, number)
+            if issue is None:
+                # una serie que lista sus fichas por título (Amalgam…) no tiene «nº 1»: se ofrecen tal cual
+                others = [i for i in client.series_issues(entry) if i.page.startswith("esp/")][:MAX_ALTERNATIVES]
+                return None, [alternative_candidate(entry, i) for i in others]
+            ficha = client.ficha(issue.page)
+            candidate = marvel_issue_candidate(entry, issue, ficha)
+            try:   # la portada: una petición más la primera vez; si falla, la ficha vale igual
+                if ficha.cover_image:
+                    attach_cover(candidate, client.cover(ficha.cover_image), image)
+            except (UniversoMarvelError, OSError):
+                pass
+            return candidate, []
+
+        @staticmethod
+        def _fetch_tebeosfera(series: Candidate, number: str, image) -> tuple[Candidate | None, list[Candidate]]:
+            entry = tebeosfera_entry(series)
+            client = TebeosferaClient(TebeosferaIndex(TEBEOSFERA_DB))
+            issue = client.find_issue(entry, number)
+            if issue is None:   # los números más cercanos al escrito, para elegir a mano
+                return None, [tebeosfera_alternative(entry, i) for i in client.nearest(entry, number, MAX_ALTERNATIVES)]
+            ficha = client.ficha(issue.page)
+            candidate = tebeosfera_issue_candidate(entry, issue, ficha)
+            try:
+                if ficha.cover_image:
+                    attach_cover(candidate, client.cover(ficha.cover_image), image)
+            except (TebeosferaError, OSError):
+                pass
+            return candidate, []
 
         def _marvel_resolved(self, request: int, series: Candidate, candidate: Candidate | None, problem: str,
                              alternatives: list[Candidate] = ()):
@@ -2240,7 +2293,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._show_candidates([candidate, *rest])
             self.results.select_row(self.results.get_row_at_index(0))
             match = f" · {candidate.similarity:.0%} de parecido con tu portada" if candidate.similarity is not None else ""
-            self.status.set_text(f"Ficha de Universo Marvel: {candidate.title} · {candidate.subtitle}{match}")
+            self.status.set_text(f"Ficha de {candidate.source}: {candidate.title} · {candidate.subtitle}{match}")
 
         def _screen_width(self) -> int | None:
             monitor = Gdk.Display.get_default().get_monitor_at_surface(self.get_surface()) if self.get_surface() else None
@@ -2299,23 +2352,32 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._open_preview(title, url, "web")
             self.webview.load_uri(url)
 
+        @staticmethod
+        def _catalog_page(uri: str) -> tuple[str, str]:
+            """(fuente, ruta) si `uri` es la ficha de un ejemplar de Universo Marvel o Tebeosfera; si no, vacío."""
+            if page := ficha_page(uri):
+                return "Universo Marvel", page
+            if page := tebeosfera_site.ficha_page(uri):
+                return "Tebeosfera", page
+            return "", ""
+
         def _web_uri_changed(self, webview, _param):
-            """Al navegar por Universo Marvel hasta la ficha de un ejemplar, se ofrece usarla (si no es ya la elegida)."""
-            page = ficha_page(webview.get_uri())
+            """Al navegar hasta la ficha de un ejemplar, se ofrece usarla (si no es ya la elegida)."""
+            _site, page = self._catalog_page(webview.get_uri())
             chosen = self.selected is not None and self.selected.extra.get("SpanishPage") == page
             self.use_ficha.set_visible(bool(page) and not chosen)
 
         def _use_web_ficha(self, _button):
             """La ficha que se ve en el panel pasa a ser el resultado elegido, con todos sus datos."""
-            uri = self.webview.get_uri()
-            page = ficha_page(uri)
+            site, page = self._catalog_page(self.webview.get_uri())
             if not page:
                 return
             self.use_ficha.set_visible(False)
-            stub = page_candidate(self.webview.get_title() or page, page)
+            title = self.webview.get_title() or page
+            stub = tebeosfera_page_candidate(title, page) if site == "Tebeosfera" else page_candidate(title, page)
             self.results.unselect_all()
             self.selected = stub
-            self._resolve_marvel(stub)
+            self._resolve_catalog(stub)
 
         def _favicon_changed(self, webview, _param):
             """comics.org bloquea la descarga directa de su icono; el motor del panel sí lo recibe al mostrar una ficha."""
@@ -2407,7 +2469,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             """La marca de la editorial de la fila, en un hueco fijo a la derecha: su logotipo (uno que haya puesto el
             usuario, o el descargado de la web de fichas) o, si no hay ninguno, una etiqueta con su nombre. Solo en las
             filas de GCD y Universo Marvel; las demás no tienen editorial."""
-            if candidate.source not in ("GCD", "Universo Marvel"):
+            if candidate.source not in ("GCD", *CATALOG_SOURCES):
                 return None
             name = candidate.publisher.strip()
             key = logo_key(candidate.publisher, candidate.brand, candidate.extra.get("index_publisher", ""))
@@ -2471,10 +2533,10 @@ def run_gui(initial_image: Path | None = None) -> None:
                 score = Gtk.Label(label=f"{verdict} · {candidate.similarity:.0%} de parecido", xalign=0)
                 score.add_css_class("success" if candidate.is_match else "dim-label")
                 text.append(score)
-            elif candidate.source == "Universo Marvel":
+            elif candidate.source in CATALOG_SOURCES:
                 if candidate.extra.get("level") != "series":
-                    how = "Datos de la ficha de Universo Marvel"
-                elif candidate.extra.get("page", "").startswith("esp/"):
+                    how = f"Datos de la ficha de {candidate.source}"
+                elif self._is_single_issue(candidate):
                     how = "Número suelto del catálogo: elígelo para ver su ficha"
                 else:
                     how = "Serie del catálogo: escribe el número y elígela para consultar su ficha"
@@ -2772,6 +2834,23 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
+                "Tebeosfera (www.tebeosfera.com): el catálogo de la historieta editada en España, de todas las editoriales "
+                "(Panini, ECC, Norma, Planeta, Zinco, Forum, Vértice…). Es el proyecto de una asociación cultural, así "
+                "que no se rastrea: el índice sale de sus sitemaps públicos (unas 13 peticiones espaciadas, unos 20 "
+                "segundos) para buscar al escribir y, al elegir una colección con su número escrito, solo la ficha "
+                "de ese ejemplar, una vez; queda guardada en la base local. Las imágenes son de sus titulares.")))
+            self.tebeosfera_button = icon_button(("folder-download-symbolic", "document-save-symbolic"),
+                                                 "Descargar el índice de Tebeosfera", halign=Gtk.Align.START)
+            self.tebeosfera_button.connect("clicked", self._download_tebeosfera)
+            self.tebeosfera_info = Gtk.Label(xalign=0, wrap=True)
+            self.tebeosfera_progress = Gtk.ProgressBar(visible=False)
+            self._tebeosfera_pulse_id = 0
+            for widget in (self.tebeosfera_button, self.tebeosfera_progress, self.tebeosfera_info):
+                page.append(widget)
+            self._refresh_tebeosfera()
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=(
                 "Asistente de IA (botón «Preguntar a la IA»): comando que se abre en un terminal con tu propia "
                 "sesión. {prompt} se sustituye por el mensaje. Ejemplos: «claude {prompt}», «codex {prompt}», "
                 "«opencode --prompt {prompt}».")))
@@ -3033,6 +3112,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     self._reload_settings()
                     self._refresh_gcd()
                     self._refresh_marvel()
+                    self._refresh_tebeosfera()
                     self._refresh_library()
                     self._refresh_backup_info()
                     self.backup_info.set_text(
@@ -3134,6 +3214,39 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self._marvel_pulse_id = 0
             self.marvel_progress.set_visible(False)
             self.marvel_button.set_sensitive(True)
+
+        def _refresh_tebeosfera(self):
+            index = TebeosferaIndex(TEBEOSFERA_DB)
+            if index.is_ready():
+                counts = index.counts()
+                self.tebeosfera_info.set_text(f"Índice de Tebeosfera: {counts['colecciones']} colecciones y "
+                                              f"{counts['números']} números.")
+            else:
+                self.tebeosfera_info.set_text("Todavía no has descargado el índice de Tebeosfera.")
+
+        def _download_tebeosfera(self, _button):
+            self.tebeosfera_button.set_sensitive(False)
+            self.tebeosfera_progress.set_visible(True)
+            self.tebeosfera_progress.pulse()
+            self._tebeosfera_pulse_id = GLib.timeout_add(150, lambda: (self.tebeosfera_progress.pulse(), True)[1])
+
+            def run():
+                try:
+                    build_tebeosfera_index(TEBEOSFERA_DB,
+                                           progress=lambda message: later(self.tebeosfera_info.set_text, message))
+                except (TebeosferaError, OSError) as error:
+                    later(self.tebeosfera_info.set_text, f"No se pudo descargar: {error}")
+                else:
+                    later(self._refresh_tebeosfera)
+                later(self._tebeosfera_download_finished)
+            Thread(target=run, daemon=True).start()
+
+        def _tebeosfera_download_finished(self):
+            if self._tebeosfera_pulse_id:
+                GLib.source_remove(self._tebeosfera_pulse_id)
+                self._tebeosfera_pulse_id = 0
+            self.tebeosfera_progress.set_visible(False)
+            self.tebeosfera_button.set_sensitive(True)
 
         def _choose_gcd(self, _button):
             dump = Gtk.FileFilter(name="Volcado SQLite de GCD")
