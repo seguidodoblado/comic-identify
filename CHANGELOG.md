@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-09-29
+
 ### Fixed
 - **GCD dejaba de pasar la comprobación «no soy un robot» de Cloudflare** desde la 0.39.0: el panel se identificaba como
   un Chrome normal para evitar avisos de consentimiento en Universo Marvel, pero un WebKit de verdad que dice ser Chrome
