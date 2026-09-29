@@ -106,3 +106,15 @@ def test_a_logo_saved_with_the_full_editorial_name_is_found_from_a_shorter_fragm
     assert user_logo(("heras-books",), mine) == mine / "heras-books.png"        # el nombre completo también al revés
     assert user_logo(("heras",), mine) == mine / "heras-books.png"              # y un fragmento suyo, como con Surco
 
+
+def test_the_word_search_is_off_for_the_automatic_publishers_so_a_shared_word_does_not_cross_match(tmp_path):
+    """«Planeta DeAgostini» busca su archivo automático «planeta.png»; si no está, con la búsqueda por palabras activada
+    encontraría por error el de una editorial distinta que también lleve la palabra «planeta», como Planeta Comic."""
+    from comic_identify.logos import user_logo
+    mine = tmp_path / "mios"; mine.mkdir()
+    (mine / "planeta-comic.png").write_bytes(_png_bytes())
+    assert user_logo(("planeta",), mine, fuzzy=True) == mine / "planeta-comic.png"    # la búsqueda por palabras sí cuela
+    assert user_logo(("planeta",), mine, fuzzy=False) is None                          # pero para una automática, no
+    (mine / "planeta.png").write_bytes(_png_bytes())
+    assert user_logo(("planeta",), mine, fuzzy=False) == mine / "planeta.png"          # con su propio archivo, sí lo encuentra
+

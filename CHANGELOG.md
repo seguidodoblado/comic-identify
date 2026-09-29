@@ -5,6 +5,16 @@ en este archivo.
 
 ## [Unreleased]
 
+### Fixed
+- **GCD dejaba de pasar la comprobación «no soy un robot» de Cloudflare** desde la 0.39.0: el panel se identificaba como
+  un Chrome normal para evitar avisos de consentimiento en Universo Marvel, pero un WebKit de verdad que dice ser Chrome
+  resulta más sospechoso para Cloudflare que uno sincero. Se deshace: el panel vuelve al User-Agent de fábrica de WebKit.
+- **El logotipo de una editorial sin el suyo propio podía colarse en una con logotipo automático** si compartían una
+  palabra: «Planeta Comic» (`planeta-comic.png`) se ponía por error en las filas de «Planeta DeAgostini», que no tiene
+  archivo propio, porque «planeta» es una palabra de las dos. La búsqueda por palabras (pensada para Tebeosfera, que
+  antes de consultar una ficha solo trae un trozo del nombre) ya no se usa para las 8 editoriales con logotipo
+  automático, que tienen su nombre corto exacto y no lo necesitan.
+
 ## [0.40.0] - 2026-09-29
 
 ### Fixed

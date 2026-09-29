@@ -243,10 +243,14 @@ a `~/.cache/comic-identify/logos` (no van en el paquete) y se pueden borrar sin 
 Las editoriales sin logotipo propio (la mayoría de las latinoamericanas y otras muchas españolas) llevan en su lugar una
 etiqueta con su nombre, así que ninguna fila queda sin marca. Para ponerles su logotipo, guarda un archivo `.png`,
 `.jpg` o `.svg` (de cualquier tamaño: se reduce al hueco de la fila) con el nombre que aparece en la ayuda de la etiqueta (p. ej. `ediciones-b.png`) en
-`~/.local/share/comic-identify/logos`; también sirve para cambiar los que se descargan (`forum.png`, `ecc.png`…). Antes de
-consultar la ficha de un ejemplar, una serie de Tebeosfera solo trae el trozo de editorial que da su dirección web («Surco»),
-no el nombre completo que dan GCD o Universo Marvel («Ediciones Surco»): el archivo se reconoce igual mientras sus palabras
-estén todas en el nombre guardado, o al revés.
+`~/.local/share/comic-identify/logos`. Antes de consultar la ficha de un ejemplar, una serie de Tebeosfera solo trae el
+trozo de editorial que da su dirección web («Surco»), no el nombre completo que dan GCD o Universo Marvel («Ediciones
+Surco»): para estas editoriales sin logotipo automático, el archivo se reconoce igual mientras sus palabras estén todas
+en el nombre guardado, o al revés.
+
+Para las 8 editoriales con logotipo automático, ese archivo se busca solo por su nombre exacto (`forum.png`, `ecc.png`…,
+sin la búsqueda por palabras de arriba): así «planeta.png» no lo encuentra por error una editorial distinta que también
+lleve la palabra «planeta» en su nombre, como Planeta Comic.
 
 Los iconos de las webs (desplegable y créditos de Ajustes) se descargan la primera vez, como haría un navegador, y se
 guardan en `~/.cache/comic-identify/icons`; no se incluyen en el paquete porque son marcas de sus webs. Se pueden
@@ -319,10 +323,11 @@ Universo Marvel, si a ti te pone un aviso de consentimiento de publicidad (varí
 quien lo exige), necesita la suya para recordar que ya lo aceptaste dentro de esa misma sesión de la aplicación —si se
 le bloqueara, como se hizo sin querer en la 0.34.0, ese aviso saldría en cada ficha.
 
-El panel se identifica como un navegador de escritorio normal (Chrome), no con el User-Agent por defecto de WebKit
-(«Safari Version/60.5», una versión que no existe: es un fallo antiguo y conocido de esa librería), que alguna web podría
-no reconocer como el de un navegador real. Las peticiones automáticas (construir el índice, pedir una ficha) siguen
-identificándose siempre como `comic-identify`.
+El panel usa el User-Agent que trae WebKit de fábrica (un «Safari Version/60.5» que en realidad no existe: es un fallo
+antiguo y conocido de esa librería, no cosa nuestra). Se probó a cambiarlo por uno de Chrome normal, pero GCD dejó de
+dejar pasar su comprobación «no soy un robot» de Cloudflare: un WebKit real que dice ser Chrome resulta más sospechoso
+para esa comprobación que uno sincero sobre lo que es, así que se deshizo. Las peticiones automáticas (construir el
+índice, pedir una ficha) siempre se identifican como `comic-identify`, sin tocar esto.
 
 En las fichas de **Tebeosfera** el panel bloquea lo que no es de la ficha: los servicios de medición y publicidad de
 terceros (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, el compilador de estilos Tailwind por CDN) y las

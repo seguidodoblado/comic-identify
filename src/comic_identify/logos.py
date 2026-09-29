@@ -55,18 +55,22 @@ def _words(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", fold(text)))
 
 
-def user_logo(names: tuple[str, ...], user_dir: Path | None) -> Path | None:
+def user_logo(names: tuple[str, ...], user_dir: Path | None, fuzzy: bool = True) -> Path | None:
     """Un logotipo que haya puesto el usuario en su carpeta: por el nombre de archivo exacto de alguno de esos nombres o,
-    si no hay ninguno exacto, por sus palabras. Esto último es para Tebeosfera: antes de consultar la ficha de un número
-    solo sabe el trozo de editorial que trae la dirección de la serie («Surco»), no el nombre completo que dan GCD o
-    Universo Marvel («Ediciones Surco») y con el que el usuario habrá guardado el archivo; en cuanto las palabras de uno
-    están todas en el otro (en cualquier sentido), se da por bueno."""
+    si no hay ninguno exacto y `fuzzy` lo permite, por sus palabras. Esto último es para las editoriales SIN logotipo
+    automático: Tebeosfera, antes de consultar la ficha de un número, solo sabe el trozo de editorial que trae la
+    dirección de la serie («Surco»), no el nombre completo que dan GCD o Universo Marvel («Ediciones Surco») y con el
+    que el usuario habrá guardado el archivo; en cuanto las palabras de uno están todas en el otro (en cualquier
+    sentido), se da por bueno. Con `fuzzy=False` (las 8 editoriales con logotipo automático, que ya tienen su nombre
+    corto exacto) esa búsqueda por palabras no se hace: si se hiciera, una sola palabra genérica compartida («planeta»)
+    encontraría el archivo de una editorial completamente distinta («planeta-comic.png», de Planeta Comic) y le pondría
+    su logotipo por error."""
     if user_dir is None:
         return None
     if (exact := next((path for name in names if name for extension in USER_EXTENSIONS
                        if (path := user_dir / f"{name}{extension}").is_file()), None)) is not None:
         return exact
-    if not user_dir.is_dir():
+    if not fuzzy or not user_dir.is_dir():
         return None
     wanted = [words for name in names if name and (words := _words(name))]
     if not wanted:

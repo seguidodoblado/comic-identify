@@ -116,13 +116,6 @@ GCD_DOWNLOAD_URL = "https://www.comics.org/download/"
 GCD_SITE = "https://www.comics.org/"
 COMICVINE_HOST, GCD_HOST = "comicvine.gamespot.com", "www.comics.org"
 FALLBACK_ICON = "applications-internet-symbolic"
-# El User-Agent por defecto de WebKitGTK dice «Safari Version/60.5», una versión que no existe (fallo conocido y antiguo
-# de esta librería): algunas webs con publicidad no lo reconocen como un navegador real y, por eso, muestran avisos de
-# consentimiento que a un Chrome o Firefox normal no le enseñan. El panel es para que tú navegues a mano (no es un
-# rastreo automático, que sigue identificándose como «comic-identify» en Universo Marvel y Tebeosfera), así que se
-# identifica como un navegador de verdad.
-WEB_PANEL_USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                       "Chrome/130.0.0.0 Safari/537.36")
 MAX_ALTERNATIVES = 30   # fichas que se ofrecen de una serie cuyo número no se encuentra
 SERIES_FILTERS = ["Incompletas", "Todas", "Sin todos sus metadatos", "Sin total indicado"]
 SERIES_SHOWN = 300
@@ -2398,7 +2391,6 @@ def run_gui(initial_image: Path | None = None) -> None:
                 # sin cookies en disco (el panel no guarda ninguna) y, con las reglas de `webfilter`, sin cookies de las webs
                 (data / "cookies.sqlite").unlink(missing_ok=True)   # las que dejó la versión anterior
                 self.webview = WebKit.WebView(network_session=session, vexpand=True)
-                self.webview.get_settings().set_user_agent(WEB_PANEL_USER_AGENT)
                 self.webview.connect("notify::favicon", self._favicon_changed)
                 self.webview.connect("notify::uri", self._web_uri_changed)
                 self.preview_stack.add_named(self.webview, "web")
@@ -2567,7 +2559,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             slot = Gtk.Box(halign=Gtk.Align.END, valign=Gtk.Align.CENTER)
             slot.set_size_request(*LOGO_BOX)
             slug = key or publisher_slug(name)
-            custom = user_logo((slug,), LOGO_DIR)
+            # la búsqueda por palabras es solo para las editoriales sin logotipo automático (Tebeosfera, antes de
+            # consultar una ficha, solo trae un trozo del nombre); con una de las 8 automáticas, «planeta» encontraría
+            # por error el archivo de una editorial distinta con esa palabra en su nombre, como «planeta-comic.png»
+            custom = user_logo((slug,), LOGO_DIR, fuzzy=key is None)
             texture = self._scaled_logo(custom) if custom is not None else None
             if texture is not None:   # el del usuario manda sobre el descargado
                 slot.set_tooltip_text(LOGO_NAMES.get(key, name))
