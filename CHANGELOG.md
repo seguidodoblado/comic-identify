@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-09-29
+
 ### Fixed
 - **Avisos de consentimiento de cookies innecesarios en el panel de Universo Marvel**: el panel se identificaba con el
   User-Agent por defecto de WebKit, que dice «Safari Version/60.5» (una versión que no existe: fallo antiguo y conocido
