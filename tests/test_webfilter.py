@@ -39,12 +39,14 @@ def test_trackers_and_the_cookie_notice_only_concern_tebeosfera_and_gcd_only_los
     assert {rule["action"]["type"] for rule in rules} == {"block", "css-display-none", "block-cookies"}
 
 
-def test_tebeosfera_and_universo_marvel_are_consulted_without_cookies_but_gcd_keeps_cloudflares():
+def test_only_tebeosfera_is_consulted_without_cookies():
     cookies = [rule for rule in webfilter.rules() if rule["action"]["type"] == "block-cookies"]
-    assert sorted(rule["trigger"]["if-domain"][0] for rule in cookies) == ["*tebeosfera.com", "*universomarvel.com"]
-    assert all(rule["trigger"]["url-filter"] == ".*" for rule in cookies)   # todas las peticiones de esas páginas
-    # sin `cf_clearance` la comprobación de Cloudflare de GCD no se supera nunca: no se le bloquean las cookies
-    assert not any("comics.org" in domain for rule in cookies for domain in rule["trigger"]["if-domain"])
+    assert sorted(rule["trigger"]["if-domain"][0] for rule in cookies) == ["*tebeosfera.com"]
+    assert all(rule["trigger"]["url-filter"] == ".*" for rule in cookies)   # todas las peticiones de esa web
+    # GCD necesita `cf_clearance` (su comprobación anti-robots) y Universo Marvel, la suya de consentimiento: a
+    # ninguna de las dos se le bloquean las cookies
+    assert not any(domain in ("*comics.org", "*universomarvel.com") for rule in cookies
+                   for domain in rule["trigger"]["if-domain"])
 
 
 def test_the_rules_are_valid_json_for_webkit():

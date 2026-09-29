@@ -312,15 +312,17 @@ dentro del panel hasta la ficha de otro ejemplar (por ejemplo, para corregir la 
 al buscar) aparece **Usar esta ficha**: lo convierte en el resultado elegido con sus datos, sin ninguna consulta (GCD ya
 está entero en tu índice local). Se carga una sola página por clic y la aplicación no extrae ni guarda ninguna imagen: es
 una vista de comics.org tal como la ve un navegador. Como cualquier navegador, WebKit mantiene su caché y sus cookies en `~/.cache/comic-identify/webkit` y
-`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. El panel no guarda cookies en disco: Universo Marvel no deja ninguna,
-Tebeosfera tampoco (se le bloquean) y GCD deja una sola, `cf_clearance`, la de la comprobación anti-robots de Cloudflare
-(sin ella la página se queda en «Un momento…»), que vive solo en memoria y se pierde al cerrar la aplicación.
+`~/.local/share/comic-identify/webkit`; se pueden borrar sin problema. Ninguna cookie se guarda en disco (solo viven
+mientras la aplicación está abierta): Tebeosfera no deja ninguna (se le bloquean, ver más abajo); GCD deja una sola,
+`cf_clearance`, la de su comprobación anti-robots de Cloudflare (sin ella la página se queda en «Un momento…»); y
+Universo Marvel, si a ti te pone un aviso de consentimiento de publicidad (varía según el país: es la Unión Europea
+quien lo exige), necesita la suya para recordar que ya lo aceptaste dentro de esa misma sesión de la aplicación —si se
+le bloqueara, como se hizo sin querer en la 0.34.0, ese aviso saldría en cada ficha.
 
 El panel se identifica como un navegador de escritorio normal (Chrome), no con el User-Agent por defecto de WebKit
-(«Safari Version/60.5», una versión que no existe: es un fallo antiguo y conocido de esa librería). Algunas webs con
-publicidad no reconocen ese User-Agent como el de un navegador real y muestran avisos de consentimiento que a un
-Chrome o Firefox normal no le enseñan; el panel es para que navegues a mano, así que identificarse como uno evita eso.
-Las peticiones automáticas (construir el índice, pedir una ficha) siguen identificándose siempre como `comic-identify`.
+(«Safari Version/60.5», una versión que no existe: es un fallo antiguo y conocido de esa librería), que alguna web podría
+no reconocer como el de un navegador real. Las peticiones automáticas (construir el índice, pedir una ficha) siguen
+identificándose siempre como `comic-identify`.
 
 En las fichas de **Tebeosfera** el panel bloquea lo que no es de la ficha: los servicios de medición y publicidad de
 terceros (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, el compilador de estilos Tailwind por CDN) y las

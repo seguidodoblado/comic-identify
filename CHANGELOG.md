@@ -5,6 +5,13 @@ en este archivo.
 
 ## [Unreleased]
 
+### Fixed
+- **El aviso de consentimiento de Universo Marvel seguía saliendo en cada ficha pese al arreglo de la 0.39.0**: la causa
+  real era que, desde la 0.34.0, se le bloqueaban todas las cookies por error; a quien la Unión Europea le exige ese
+  aviso, la web necesita una cookie para recordar que ya lo aceptó, y al bloquearla nunca podía recordarlo. Ahora ya no
+  se le bloquean las cookies a Universo Marvel (solo a Tebeosfera, donde además se bloquea su publicidad); siguen sin
+  guardarse en disco, solo mientras la aplicación está abierta.
+
 ## [0.39.0] - 2026-09-29
 
 ### Fixed

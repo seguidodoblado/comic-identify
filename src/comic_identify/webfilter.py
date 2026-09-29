@@ -1,10 +1,12 @@
-"""Reglas de bloqueo de contenido del panel web para las fichas de Tebeosfera.
+"""Reglas de bloqueo de contenido del panel web: la publicidad de Tebeosfera y la medición de visitas de GCD.
 
 Una ficha de Tebeosfera pesa unos 6 MB y ~110 peticiones: además de su propia página carga Google Tag Manager, Google
 Analytics, publicidad de Google, el analizador de Ahrefs y el compilador de Tailwind por CDN, y unas imágenes de anuncios
 propios de la web que suman más de 5 MB. Para consultar una ficha no hace falta nada de eso: esos servicios solo miden
 visitas (y dejan sus cookies en el panel). Se bloquean, y con ellos deja de hacer falta el aviso de cookies de la web
-(que pregunta por esas mismas cookies), que se oculta. Solo afecta a las páginas de Tebeosfera y a lo que ellas piden a terceros; la propia web sigue cargando entera.
+(que pregunta por esas mismas cookies), que se oculta. Solo afecta a las páginas de Tebeosfera y a lo que ellas piden a
+terceros; la propia web sigue cargando entera. A Universo Marvel y a GCD no se les toca su publicidad ni sus cookies
+(ver `NO_COOKIES`): cada una tiene una razón para necesitar la suya.
 """
 import json
 import re
@@ -21,10 +23,14 @@ TRACKING_PATHS = (r"google\.com/pagead/", r"google\.es/pagead/", r"google\.com/c
 # y no son de ella (la portada y las muestras están en «T3_numeros»)
 PROMOTIONS = ("/T3_avisos/", "/T3_instituciones/", "/neko/img/awasetoco.png")
 BANNER = ".cc-cookies"
-# Estas webs se consultan sin cookies: ni las envía el panel ni guarda las que le den (`block-cookies`). GCD (comics.org) no
-# puede estar aquí: su comprobación anti-robots de Cloudflare no se supera sin su cookie `cf_clearance` (sin ella, la página
-# se queda en «Un momento…»), y es la única que deja; solo vive en memoria y desaparece al cerrar la aplicación.
-NO_COOKIES = ("*tebeosfera.com", "*universomarvel.com")
+# Tebeosfera se consulta sin cookies: ni las envía el panel ni guarda las que le den (`block-cookies`); como aquí también
+# se bloquea su publicidad (arriba), nada las necesita. Universo Marvel NO puede estar aquí ni GCD tampoco: a los
+# visitantes de la Unión Europea, Universo Marvel les pone un aviso de consentimiento de publicidad (invisible desde
+# fuera de la UE, donde se probó esto) que necesita una cookie para recordar que ya se aceptó; sin ella, vuelve a
+# preguntar en cada ficha. Y GCD (comics.org) necesita la suya, `cf_clearance`, para su comprobación anti-robots de
+# Cloudflare (sin ella, la página se queda en «Un momento…»). Ambas viven solo en memoria y se pierden al cerrar la
+# aplicación: no se guarda ninguna cookie en disco.
+NO_COOKIES = ("*tebeosfera.com",)
 # La web de GCD (comics.org) carga además la medición de visitas de Cloudflare
 GCD_TRACKERS = ("cloudflareinsights.com",)   # el aviso de cookies de la web (cookiecuttr)
 HEAVY = ("cdn.tailwindcss.com",)   # un compilador de estilos que se descarga y ejecuta en cada ficha
