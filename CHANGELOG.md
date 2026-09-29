@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-09-29
+
 ### Fixed
 - **El aviso de consentimiento de Universo Marvel seguía saliendo en cada ficha pese al arreglo de la 0.39.0**: la causa
   real era que, desde la 0.34.0, se le bloqueaban todas las cookies por error; a quien la Unión Europea le exige ese
