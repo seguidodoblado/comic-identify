@@ -5,6 +5,13 @@ en este archivo.
 
 ## [Unreleased]
 
+### Fixed
+- **Avisos de consentimiento de cookies innecesarios en el panel de Universo Marvel**: el panel se identificaba con el
+  User-Agent por defecto de WebKit, que dice «Safari Version/60.5» (una versión que no existe: fallo antiguo y conocido
+  de esa librería). Algunas webs con publicidad no lo reconocen como un navegador real y muestran su aviso de
+  consentimiento completo cada vez, cosa que un Chrome o Firefox normal no ve. El panel ahora se identifica como un
+  Chrome de escritorio normal; las peticiones automáticas siguen identificándose como `comic-identify`.
+
 ## [0.38.0] - 2026-09-28
 
 ### Fixed

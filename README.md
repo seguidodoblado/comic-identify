@@ -316,6 +316,12 @@ una vista de comics.org tal como la ve un navegador. Como cualquier navegador, W
 Tebeosfera tampoco (se le bloquean) y GCD deja una sola, `cf_clearance`, la de la comprobación anti-robots de Cloudflare
 (sin ella la página se queda en «Un momento…»), que vive solo en memoria y se pierde al cerrar la aplicación.
 
+El panel se identifica como un navegador de escritorio normal (Chrome), no con el User-Agent por defecto de WebKit
+(«Safari Version/60.5», una versión que no existe: es un fallo antiguo y conocido de esa librería). Algunas webs con
+publicidad no reconocen ese User-Agent como el de un navegador real y muestran avisos de consentimiento que a un
+Chrome o Firefox normal no le enseñan; el panel es para que navegues a mano, así que identificarse como uno evita eso.
+Las peticiones automáticas (construir el índice, pedir una ficha) siguen identificándose siempre como `comic-identify`.
+
 En las fichas de **Tebeosfera** el panel bloquea lo que no es de la ficha: los servicios de medición y publicidad de
 terceros (Google Tag Manager, Analytics y publicidad de Google, Ahrefs, el compilador de estilos Tailwind por CDN) y las
 imágenes de anuncios propios de la web (asociarse, colaborar…). Sin ellos la ficha baja de unos 6 MB a algo más de 1 MB,
