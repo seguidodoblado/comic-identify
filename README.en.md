@@ -33,13 +33,6 @@ everything lives on your own machine.
 Full documentation —installation, usage guide, technical specifications, troubleshooting and more— is on the
 **[project wiki](https://github.com/seguidodoblado/comic-identify/wiki)** (Spanish and English).
 
-## Checks
-
-```bash
-pytest
-ruff check .
-```
-
 ## Third-party data
 
 GCD data is © Grand Comics Database (<https://www.comics.org/>) and is distributed under the
@@ -52,6 +45,9 @@ publications to their rights holders. The local database is for your personal us
 Data from Tebeosfera (www.tebeosfera.com) belongs to the Tebeosfera cultural association and its contributors (its
 texts are distributed under the CC BY-SA 4.0 license and images belong to their rights holders). The local database
 is for your personal use.
+
+Data from [Comic Vine](https://comicvine.gamespot.com/) is obtained through its public API; its terms of use
+require linking back to its website on any page that uses its data.
 
 ## License
 
