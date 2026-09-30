@@ -39,12 +39,12 @@ GCD data is © Grand Comics Database (<https://www.comics.org/>) and is distribu
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license. The local index the application generates
 is a derivative work and must keep that attribution and license if shared.
 
-Data from Universo Marvel records (fichas.universomarvel.com) belongs to its authors, and the characters and
-publications to their rights holders. The local database is for your personal use: do not redistribute it.
+Data from [Universo Marvel](https://fichas.universomarvel.com/) records belongs to its authors, and the characters
+and publications to their rights holders. The local database is for your personal use: do not redistribute it.
 
-Data from Tebeosfera (www.tebeosfera.com) belongs to the Tebeosfera cultural association and its contributors (its
-texts are distributed under the CC BY-SA 4.0 license and images belong to their rights holders). The local database
-is for your personal use.
+Data from [Tebeosfera](https://www.tebeosfera.com/) belongs to the Tebeosfera cultural association and its
+contributors (its texts are distributed under the CC BY-SA 4.0 license and images belong to their rights holders).
+The local database is for your personal use.
 
 Data from [Comic Vine](https://comicvine.gamespot.com/) is obtained through its public API; its terms of use
 require linking back to its website on any page that uses its data.
