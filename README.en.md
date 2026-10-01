@@ -7,6 +7,16 @@
 <h1 align="center">Comic Identify</h1>
 
 <p align="center">
+  <img src="https://img.shields.io/github/v/release/seguidodoblado/comic-identify" alt="release">
+  <img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license">
+  <img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit">
+  <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
+  <img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars">
+  <img src="https://img.shields.io/github/issues/seguidodoblado/comic-identify" alt="issues">
+  <img src="https://img.shields.io/github/languages/top/seguidodoblado/comic-identify" alt="language">
+</p>
+
+<p align="center">
   Identify and catalog your digital comic collection (CBR, CBZ, CB7) by cover or by title, with
   Grand Comics Database, Universo Marvel, Tebeosfera and ComicVine.
 </p>
