@@ -1,0 +1,309 @@
+comic-identify (0.41.1-1) noble; urgency=medium
+
+  * README rewritten and simplified, with an English version, a
+    screenshot and links to Universo Marvel and Tebeosfera; Comic Vine
+    credit added. The .deb now takes its version from debian/changelog.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Thu, 01 Oct 2026 03:12:28 +0200
+
+comic-identify (0.41.0-1) noble; urgency=medium
+
+  * GCD panel passes Cloudflare's robot check again: revert the Chrome
+    User-Agent introduced in 0.39.0 (a WebKit claiming to be Chrome
+    looks more suspicious than an honest one).
+  * Publisher logo of a publisher without its own file no longer leaks
+    into one with an automatic logo that shares a word (e.g. Planeta
+    Comic vs Planeta DeAgostini).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Tue, 29 Sep 2026 12:00:00 +0200
+
+comic-identify (0.40.0-1) noble; urgency=medium
+
+  * Universo Marvel consent banner no longer shows on every sheet: its
+    cookies are not blocked any more (only Tebeosfera's are); still
+    kept in memory only.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Tue, 29 Sep 2026 12:00:00 +0200
+
+comic-identify (0.39.0-1) noble; urgency=medium
+
+  * Web panel identified itself as a desktop Chrome to avoid needless
+    cookie-consent banners on Universo Marvel (reverted in 0.41.0);
+    automatic requests still identify as comic-identify.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Tue, 29 Sep 2026 12:00:00 +0200
+
+comic-identify (0.38.0-1) noble; urgency=medium
+
+  * Fix the 'Delete data' button widening the window; it now sits next
+    to the ComicInfo.xml label and long data scrolls inside its
+    column.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.37.0-1) noble; urgency=medium
+
+  * New 'Delete data' button: removes the whole ComicInfo.xml of the
+    open file (logged and undoable).
+  * Editorial Ivrea added to the buy menu (La Comiqueria).
+  * Zona Negativa removed from 'Search other sites'.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.36.0-1) noble; urgency=medium
+
+  * 'Use this sheet' now also works for GCD when browsing comics.org
+    in the panel (instant, local index).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.35.0-1) noble; urgency=medium
+
+  * Fix the user's publisher logo missing on unresolved Tebeosfera
+    series: fall back to matching the logo file by words of the name.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.34.0-1) noble; urgency=medium
+
+  * No cookies kept by the web panel: Universo Marvel none, Tebeosfera
+    all blocked, GCD only cf_clearance, in memory.
+  * Revert the on-disk cookie storage added in 0.33.0.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.33.0-1) noble; urgency=medium
+
+  * Lighter Tebeosfera sheets: block third-party tracking/advertising
+    and the site's own ads (about 6 MB to 1.3 MB per sheet).
+  * Fix web panel cookies not being persisted (reverted in 0.34.0).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.32.0-1) noble; urgency=medium
+
+  * Settings and About now credit Universo Marvel and Tebeosfera, like
+    Comic Vine and GCD.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.31.0-1) noble; urgency=medium
+
+  * Universo Marvel index now covers all 31 publishers (re-download
+    the index in Settings).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.30.0-1) noble; urgency=medium
+
+  * Tebeosfera as a new local source for all publishers and eras
+    (index from its public sitemaps), with sheets, cover similarity
+    and full credits.
+  * New result order: My collection, Tebeosfera, Universo Marvel, GCD.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.29.0-1) noble; urgency=medium
+
+  * Transfer to GCstar: translation and edition go to the comment;
+    BlackAndWhite becomes the 'Color'/'B&N' tags.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.28.0-1) noble; urgency=medium
+
+  * Buy -> All opens the search in the eight shops at once.
+  * 'Use this sheet' for Universo Marvel while browsing the panel.
+  * Candidates offered for series that list sheets by title;
+    BlackAndWhite from Universo Marvel sheets.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.27.0-1) noble; urgency=medium
+
+  * GCD index now imports stories and credits; metadata dialog
+    preloads credits, genre, characters, date, web and barcode.
+  * New Genre, Characters and Edition fields. Re-import the GCD dump
+    in Settings.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.26.3-1) noble; urgency=medium
+
+  * Fix manually added publisher logos showing oversized and
+    misaligned: scaled to the row slot (PNG, JPG, SVG).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.26.2-1) noble; urgency=medium
+
+  * Fix the WebKit panel still breaking the screen width after using
+    the assistant terminal.
+  * Opening, dropping or pasting a new comic closes the right panel
+    once the new one has loaded.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.26.1-1) noble; urgency=medium
+
+  * Fix opening the AI assistant (or any right panel) pushing the
+    window off-screen and disabling maximize.
+  * README: light/dark theme and right-panel width.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.26.0-1) noble; urgency=medium
+
+  * Light and dark theme with symbolic icons in dark; toggling
+    restarts the app keeping the open comic.
+  * Publisher label on every GCD row; coloured source labels with
+    icons; margin before the right panel.
+  * Logos for Planeta DeAgostini, ECC Ediciones, Zinco, Norma
+    Editorial and Bruguera.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.25.0-1) noble; urgency=medium
+
+  * Buy menu next to 'Search other sites' (Panini, second-hand sites,
+    shops).
+  * Publisher logos (Forum, Panini, Vertice) downloaded once to the
+    user cache.
+  * README and .deb description brought up to date.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.24.0-1) noble; urgency=medium
+
+  * Synopsis in Summary from Universo Marvel sheets.
+  * Pulsing progress bar for Universo Marvel queries.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.23.0-1) noble; urgency=medium
+
+  * Format, cover artist, and writer/penciller/inker/colorist credits
+    from Universo Marvel (including USA sheets).
+  * Per-story credits in Notes; cover similarity with the chosen
+    sheet.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.22.1-1) noble; urgency=medium
+
+  * Fix Web field carrying the series page instead of the issue sheet
+    for Universo Marvel.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.22.0-1) noble; urgency=medium
+
+  * Universo Marvel as a local source (Forum/Planeta, Panini,
+    Vertice), with on-demand issue sheets.
+  * PageCount in ComicInfo.xml; cost and ISBN in Transfer to GCstar;
+    Translator credit.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.21.0-1) noble; urgency=medium
+
+  * Verified backups and restore of the application data (Settings).
+  * 'Search other sites' menu grouped into General, Marvel and DC.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.20.4-1) noble; urgency=medium
+
+  * Transfer to GCstar: 'Published by' now carries 'Publisher -
+    Imprint'.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 28 Sep 2026 12:00:00 +0200
+
+comic-identify (0.20.3-1) noble; urgency=medium
+
+  * 'All' in 'Search other sites' opens the 9 sites at once.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.20.2-1) noble; urgency=medium
+
+  * Fix Transfer to GCstar not carrying the Web field.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.20.1-1) noble; urgency=medium
+
+  * Optional Month and Day next to Year in the metadata dialog.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.20.0-1) noble; urgency=medium
+
+  * Progress bar while querying ComicVine.
+  * New {editorial} pattern variable; Summary field; GCstar Category
+    and Type suggestions; covers under a 'comics' folder.
+  * Fix stray ' - ' separator in render() with chained optional
+    fields.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.19.0-1) noble; urgency=medium
+
+  * Transfer to GCstar, credits in metadata and Extract cover.
+  * Fix cover and metadata dialog growing past the screen.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.18.4-1) noble; urgency=medium
+
+  * 'Open comic...' renamed 'Open...'; clarify that rename and
+    metadata act on the original file.
+  * Fix paste of a copied comic file.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.18.3-1) noble; urgency=medium
+
+  * Search sites: remove 'ECC (DC)', add 'DC Comics' and 'Norma
+    Comics'.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.18.2-1) noble; urgency=medium
+
+  * Assistant terminal uses Ubuntu Sans Mono 11 pt.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.18.1-1) noble; urgency=medium
+
+  * Top buttons on a single line; 'Open cover...' renamed 'Open
+    comic...'.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.18.0-1) noble; urgency=medium
+
+  * Configurable assistant message; DC sites; favicon fallback;
+    'Search other sites' dropdown.
+  * Fix the AI assistant not finding CLIs only on the shell PATH.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.17.0-1) noble; urgency=medium
+
+  * Double-click to view a page large; ComicInfo.xml panel; About
+    dialog; comic-identify --version.
+  * DEB package states maintainer and homepage.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200
+
+comic-identify (0.16.0-1) noble; urgency=medium
+
+  * Page browsing, collection series view, ComicInfo.xml writing with
+    undo, Normalize folder and name, GCD and ComicVine sources, AI
+    assistant panel and many fixes.
+  * First entry of this changelog: it summarises everything up to
+    0.16.0; see CHANGELOG.md for detail.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 27 Sep 2026 12:00:00 +0200

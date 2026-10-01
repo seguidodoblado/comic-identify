@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-10-01
+
+### Changed
+- **El README se ha simplificado y ahora tiene versión en inglés** (`README.en.md`), con una captura de pantalla y enlaces
+  a Universo Marvel y Tebeosfera en «Datos de terceros»; se añade el crédito a Comic Vine y se quitan las comprobaciones
+  que estaban duplicadas.
+- **El `.deb` toma su versión de `debian/changelog`** (ahora versionado en el repositorio) en lugar de `pyproject.toml`;
+  `build-deb.sh` se niega a construir si la versión del changelog, la de `pyproject.toml` y la de `__init__.py` no coinciden.
+
 ## [0.41.0] - 2026-09-29
 
 ### Fixed
