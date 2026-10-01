@@ -2,8 +2,13 @@
 set -eu
 base=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 stage="$base/.deb-stage"
-version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$base/pyproject.toml")
-package="$base/../comic-identify_${version}-1_all.deb"
+version=$(sed -n '1s/^[^ ]* (\([^)]*\)).*/\1/p' "$base/debian/changelog")
+test -n "$version" || { echo "No se pudo leer la versión de debian/changelog" >&2; exit 1; }
+upstream=${version%-*}
+project_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$base/pyproject.toml")
+init_version=$(sed -n 's/^__version__ = "\([^"]*\)"/\1/p' "$base/src/comic_identify/__init__.py")
+test "$upstream" = "$project_version" -a "$upstream" = "$init_version" || { echo "Versiones distintas: debian/changelog ($upstream), pyproject.toml ($project_version), __init__.py ($init_version). Ejecuta «Versionar repositorio»." >&2; exit 1; }
+package="$base/../comic-identify_${version}_all.deb"
 command -v dpkg-deb >/dev/null 2>&1 || { echo "Falta dpkg-deb (instala dpkg-dev)." >&2; exit 1; }
 rm -rf "$stage"
 mkdir -p "$stage/DEBIAN" "$stage/opt/comic-identify" "$stage/usr/bin" "$stage/usr/share/applications" "$stage/usr/share/icons/hicolor/scalable/apps"
@@ -16,7 +21,7 @@ cp "$base/comic-identify.svg" "$stage/usr/share/icons/hicolor/scalable/apps/"
 cp "$base/debian/postinst" "$stage/DEBIAN/postinst"
 cat > "$stage/DEBIAN/control" <<EOT
 Package: comic-identify
-Version: ${version}-1
+Version: ${version}
 Section: graphics
 Priority: optional
 Architecture: all
