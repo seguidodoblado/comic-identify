@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests y ruff
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Herramientas de sistema que usan los tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full zbar-tools
+
+      # unrar y rar viven en multiverse: si no están, los tests que las necesitan se saltan
+      - name: Herramientas RAR (opcionales)
+        continue-on-error: true
+        run: sudo apt-get install -y unrar rar
+
+      - name: Instalar el proyecto
+        run: pip install -e ".[dev]"
+
+      - name: ruff
+        run: ruff check .
+
+      - name: pytest
+        run: pytest -q -rs
+
+  deb:
+    name: Paquete .deb y lintian
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar herramientas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev lintian
+
+      # build-deb.sh deja el .deb en el directorio padre; se copia a dist/ para subirlo
+      - name: Construir el .deb
+        run: |
+          ./build-deb.sh
+          mkdir dist
+          cp ../comic-identify_*.deb dist/
+
+      # Falla ante errores de lintian; los avisos (W) e informativos (I) solo se muestran.
+      # El informe va al resumen del job aunque falle.
+      - name: lintian
+        run: |
+          set +e
+          lintian --info --display-info --fail-on error dist/*.deb | tee lintian.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo "### lintian"
+            echo '```'
+            cat lintian.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: comic-identify-deb
+          path: dist/*.deb
+          if-no-files-found: error
