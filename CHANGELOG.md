@@ -5,6 +5,14 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-10-03
+
+### Added
+- **API pública de GCD como último recurso en «Usar esta ficha»** (#12): si el número de la ficha abierta no está en
+  el índice local importado, se consulta la API pública de comics.org (ficha, serie y editorial; con pausa entre
+  peticiones) para rellenar los mismos metadatos que ya daba el índice local. No sustituye la búsqueda por texto
+  (la API no la permite) ni trae la portada (sigue bloqueada por Cloudflare).
+
 ## [0.42.0] - 2026-10-02
 
 ### Added

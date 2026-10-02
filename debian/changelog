@@ -1,3 +1,10 @@
+comic-identify (0.43.0-1) noble; urgency=medium
+
+  * API pública de GCD como último recurso en «Usar esta ficha» (issue
+    #12).
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sat, 03 Oct 2026 00:55:14 +0200
+
 comic-identify (0.42.0-1) noble; urgency=medium
 
   * Tema del sistema: tercer botón 'Sistema' en Ajustes que sigue el
