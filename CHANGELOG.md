@@ -5,6 +5,19 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.41.2] - 2026-10-02
+
+Incluye también los cambios de empaquetado de la revisión 0.41.1-1ubuntu1 (más abajo).
+
+### Fixed
+- **La primera petición a Universo Marvel y a Tebeosfera ya no espera de más en un equipo recién arrancado.** El marcador de
+  «aún no hubo petición» valía `0.0` y se comparaba con `time.monotonic()`, que cuenta desde el arranque: con menos
+  segundos de uptime que el intervalo entre peticiones (1,5 s), la primera esperaba sin necesidad. Ahora vale `-inf`. En uso
+  normal apenas se notaba; hacía intermitente un test del CI en máquinas recién arrancadas.
+
+### Added
+- Un test por módulo para ese caso (primera petición sin espera con el reloj «joven», segunda con la espera debida).
+
 ## [0.41.1-1ubuntu1] - 2026-10-02
 
 Revisión solo de empaquetado: el código de la aplicación no cambia.

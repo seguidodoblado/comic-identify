@@ -1,3 +1,12 @@
+comic-identify (0.41.2-1) noble; urgency=medium
+
+  * Fix: the first request to Universo Marvel and Tebeosfera no longer
+    waits when the machine has just booted. The "no request yet" marker
+    was 0.0, compared with the monotonic clock, which counts from boot.
+  * Add tests for the first request on a freshly booted machine.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Fri, 02 Oct 2026 02:17:11 +0200
+
 comic-identify (0.41.1-1ubuntu1) noble; urgency=medium
 
   * Packaging: the package now passes lintian with no errors, warnings
