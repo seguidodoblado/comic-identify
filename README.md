@@ -12,6 +12,7 @@
   <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml/badge.svg" alt="CD">
   <img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license">
   <img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit">
+  <img src="https://img.shields.io/github/commit-activity/t/seguidodoblado/comic-identify" alt="total commits">
   <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
   <img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars">
   <img src="https://img.shields.io/github/issues/seguidodoblado/comic-identify" alt="issues">
