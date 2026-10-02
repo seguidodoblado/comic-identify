@@ -8,6 +8,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/v/release/seguidodoblado/comic-identify" alt="release">
+  <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml/badge.svg" alt="CI">
   <img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license">
   <img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit">
   <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
