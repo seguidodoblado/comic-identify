@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+from dataclasses import asdict
 from pathlib import Path
 from threading import Event, Thread
 
@@ -21,7 +22,8 @@ from .covers import (
     read_page,
     thumbnail_bytes,
 )
-from .gcd import GcdIndex, build_index, issue_id_from_url
+from .gcd import GcdIndex, IssueDetails, build_index, issue_id_from_url
+from .gcd_api import GcdApiClient, GcdApiError
 from .gcstar import (
     VOCABULARY_FIELDS,
     GCstarError,
@@ -266,6 +268,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.source_file: Path | None = None   # CBR/CBZ abierto: el que se puede normalizar
             self.selected: Candidate | None = None
             self._marvel_request = 0   # descarta la respuesta de una ficha si ya se eligió otra cosa
+            self._gcd_api_request = 0  # igual, para la consulta a la API pública de GCD (último recurso)
             self._generation = 0   # sube al limpiar: descarta los resultados de una búsqueda ya en marcha
             self.assistant_box = None   # página del panel con el terminal, mientras hay sesión
             self.assistant_terminal = None
@@ -1855,9 +1858,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue, notice)
 
         def _gcd_issue_details(self, gcd):
-            """Los datos que GCD tiene del número elegido (no de la serie), si el índice los trae."""
+            """Los datos que GCD tiene del número elegido (no de la serie): del índice local si los trae, o los ya
+            consultados a su API pública al usar la ficha de un número que no estaba en el índice."""
             chosen = self.selected
-            if gcd is None or chosen is None or chosen.source != "GCD" or not chosen.extra.get("issue_id"):
+            if chosen is None or chosen.source != "GCD" or not chosen.extra.get("issue_id"):
+                return None
+            if api_details := chosen.extra.get("ApiIssueDetails"):
+                return IssueDetails(**json.loads(api_details))
+            if gcd is None:
                 return None
             return gcd.issue_details(int(chosen.extra["issue_id"]))
 
@@ -2448,13 +2456,39 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _use_gcd_ficha(self, issue_id: int):
             """GCD ya está entero en local: al contrario que Universo Marvel y Tebeosfera, no hace falta consultar nada,
-            así que se resuelve al momento."""
+            así que se resuelve al momento. Si el número no está en el índice (uno nuevo, o de un país que no se
+            importa), se consulta como último recurso su API pública."""
             gcd = self._gcd()
             hit = gcd.issue_by_id(issue_id) if gcd is not None else None
+            if hit is not None:
+                self._show_gcd_candidate(gcd_issue_candidate(hit))
+                return
+            self._gcd_api_request += 1
+            request = self._gcd_api_request
+            self._start_search_progress("gcd_api")
+            self.status.set_text("Ese número no está en tu índice de GCD: consultando su API pública…")
+
+            def run():
+                try:
+                    hit, details = GcdApiClient().issue(issue_id)
+                except GcdApiError as error:
+                    later(self._gcd_api_resolved, request, None, None, str(error))
+                else:
+                    later(self._gcd_api_resolved, request, hit, details, "")
+            Thread(target=run, daemon=True).start()
+
+        def _gcd_api_resolved(self, request: int, hit, details, problem: str):
+            if request != self._gcd_api_request:
+                return   # se ha limpiado o elegido otra cosa mientras tanto
+            self._stop_search_progress("gcd_api")
             if hit is None:
-                self.status.set_text("Ese número no está en tu índice de GCD (¿lo has importado, o es de otro país?).")
+                self.status.set_text(f"No se pudo consultar la API pública de GCD: {problem}")
                 return
             candidate = gcd_issue_candidate(hit)
+            candidate.extra["ApiIssueDetails"] = json.dumps(asdict(details), ensure_ascii=False)
+            self._show_gcd_candidate(candidate)
+
+        def _show_gcd_candidate(self, candidate: Candidate):
             self.results.unselect_all()
             self._show_candidates([candidate, *self.candidates])
             self.results.select_row(self.results.get_row_at_index(0))
