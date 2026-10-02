@@ -186,7 +186,7 @@ class Fetcher:
 
     def __init__(self, min_interval: float = MIN_INTERVAL):
         self.min_interval = min_interval
-        self._last = 0.0
+        self._last = float("-inf")   # aún no hubo petición: la primera no espera (monotonic arranca con el equipo)
 
     def get(self, url: str) -> bytes:
         if urlparse(url).netloc != HOST:

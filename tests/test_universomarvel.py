@@ -1,4 +1,5 @@
 import sqlite3
+import types
 
 import pytest
 
@@ -143,6 +144,28 @@ def test_fetcher_waits_between_requests_and_identifies_itself(monkeypatch):
     fetcher.get("https://fichas.universomarvel.com/panini.html")
     assert len(slept) == 1 and 0 < slept[0] <= 100                        # la segunda petición esperó
     assert sent[0].get_header("User-agent").startswith("comic-identify/")
+
+
+def test_fetcher_does_not_wait_before_the_first_request_on_a_freshly_booted_machine(monkeypatch):
+    slept = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, limit):
+            return b"ok"
+    # equipo recién arrancado: monotonic() vale menos que el intervalo y no debe provocar una espera
+    monkeypatch.setattr(um, "time", types.SimpleNamespace(monotonic=lambda: 5.0, sleep=slept.append))
+    monkeypatch.setattr(um.urllib.request, "urlopen", lambda request, timeout: Response())
+    fetcher = Fetcher(min_interval=100)
+    fetcher.get("https://fichas.universomarvel.com/forum.html")
+    assert slept == []
+    fetcher.get("https://fichas.universomarvel.com/panini.html")
+    assert slept == [100]
 
 
 def test_search_marvel_gives_candidates_that_open_the_series_page(index):

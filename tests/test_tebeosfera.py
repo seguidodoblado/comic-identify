@@ -1,6 +1,7 @@
 import gzip
 import io
 import sqlite3
+import types
 from contextlib import closing
 
 import pytest
@@ -182,6 +183,31 @@ def test_fetcher_only_talks_to_tebeosfera_and_understands_gzip(monkeypatch):
     monkeypatch.setattr(tb.urllib.request, "urlopen", lambda request, timeout: Response(b"not gzip", "gzip"))
     with pytest.raises(tb.TebeosferaError):
         tb.Fetcher(min_interval=0).get(BASE + "sitemap1.xml")
+
+
+def test_fetcher_does_not_wait_before_the_first_request_on_a_freshly_booted_machine(monkeypatch):
+    slept = []
+
+    class Response:
+        def __init__(self):
+            self.headers = {}
+
+        def read(self, limit):
+            return b"ok"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+    # equipo recién arrancado: monotonic() vale menos que el intervalo y no debe provocar una espera
+    monkeypatch.setattr(tb, "time", types.SimpleNamespace(monotonic=lambda: 5.0, sleep=slept.append))
+    monkeypatch.setattr(tb.urllib.request, "urlopen", lambda request, timeout: Response())
+    fetcher = tb.Fetcher(min_interval=100)
+    fetcher.get(BASE + "sitemap1.xml")
+    assert slept == []
+    fetcher.get(BASE + "sitemap2.xml")
+    assert slept == [100]
 
 
 def test_ficha_page_only_accepts_numbers_of_the_site():
