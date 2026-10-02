@@ -1,3 +1,19 @@
+comic-identify (0.41.1-1ubuntu1) noble; urgency=medium
+
+  * Packaging: the package now passes lintian with no errors, warnings
+    or notes. Add debian/copyright and changelog.Debian.gz, and manual
+    pages in English and Spanish.
+  * Install the application in /usr/share/comic-identify instead of
+    /opt/comic-identify.
+  * Add Keywords to the desktop entry and use only the Graphics
+    category.
+  * Fix file permissions in the package, independent of the umask used
+    to build it.
+  * Add a CI workflow (tests, ruff and lintian on the .deb) and status
+    badges in the READMEs.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Fri, 02 Oct 2026 02:05:36 +0200
+
 comic-identify (0.41.1-1) noble; urgency=medium
 
   * README rewritten and simplified, with an English version, a

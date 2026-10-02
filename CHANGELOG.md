@@ -5,6 +5,20 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.41.1-1ubuntu1] - 2026-10-02
+
+Revisión solo de empaquetado: el código de la aplicación no cambia.
+
+### Changed
+- **El `.deb` pasa lintian sin errores, avisos ni notas.** Incluye `copyright` y `changelog.Debian.gz`, páginas de manual en
+  inglés y en español (`man comic-identify`), `Keywords` en la entrada de escritorio y una única categoría (`Graphics`).
+- **La aplicación se instala en `/usr/share/comic-identify`** en lugar de `/opt/comic-identify`.
+- **Los permisos del paquete son fijos** (755 en directorios, 644 en ficheros) y ya no dependen de la `umask` de quien lo construye.
+
+### Added
+- **Workflow de CI** (`.github/workflows/ci.yml`): `ruff` y `pytest`, y construcción del `.deb` con lintian, que falla ante errores.
+- Insignias de estado en los README, en español e inglés.
+
 ## [0.41.1] - 2026-10-01
 
 ### Changed
