@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.41.3] - 2026-10-02
+
+### Added
+- **Despliegue automático de la release (CD)**: nuevo workflow `cd.yml` de GitHub Actions que, al subir una etiqueta
+  `vX.Y.Z`, comprueba que coincide con `debian/changelog`, construye el `.deb`, le pasa lintian y deja la release en
+  **borrador** con el `.deb` adjunto, las notas de `debian/changelog`, las notas autogeneradas de GitHub y el SHA-256.
+  La release se revisa y se publica a mano desde GitHub.
+- Insignias de la métrica de tiempo de programación (CodeTime y WakaTime) en los README.
+
 ## [0.41.2] - 2026-10-02
 
 Incluye también los cambios de empaquetado de la revisión 0.41.1-1ubuntu1 (más abajo).
