@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/github/v/release/seguidodoblado/comic-identify" alt="release">
   <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml/badge.svg" alt="CI">
   <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml/badge.svg" alt="CD">
-  <a href="https://github.com/seguidodoblado/comic-identify?tab=GPL-3.0-1-ov-file"><img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license"></a>
+  <a href="https://github.com/seguidodoblado/comic-identify/blob/main/LICENSE"><img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license"></a>
   <img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit">
   <img src="https://img.shields.io/github/commit-activity/t/seguidodoblado/comic-identify" alt="total commits">
   <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
