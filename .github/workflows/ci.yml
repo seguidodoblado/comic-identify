@@ -67,9 +67,16 @@ jobs:
           status=${PIPESTATUS[0]}
           {
             echo "### lintian"
-            echo '```'
-            cat lintian.txt
-            echo '```'
+            echo
+            if [ -s lintian.txt ]; then
+              echo '```'
+              cat lintian.txt
+              echo '```'
+            elif [ "$status" -eq 0 ]; then
+              echo "✅ Sin etiquetas: \`$(basename dist/*.deb)\` pasa lintian limpio."
+            else
+              echo "❌ lintian terminó con código $status sin generar informe."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
 
