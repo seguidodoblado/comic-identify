@@ -51,6 +51,8 @@ EOT
 chmod 644 "$stage/DEBIAN/control"
 chmod 755 "$stage/usr/bin/comic-identify"
 chmod 755 "$stage/DEBIAN/postinst"
+(cd "$stage" && find . -type f ! -path './DEBIAN/*' -printf '%P\n' | LC_ALL=C sort | xargs -d '\n' md5sum > DEBIAN/md5sums)
+chmod 644 "$stage/DEBIAN/md5sums"
 dpkg-deb --build --root-owner-group "$stage" "$package"
 rm -rf "$stage"
 echo "Paquete generado: $package"
