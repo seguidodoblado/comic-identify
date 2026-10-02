@@ -1,10 +1,12 @@
 [Desktop Entry]
 Name=Comic Identify
 Comment=Identificar un cómic a partir de su portada
+Keywords=cómic;comic;cbz;cbr;portada;metadatos;ComicInfo;GCD;colección;
+Keywords[en]=comic;cbz;cbr;cover;metadata;ComicInfo;GCD;collection;
 Exec=/usr/bin/comic-identify %f
 Icon=comic-identify
 StartupWMClass=comic-identify
 Type=Application
-Categories=Graphics;Utility;
+Categories=Graphics;
 MimeType=image/jpeg;image/png;image/webp;application/vnd.comicbook+zip;application/vnd.comicbook-rar;
 Terminal=false

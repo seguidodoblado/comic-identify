@@ -1,3 +1,3 @@
 #!/bin/bash
-export PYTHONPATH=/opt/comic-identify
+export PYTHONPATH=/usr/share/comic-identify
 exec -a comic-identify python3 -m comic_identify "$@"

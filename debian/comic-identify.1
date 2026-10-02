@@ -1,0 +1,94 @@
+.TH COMIC\-IDENTIFY 1 "" "comic-identify @VERSION@"
+.SH NAME
+comic\-identify \- identify a comic from its cover and manage a digital comic collection
+.SH SYNOPSIS
+.B comic\-identify
+.br
+.B comic\-identify
+.I cover
+.br
+.B comic\-identify buscar
+.I title
+.RI [ number ]
+.br
+.B comic\-identify
+.RB { \-V | \-\-version }
+.br
+.B comic\-identify
+.RB { \-h | \-\-help }
+.SH DESCRIPTION
+.B comic\-identify
+is a GTK application to manage a collection of digital comics. It identifies a comic
+by its cover or title (Grand Comics Database, Universo Marvel, Tebeosfera, barcode,
+ComicVine and visual cover comparison), normalizes file names, writes
+.I ComicInfo.xml
+metadata, exports to GCstar, makes backups and offers an optional AI assistant that
+uses the user's own session.
+.PP
+Without arguments it opens the graphical interface. Text commands never open a window.
+.SH COMMANDS
+.TP
+.B comic\-identify
+Open the application.
+.TP
+.BI comic\-identify " cover"
+Open the application with that cover loaded.
+.I cover
+can be an image file or a CBR or CBZ comic file.
+.TP
+.BI "comic\-identify buscar " title " [" number ]
+Search the local Grand Comics Database index and print one result per line as
+.IR "title | subtitle | URL" .
+Print
+.B Sin resultados.
+if nothing matches. It does not open the interface. The index must have been imported
+beforehand from the application settings (\(lqImportar volcado de GCD\(rq).
+.TP
+.BR \-V ", " \-\-version
+Print the version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print a short usage message and exit.
+.PP
+Any other argument is rejected with a usage message and exit status 2; it never opens
+the interface.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+.B buscar
+found no Grand Comics Database index.
+.TP
+.B 2
+Unknown command or missing argument.
+.SH FILES
+Files are kept under the XDG directories, in a
+.I comic\-identify
+subdirectory.
+.TP
+.I $XDG_CONFIG_HOME/comic\-identify/config.json
+User settings (ComicVine key and collection folders). Defaults to
+.IR ~/.config .
+.TP
+.I $XDG_DATA_HOME/comic\-identify/
+Local indexes (\fIgcd_es.db\fR, \fIuniversomarvel.db\fR, \fItebeosfera.db\fR,
+\fIlibrary.db\fR), logs (\fIrenames.log\fR, \fImetadata.log\fR, \fIgcstar.log\fR)
+and the user's own logos in \fIlogos/\fR. Defaults to
+.IR ~/.local/share .
+.SH ENVIRONMENT
+.TP
+.B XDG_CONFIG_HOME
+Base directory for the configuration file.
+.TP
+.B XDG_DATA_HOME
+Base directory for indexes, logs and logos.
+.SH SEE ALSO
+.BR 7z (1),
+.BR unrar (1),
+.BR zbarimg (1)
+.PP
+Project page: https://github.com/seguidodoblado/comic\-identify
+.SH AUTHOR
+Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>

@@ -1,0 +1,95 @@
+.TH COMIC\-IDENTIFY 1 "" "comic-identify @VERSION@"
+.SH NOMBRE
+comic\-identify \- identifica un cómic a partir de su portada y gestiona una colección de cómics digitales
+.SH SINOPSIS
+.B comic\-identify
+.br
+.B comic\-identify
+.I portada
+.br
+.B comic\-identify buscar
+.I título
+.RI [ número ]
+.br
+.B comic\-identify
+.RB { \-V | \-\-version }
+.br
+.B comic\-identify
+.RB { \-h | \-\-help }
+.SH DESCRIPCIÓN
+.B comic\-identify
+es una aplicación GTK para gestionar una colección de cómics digitales. Identifica un
+cómic por su portada o su título (Grand Comics Database, Universo Marvel, Tebeosfera,
+código de barras, ComicVine y comparación visual de portadas), normaliza los nombres de
+archivo, escribe metadatos
+.IR ComicInfo.xml ,
+exporta a GCstar, hace copias de seguridad y ofrece un asistente de IA opcional que usa
+la propia sesión del usuario.
+.PP
+Sin argumentos abre la interfaz gráfica. Las órdenes de texto nunca abren una ventana.
+.SH ÓRDENES
+.TP
+.B comic\-identify
+Abre la aplicación.
+.TP
+.BI comic\-identify " portada"
+Abre la aplicación con esa portada cargada.
+.I portada
+puede ser un archivo de imagen o un cómic CBR o CBZ.
+.TP
+.BI "comic\-identify buscar " título " [" número ]
+Busca en el índice local de la Grand Comics Database e imprime un resultado por línea con el
+formato
+.IR "título | subtítulo | URL" .
+Imprime
+.B Sin resultados.
+si no hay coincidencias. No abre la interfaz. El índice debe haberse importado antes desde
+los ajustes de la aplicación («Importar volcado de GCD»).
+.TP
+.BR \-V ", " \-\-version
+Muestra la versión y termina.
+.TP
+.BR \-h ", " \-\-help
+Muestra un resumen de uso y termina.
+.PP
+Cualquier otro argumento se rechaza con un mensaje de uso y estado de salida 2; nunca abre la
+interfaz.
+.SH ESTADO DE SALIDA
+.TP
+.B 0
+Correcto.
+.TP
+.B 1
+.B buscar
+no encontró el índice de la Grand Comics Database.
+.TP
+.B 2
+Orden desconocida o falta un argumento.
+.SH ARCHIVOS
+Los archivos se guardan en los directorios XDG, dentro de un subdirectorio
+.IR comic\-identify .
+.TP
+.I $XDG_CONFIG_HOME/comic\-identify/config.json
+Ajustes del usuario (clave de ComicVine y carpetas de la colección). Por defecto
+.IR ~/.config .
+.TP
+.I $XDG_DATA_HOME/comic\-identify/
+Índices locales (\fIgcd_es.db\fR, \fIuniversomarvel.db\fR, \fItebeosfera.db\fR,
+\fIlibrary.db\fR), registros (\fIrenames.log\fR, \fImetadata.log\fR, \fIgcstar.log\fR)
+y los logotipos propios del usuario en \fIlogos/\fR. Por defecto
+.IR ~/.local/share .
+.SH ENTORNO
+.TP
+.B XDG_CONFIG_HOME
+Directorio base del archivo de configuración.
+.TP
+.B XDG_DATA_HOME
+Directorio base de índices, registros y logotipos.
+.SH VÉASE TAMBIÉN
+.BR 7z (1),
+.BR unrar (1),
+.BR zbarimg (1)
+.PP
+Página del proyecto: https://github.com/seguidodoblado/comic\-identify
+.SH AUTOR
+Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>
