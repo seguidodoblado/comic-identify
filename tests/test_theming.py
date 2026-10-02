@@ -51,6 +51,8 @@ def test_the_chosen_theme_is_persisted_in_the_config_and_unset_means_follow_the_
     assert Settings.load(path).dark_mode is True
     Settings(dark_mode=False).save(path)
     assert Settings.load(path).dark_mode is False
+    Settings(dark_mode=None).save(path)                                                 # volver a «Sistema»
+    assert Settings.load(path).dark_mode is None
     path.write_text('{"dark_mode": "si"}')
     assert Settings.load(path).dark_mode is None                                        # un valor raro se ignora
     path.write_text('{"api_key": "x"}')

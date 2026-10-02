@@ -2898,11 +2898,12 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Tema: claro (iconos de color de tu tema) u oscuro (iconos simbólicos). Se recuerda al reiniciar; cambiarlo "
-                "reinicia la aplicación conservando el cómic abierto y los campos.")))
+                "Tema: claro (iconos de color de tu tema), oscuro (iconos simbólicos) o el del sistema. Se recuerda al "
+                "reiniciar; cambiarlo reinicia la aplicación conservando el cómic abierto y los campos.")))
             theme_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
             self.theme_buttons = {}
-            for dark, text, icons in ((False, "Claro", ("weather-clear",)), (True, "Oscuro", ("weather-clear-night",))):
+            for dark, text, icons in ((False, "Claro", ("weather-clear",)), (True, "Oscuro", ("weather-clear-night",)),
+                                       (None, "Sistema", ("preferences-desktop-theme",))):
                 button = icon_button(icons, text)
                 button.connect("clicked", lambda _b, d=dark: self._set_theme(d))
                 self.theme_buttons[dark] = button
@@ -3250,9 +3251,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             origin = "elegido" if self.settings.dark_mode is not None else "el del sistema"
             self.theme_info.set_text(f"Tema actual: {mode} ({origin}).")
             for dark, button in self.theme_buttons.items():
-                button.set_sensitive(dark != theme_state["dark"])
+                button.set_sensitive(dark != self.settings.dark_mode)
 
-        def _set_theme(self, dark: bool):
+        def _set_theme(self, dark: bool | None):
             """Guarda el tema y reinicia el proceso para aplicarlo (Cinnamon/Mint no repinta una ventana ya presentada),
             con el mismo cómic abierto y los mismos campos."""
             if self.indexing:
