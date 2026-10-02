@@ -5,6 +5,10 @@ en este archivo.
 
 ## [Unreleased]
 
+### Fixed
+- **Aclaración sobre la 0.40.0**: el aviso de consentimiento de cookies de Universo Marvel no quedó resuelto con aquella
+  versión (dejar de bloquearle las cookies no bastó). Sigue siendo un problema conocido.
+
 ## [0.41.3] - 2026-10-02
 
 ### Added
