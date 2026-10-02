@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-10-02
+
+### Added
+- **Tema del sistema**: en Ajustes, junto a Claro y Oscuro, un tercer botón «Sistema» que sigue el tema claro/oscuro
+  del escritorio en vez de fijar uno elegido.
+
 ### Fixed
 - **Aclaración sobre la 0.40.0**: el aviso de consentimiento de cookies de Universo Marvel no quedó resuelto con aquella
   versión (dejar de bloquearle las cookies no bastó). Sigue siendo un problema conocido.
