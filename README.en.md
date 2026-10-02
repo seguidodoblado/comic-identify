@@ -11,8 +11,8 @@
   <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml/badge.svg" alt="CI">
   <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml/badge.svg" alt="CD">
   <a href="https://github.com/seguidodoblado/comic-identify/blob/main/LICENSE"><img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license"></a>
-  <img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit">
-  <img src="https://img.shields.io/github/commit-activity/t/seguidodoblado/comic-identify" alt="total commits">
+  <a href="https://github.com/seguidodoblado/comic-identify/commits/main/"><img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit"></a>
+  <a href="https://github.com/seguidodoblado/comic-identify/commits/main/"><img src="https://img.shields.io/github/commit-activity/t/seguidodoblado/comic-identify" alt="total commits"></a>
   <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
   <img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars">
   <a href="https://github.com/seguidodoblado/comic-identify/issues"><img src="https://img.shields.io/github/issues/seguidodoblado/comic-identify" alt="issues"></a>
