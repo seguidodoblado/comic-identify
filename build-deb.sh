@@ -10,6 +10,7 @@ init_version=$(sed -n 's/^__version__ = "\([^"]*\)"/\1/p' "$base/src/comic_ident
 test "$upstream" = "$project_version" -a "$upstream" = "$init_version" || { echo "Versiones distintas: debian/changelog ($upstream), pyproject.toml ($project_version), __init__.py ($init_version). Ejecuta «Versionar repositorio»." >&2; exit 1; }
 package="$base/../comic-identify_${version}_all.deb"
 command -v dpkg-deb >/dev/null 2>&1 || { echo "Falta dpkg-deb (instala dpkg-dev)." >&2; exit 1; }
+sh "$base/i18n-compile.sh"
 rm -rf "$stage"
 doc="$stage/usr/share/doc/comic-identify"
 mkdir -p "$stage/DEBIAN" "$stage/usr/share/comic-identify" "$stage/usr/bin" "$stage/usr/share/applications" "$stage/usr/share/icons/hicolor/scalable/apps" "$doc"

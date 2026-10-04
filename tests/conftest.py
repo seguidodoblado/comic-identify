@@ -1,3 +1,9 @@
+import os
+
+# Las pruebas comprueban los textos en español (el idioma fuente), vengan los .mo compilados o no:
+# se fija antes de importar nada del paquete, porque algunos textos se resuelven al importar.
+os.environ["LANGUAGE"] = "es"
+
 import io
 import random
 import sqlite3

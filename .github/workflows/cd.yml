@@ -21,7 +21,7 @@ jobs:
       - name: Instalar herramientas
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev lintian
+          sudo apt-get install -y dpkg-dev lintian gettext
 
       # La etiqueta lleva solo la parte upstream: tiene que coincidir con debian/changelog
       - name: Comprobar que la etiqueta coincide con debian/changelog

@@ -5,6 +5,12 @@ en este archivo.
 
 ## [Unreleased]
 
+### Added
+- **Interfaz en español e inglés** (#9): toda la interfaz, los avisos y los mensajes de error pasan por `gettext`. El idioma fuente es el español y el catálogo inglés está en `po/en.po` (590 mensajes); se elige con el idioma del sistema o con `$LANGUAGE`. Los catálogos se compilan al empaquetar y en el CI, y no se versionan; ver `po/README.md`. No se traduce lo que es dato o clave (campos de `ComicInfo.xml`, variables del patrón de nombres, nombres de fuentes y tiendas, valores que se escriben en los archivos)
+
+### Changed
+- El estado de cada serie y el filtro de la lista de series ya no dependen del texto traducido: usan claves estables (`SeriesReport.status_key`), y el aviso de metadatos se pinta como advertencia por una marca, no buscando palabras en el texto
+
 ## [0.43.1] - 2026-10-04
 
 ### Changed

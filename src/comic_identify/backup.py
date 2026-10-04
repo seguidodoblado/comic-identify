@@ -19,11 +19,12 @@ from datetime import datetime
 from pathlib import Path
 
 from . import settings
+from .i18n import _
 
 MANIFEST = "manifest.json"
 PREFIX = "comic-identify-"
 AUTO, MANUAL, RESTORE = "auto", "manual", "restaurar"
-KIND_LABELS = {AUTO: "automática", MANUAL: "manual", RESTORE: "antes de restaurar"}
+KIND_LABELS = {AUTO: _("automática"), MANUAL: _("manual"), RESTORE: _("antes de restaurar")}
 DEFAULT_KEEP = 10
 _STAMP = "%Y-%m-%d_%H-%M-%S"
 
@@ -72,9 +73,9 @@ def _integrity(path: Path) -> None:
         with closing(sqlite3.connect(path)) as db:
             answer = db.execute("PRAGMA integrity_check").fetchone()
     except sqlite3.Error as error:
-        raise BackupError(f"«{path.name}» no es una base de datos válida: {error}") from error
+        raise BackupError(_("«{name}» no es una base de datos válida: {error}").format(name=path.name, error=error)) from error
     if not answer or answer[0] != "ok":
-        raise BackupError(f"La base de datos «{path.name}» está dañada.")
+        raise BackupError(_("La base de datos «{name}» está dañada.").format(name=path.name))
 
 
 def _snapshot(source: Path, target: Path, name: str) -> None:
@@ -84,7 +85,7 @@ def _snapshot(source: Path, target: Path, name: str) -> None:
                     closing(sqlite3.connect(target)) as copy:
                 origin.backup(copy)
         except sqlite3.Error as error:
-            raise BackupError(f"No se pudo copiar «{name}»: {error}") from error
+            raise BackupError(_("No se pudo copiar «{name}»: {error}").format(name=name, error=error)) from error
         _integrity(target)
     else:
         shutil.copyfile(source, target)
@@ -99,9 +100,9 @@ def read_manifest(archive: Path) -> dict:
         with zipfile.ZipFile(archive) as zipped:
             manifest = json.loads(zipped.read(MANIFEST))
     except (OSError, KeyError, ValueError, zipfile.BadZipFile) as error:
-        raise BackupError(f"«{archive.name}» no es una copia válida: {error}") from error
+        raise BackupError(_("«{name}» no es una copia válida: {error}").format(name=archive.name, error=error)) from error
     if not isinstance(manifest.get("files"), dict):
-        raise BackupError(f"«{archive.name}» no es una copia válida: manifiesto incompleto.")
+        raise BackupError(_("«{name}» no es una copia válida: manifiesto incompleto.").format(name=archive.name))
     return manifest
 
 
@@ -110,13 +111,13 @@ def _verify_archive(archive: Path) -> None:
     try:
         with zipfile.ZipFile(archive) as zipped:
             if (bad := zipped.testzip()) is not None:
-                raise BackupError(f"La copia está dañada ({bad}).")
+                raise BackupError(_("La copia está dañada ({bad}).").format(bad=bad))
             for name, meta in manifest["files"].items():
                 digest = hashlib.sha256(zipped.read(name)).hexdigest()
                 if digest != meta.get("sha256"):
-                    raise BackupError(f"«{name}» no coincide con su SHA-256 en la copia.")
+                    raise BackupError(_("«{name}» no coincide con su SHA-256 en la copia.").format(name=name))
     except (OSError, KeyError, zipfile.BadZipFile) as error:
-        raise BackupError(f"La copia no se puede leer: {error}") from error
+        raise BackupError(_("La copia no se puede leer: {error}").format(error=error)) from error
 
 
 def create(dest_dir: Path, kind: str, sources: Mapping[str, Path] | None = None, version: str = "") -> Path:
@@ -125,7 +126,7 @@ def create(dest_dir: Path, kind: str, sources: Mapping[str, Path] | None = None,
     sources = default_sources() if sources is None else sources
     present = {name: path for name, path in sources.items() if path.is_file()}
     if not present:
-        raise BackupError("Todavía no hay datos que copiar.")
+        raise BackupError(_("Todavía no hay datos que copiar."))
     try:
         dest_dir.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=dest_dir, prefix=".copia-") as tmp:
@@ -158,7 +159,7 @@ def create(dest_dir: Path, kind: str, sources: Mapping[str, Path] | None = None,
                     part.unlink()
                 raise
     except OSError as error:
-        raise BackupError(f"No se pudo escribir la copia en «{dest_dir}»: {error}") from error
+        raise BackupError(_("No se pudo escribir la copia en «{dest_dir}»: {error}").format(dest_dir=dest_dir, error=error)) from error
     return final
 
 
@@ -213,7 +214,7 @@ def restore(archive: Path, targets: Mapping[str, Path] | None = None, version: s
     manifest = read_manifest(archive)
     names = [name for name in manifest["files"] if name in targets]
     if not names:
-        raise BackupError("La copia no contiene ningún dato que restaurar.")
+        raise BackupError(_("La copia no contiene ningún dato que restaurar."))
     staged: dict[str, Path] = {}
     try:
         with zipfile.ZipFile(archive) as zipped:
@@ -224,7 +225,7 @@ def restore(archive: Path, targets: Mapping[str, Path] | None = None, version: s
                 with os.fdopen(descriptor, "wb") as out, zipped.open(name) as source:
                     shutil.copyfileobj(source, out)
                 if _sha256(staged[name]) != manifest["files"][name].get("sha256"):
-                    raise BackupError(f"«{name}» está dañado en la copia (no coincide su SHA-256).")
+                    raise BackupError(_("«{name}» está dañado en la copia (no coincide su SHA-256).").format(name=name))
                 if _is_db(name):
                     _integrity(staged[name])
         safety = None
@@ -238,7 +239,7 @@ def restore(archive: Path, targets: Mapping[str, Path] | None = None, version: s
                         Path(str(targets[name]) + suffix).unlink()
         staged.clear()
     except (OSError, zipfile.BadZipFile, KeyError) as error:
-        raise BackupError(f"No se pudo restaurar: {error}") from error
+        raise BackupError(_("No se pudo restaurar: {error}").format(error=error)) from error
     finally:
         for temp in staged.values():
             with suppress(OSError):

@@ -23,6 +23,7 @@ from urllib.parse import urljoin, urlparse
 from . import __version__
 from .covers import thumbnail_bytes
 from .gcd import fold
+from .i18n import _
 from .umficha import (
     PARSER_VERSION,
     Ficha,
@@ -190,7 +191,7 @@ class Fetcher:
 
     def get(self, url: str) -> bytes:
         if urlparse(url).netloc != HOST:
-            raise UniversoMarvelError(f"Solo se consulta {HOST}, no «{url}».")
+            raise UniversoMarvelError(_("Solo se consulta {HOST}, no «{url}».").format(HOST=HOST, url=url))
         wait = self._last + self.min_interval - time.monotonic()
         if wait > 0:
             time.sleep(wait)
@@ -199,16 +200,16 @@ class Fetcher:
             with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
                 data = response.read(MAX_BYTES + 1)
         except (urllib.error.URLError, OSError) as error:
-            raise UniversoMarvelError(f"No se pudo descargar {url}: {error}") from error
+            raise UniversoMarvelError(_("No se pudo descargar {url}: {error}").format(url=url, error=error)) from error
         finally:
             self._last = time.monotonic()
         if len(data) > MAX_BYTES:
-            raise UniversoMarvelError(f"{url} es demasiado grande.")
+            raise UniversoMarvelError(_("{url} es demasiado grande.").format(url=url))
         return data
 
 
 def build_index(target: Path, publishers: dict[str, str] | None = None, fetch: Callable[[str], bytes] | None = None,
-                progress: Callable[[str], None] = lambda _: None) -> int:
+                progress: Callable[[str], None] = lambda _message: None) -> int:
     """Descarga las páginas de las editoriales y guarda sus series en `target`; devuelve cuántas. Todo se descarga
     antes de tocar la base y se sustituye en una sola transacción: si algo falla (o una página viene vacía), el
     índice anterior sigue igual. Las fichas ya consultadas no se tocan."""
@@ -216,10 +217,10 @@ def build_index(target: Path, publishers: dict[str, str] | None = None, fetch: C
     fetch = Fetcher().get if fetch is None else fetch
     entries: list[Entry] = []
     for number, (publisher, page) in enumerate(publishers.items(), 1):
-        progress(f"Descargando el índice de {publisher} ({number}/{len(publishers)})…")
+        progress(_("Descargando el índice de {publisher} ({number}/{len})…").format(publisher=publisher, number=number, len=len(publishers)))
         found = parse_index(fetch(urljoin(BASE, page)), publisher)
         if not found:
-            raise UniversoMarvelError(f"La página de {publisher} no trae ninguna serie: ¿ha cambiado la web?")
+            raise UniversoMarvelError(_("La página de {publisher} no trae ninguna serie: ¿ha cambiado la web?").format(publisher=publisher))
         entries += found
     target.parent.mkdir(parents=True, exist_ok=True)
     with closing(sqlite3.connect(target)) as db:
@@ -343,7 +344,7 @@ class UniversoMarvelIndex:
         found: dict[tuple[str, str, str], tuple[int, int, Entry]] = {}
         with closing(sqlite3.connect(self.path)) as db:
             for variant in variants:
-                clause = " AND ".join("folded LIKE ? ESCAPE '\\'" for _ in variant)
+                clause = " AND ".join("folded LIKE ? ESCAPE '\\'" for _term in variant)
                 rows = db.execute(f"SELECT publisher, section, title, page, folded FROM series WHERE {clause}",
                                   [_like(t) for t in variant]).fetchall()
                 for pub, section, title, page, folded in rows:
@@ -387,7 +388,7 @@ class UniversoMarvelClient:
         issues = parse_series_page(html, url)
         subpages = [] if issues else parse_series_subpages(html, url)
         if not issues and not subpages and not allow_empty:
-            raise UniversoMarvelError(f"La página de «{title}» no trae ningún número: ¿ha cambiado la web?")
+            raise UniversoMarvelError(_("La página de «{title}» no trae ningún número: ¿ha cambiado la web?").format(title=title))
         self.index.store_issues(key, issues, subpages)
         return issues, subpages
 
@@ -424,7 +425,7 @@ class UniversoMarvelClient:
             return known
         small = thumbnail_bytes(self.fetch(urljoin(BASE, image)), COVER_SIDE)
         if small is None:
-            raise UniversoMarvelError(f"«{image}» no es una imagen válida.")
+            raise UniversoMarvelError(_("«{image}» no es una imagen válida.").format(image=image))
         self.index.store_cover(image, small)
         return small
 
@@ -435,12 +436,12 @@ class UniversoMarvelClient:
         raw = self.fetch(url)
         ficha = parse_ficha(decode(raw), url)
         if not ficha.title:
-            raise UniversoMarvelError(f"«{page}» no parece una ficha: ¿ha cambiado la web?")
+            raise UniversoMarvelError(_("«{page}» no parece una ficha: ¿ha cambiado la web?").format(page=page))
         self.index.store_ficha(page, raw, ficha)
         return ficha
 
     def usa_info(self, refs: list[tuple[str, str]], spanish_page: str,
-                 progress: Callable[[str], None] = lambda _: None) -> UsaInfo:
+                 progress: Callable[[str], None] = lambda _message: None) -> UsaInfo:
         """Guion, lápiz, tinta y color de los originales USA que recoge un ejemplar español. De cada ficha USA solo
         cuentan las historias que enlazan a `spanish_page` (un número USA trae varias y el español puede recoger solo
         alguna); si ninguna lo hace se usan todas y se avisa en `approximate`. Un original que no se pueda leer no
@@ -453,7 +454,7 @@ class UniversoMarvelClient:
             unique.setdefault(page, text)
         wanted = list(unique.items())
         for number, (page, text) in enumerate(wanted, 1):
-            progress(f"Consultando la ficha USA «{text}» ({number}/{len(wanted)})…")
+            progress(_("Consultando la ficha USA «{text}» ({number}/{len})…").format(text=text, number=number, len=len(wanted)))
             try:
                 ficha = self.ficha(page)
             except UniversoMarvelError:

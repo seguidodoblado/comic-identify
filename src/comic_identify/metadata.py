@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .comicinfo import MetadataError, build_xml, parse_info, read_xml, write_xml
+from .i18n import _
 from .library import Library
 
 
@@ -103,7 +104,7 @@ def undo_last(log: Path, library: Library | None = None) -> UndoResult:
     está (no se pisan cambios posteriores) y se cuenta en `skipped`; un fallo al escribir lo deja en el registro."""
     lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
     if not lines:
-        raise LookupError("No hay metadatos que deshacer.")
+        raise LookupError(_("No hay metadatos que deshacer."))
     batch = json.loads(lines[-1])["batch"]
     start = len(lines)
     while start > 0 and json.loads(lines[start - 1])["batch"] == batch:
@@ -114,10 +115,10 @@ def undo_last(log: Path, library: Library | None = None) -> UndoResult:
         path = Path(entry["path"])
         try:
             if not path.is_file():
-                result.skipped.append((path, "el archivo ya no está en esa ruta"))
+                result.skipped.append((path, _("el archivo ya no está en esa ruta")))
                 continue
             if read_xml(path) != _decode(entry["after"]):
-                result.skipped.append((path, "se ha modificado desde entonces"))
+                result.skipped.append((path, _("se ha modificado desde entonces")))
                 continue
             write_xml(path, _decode(entry["before"]))
         except MetadataError as error:

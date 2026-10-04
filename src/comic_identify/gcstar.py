@@ -19,6 +19,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from .covers import extract_page, list_pages
+from .i18n import _
 
 COVER_SUFFIX = " - Portada"
 BACK_SUFFIX = " - Trasera"
@@ -210,7 +211,7 @@ def insert_item(text: str, item_xml: str) -> str:
     marker = "</collection>"
     index = text.rfind(marker)
     if index == -1:
-        raise GCstarError("El archivo no parece un .gcs de GCstar (no se encontró «</collection>»).")
+        raise GCstarError(_("El archivo no parece un .gcs de GCstar (no se encontró «</collection>»)."))
     return text[:index] + item_xml + text[index:]
 
 
@@ -257,7 +258,7 @@ def _read_text(gcs_path: Path) -> str:
     try:
         return gcs_path.read_text(encoding="utf-8")
     except OSError as error:
-        raise GCstarError(f"No se pudo leer «{gcs_path.name}»: {error}") from error
+        raise GCstarError(_("No se pudo leer «{name}»: {error}").format(name=gcs_path.name, error=error)) from error
 
 
 def _write_text(gcs_path: Path, text: str) -> None:
@@ -268,10 +269,10 @@ def _write_text(gcs_path: Path, text: str) -> None:
         try:
             ET.fromstring(temp.read_text(encoding="utf-8"))
         except ET.ParseError as error:
-            raise GCstarError(f"El resultado no sería un XML válido: {error}") from error
+            raise GCstarError(_("El resultado no sería un XML válido: {error}").format(error=error)) from error
         os.replace(temp, gcs_path)
     except OSError as error:
-        raise GCstarError(f"No se pudo escribir «{gcs_path.name}»: {error}") from error
+        raise GCstarError(_("No se pudo escribir «{name}»: {error}").format(name=gcs_path.name, error=error)) from error
     finally:
         with suppress(OSError):
             temp.unlink()
@@ -285,10 +286,10 @@ def transfer(comic: Path, fields: Mapping[str, str], gcstar_fields: Mapping[str,
     imágenes que se hubieran empezado a crear quedan como si no se hubiera hecho nada.
     """
     if is_running():
-        raise GCstarError("GCstar parece estar abierto: ciérralo antes de transferir, para que no sobrescriba "
-                          "esto al guardar.")
+        raise GCstarError(_("GCstar parece estar abierto: ciérralo antes de transferir, para que no sobrescriba "
+                          "esto al guardar."))
     if not gcs_path.is_file():
-        raise GCstarError(f"No existe el archivo «{gcs_path}».")
+        raise GCstarError(_("No existe el archivo «{gcs_path}».").format(gcs_path=gcs_path))
     text = _read_text(gcs_path)
     item_id = next_id(text)
     pages = list_pages(comic)
@@ -334,7 +335,7 @@ def undo_last(log: Path) -> UndoResult:
     """
     lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
     if not lines:
-        raise LookupError("No hay transferencias a GCstar que deshacer.")
+        raise LookupError(_("No hay transferencias a GCstar que deshacer."))
     entry = json.loads(lines[-1])
     gcs_path = Path(entry["gcs"])
     result = UndoResult()

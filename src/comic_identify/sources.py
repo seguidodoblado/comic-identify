@@ -6,8 +6,10 @@ es el navegador, a petición del usuario, quien carga la búsqueda.
 from typing import NamedTuple
 from urllib.parse import quote_plus
 
+from .i18n import _
+
 GOOGLE = "https://www.google.com/search?q={}"
-GENERAL, MARVEL, DC = "Generalistas", "Marvel", "DC"
+GENERAL, MARVEL, DC = _("Generalistas"), "Marvel", "DC"
 GROUPS = (GENERAL, MARVEL, DC)   # orden en el menú
 
 
@@ -37,7 +39,7 @@ NAMES = tuple(source.name for source in SOURCES)
 # Dónde comprar el ejemplar físico: enlaces de búsqueda que se abren en el navegador (sin rastrear nada y sin enlaces
 # de afiliado). Forum/Planeta y Vértice ya no publican: sus números solo se encuentran de segunda mano; Panini vende
 # su catálogo actual. Direcciones comprobadas: Wallapop y Casa del Libro redirigen desde sus rutas antiguas a estas.
-EDITORIAL, USED, STORES = "Editorial", "Segunda mano", "Tiendas"
+EDITORIAL, USED, STORES = _("Editorial"), _("Segunda mano"), _("Tiendas")
 SHOP_GROUPS = (EDITORIAL, USED, STORES)
 SHOPS = (
     Source("Panini", "https://www.panini.es/shp_esp_es/catalogsearch/result/?q={q}", None, "www.panini.es", EDITORIAL),
@@ -58,21 +60,21 @@ def search_url(name: str, title: str, number: str = "", publisher: str = "", yea
     """Dirección de búsqueda en la web `name` del título y, si se dan, número, editorial y año."""
     text = " ".join(part for part in (title.strip(), number.strip(), publisher.strip(), year.strip()) if part)
     if not text:
-        raise ValueError("Falta el título.")
+        raise ValueError(_("Falta el título."))
     for source in SOURCES:
         if source.name == name:
             if source.template:
                 return source.template.format(q=quote_plus(text))
             return GOOGLE.format(quote_plus(f"site:{source.domain} {text}"))
-    raise ValueError(f"Fuente desconocida: {name}")
+    raise ValueError(_("Fuente desconocida: {name}").format(name=name))
 
 
 def shop_url(name: str, title: str, number: str = "", publisher: str = "", year: str = "") -> str:
     """Dirección de búsqueda del título (y, si se dan, número, editorial y año) en la tienda `name`."""
     text = " ".join(part for part in (title.strip(), number.strip(), publisher.strip(), year.strip()) if part)
     if not title.strip():
-        raise ValueError("Falta el título.")
+        raise ValueError(_("Falta el título."))
     for shop in SHOPS:
         if shop.name == name:
             return shop.template.format(q=quote_plus(text))
-    raise ValueError(f"Tienda desconocida: {name}")
+    raise ValueError(_("Tienda desconocida: {name}").format(name=name))

@@ -24,7 +24,7 @@ jobs:
       - name: Herramientas de sistema que usan los tests
         run: |
           sudo apt-get update
-          sudo apt-get install -y p7zip-full zbar-tools
+          sudo apt-get install -y p7zip-full zbar-tools gettext
 
       # unrar y rar viven en multiverse: si no están, los tests que las necesitan se saltan
       - name: Herramientas RAR (opcionales)
@@ -36,6 +36,10 @@ jobs:
 
       - name: ruff
         run: ruff check .
+
+      # Las pruebas de traducción necesitan los .mo compilados
+      - name: Compilar las traducciones
+        run: sh i18n-compile.sh
 
       - name: pytest
         run: pytest -q -rs
@@ -49,7 +53,7 @@ jobs:
       - name: Instalar herramientas
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev lintian
+          sudo apt-get install -y dpkg-dev lintian gettext
 
       # build-deb.sh deja el .deb en el directorio padre; se copia a dist/ para subirlo
       - name: Construir el .deb

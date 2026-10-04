@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from .i18n import _
 from .naming import natural_key
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".gif")
@@ -110,7 +111,7 @@ def cover_to_png(comic: Path, target: Path) -> None:
     """Guarda la portada de un CBR/CBZ como PNG. Lanza ValueError si no tiene imágenes."""
     data = read_cover(comic)
     if data is None:
-        raise ValueError("no se encontró ninguna imagen en el archivo")
+        raise ValueError(_("no se encontró ninguna imagen en el archivo"))
     with Image.open(io.BytesIO(data)) as image:
         image.convert("RGB").save(target, "PNG")
 
@@ -124,10 +125,10 @@ def extract_page(comic: Path, name: str, target_stem: Path) -> Path:
     """
     data = read_page(comic, name)
     if data is None:
-        raise ValueError(f"no se pudo leer la página «{name}»")
+        raise ValueError(_("no se pudo leer la página «{name}»").format(name=name))
     target = target_stem.with_suffix(Path(name).suffix.lower() or ".jpg")
     if target.exists():
-        raise FileExistsError(f"ya existe un archivo llamado «{target.name}»")
+        raise FileExistsError(_("ya existe un archivo llamado «{name}»").format(name=target.name))
     target.write_bytes(data)
     return target
 
@@ -136,7 +137,7 @@ def extract_cover(comic: Path, target_stem: Path) -> Path:
     """Guarda la portada (primera página) del cómic; ver `extract_page`. Lanza ValueError si no tiene páginas."""
     pages = list_pages(comic)
     if not pages:
-        raise ValueError("no se encontró ninguna imagen en el archivo")
+        raise ValueError(_("no se encontró ninguna imagen en el archivo"))
     return extract_page(comic, pages[0], target_stem)
 
 

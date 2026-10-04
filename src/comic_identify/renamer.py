@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 
+from .i18n import _
 from .library import Library
 from .naming import MAX_NAME_BYTES
 
@@ -22,17 +23,17 @@ def _append(log: Path, entries: list[dict]) -> None:
 
 def check_moves(moves: list[tuple[Path, Path]]) -> None:
     """Valida un lote antes de tocar nada. Un destino puede ser el nombre actual de otro archivo del lote."""
-    sources = {src for src, _ in moves}
-    targets = [dst for _, dst in moves]
+    sources = {src for src, _dst in moves}
+    targets = [dst for _src, dst in moves]
     if len(set(targets)) != len(targets):
-        raise FileExistsError("Dos archivos acabarían con el mismo nombre.")
+        raise FileExistsError(_("Dos archivos acabarían con el mismo nombre."))
     for src, dst in moves:
         if not src.is_file():
-            raise FileNotFoundError(f"No existe el archivo: {src}")
+            raise FileNotFoundError(_("No existe el archivo: {src}").format(src=src))
         if len(dst.name.encode()) > MAX_NAME_BYTES or len(src.name.encode()) + 24 > MAX_NAME_BYTES:
-            raise ValueError("El nombre resultante es demasiado largo para el sistema de archivos.")
+            raise ValueError(_("El nombre resultante es demasiado largo para el sistema de archivos."))
         if dst.exists() and dst not in sources:
-            raise FileExistsError(f"Ya existe un archivo con ese nombre: {dst.name}")
+            raise FileExistsError(_("Ya existe un archivo con ese nombre: {name}").format(name=dst.name))
 
 
 def move_all(moves: list[tuple[Path, Path]]) -> None:
@@ -68,7 +69,7 @@ def rename_file(path: Path, stem: str, log: Path, library: Library | None = None
     """Renombra `path` a `stem` (conserva la extensión) en su misma carpeta. No sobrescribe nunca."""
     target = path.with_name(stem + path.suffix)
     if not path.is_file():
-        raise FileNotFoundError(f"No existe el archivo: {path}")
+        raise FileNotFoundError(_("No existe el archivo: {path}").format(path=path))
     if target == path:
         return path
     move_all([(path, target)])
@@ -88,9 +89,9 @@ def rename_series(folder: Path, folder_name: str | None, moves: list[tuple[Path,
     new_folder = folder.with_name(folder_name) if folder_name and folder_name != folder.name else folder
     if new_folder != folder:
         if len(new_folder.name.encode()) > MAX_NAME_BYTES:
-            raise ValueError("El nombre de la carpeta es demasiado largo para el sistema de archivos.")
+            raise ValueError(_("El nombre de la carpeta es demasiado largo para el sistema de archivos."))
         if new_folder.exists():
-            raise FileExistsError(f"Ya existe una carpeta con ese nombre: {new_folder.name}")
+            raise FileExistsError(_("Ya existe una carpeta con ese nombre: {name}").format(name=new_folder.name))
     move_all(moves)
     try:
         if new_folder != folder:
@@ -115,7 +116,7 @@ def undo_last(log: Path, library: Library | None = None) -> list[tuple[Path, Pat
     """Deshace el último renombrado (o el último lote entero). Devuelve los pares (antes, después de deshacer)."""
     lines = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
     if not lines:
-        raise LookupError("No hay renombrados que deshacer.")
+        raise LookupError(_("No hay renombrados que deshacer."))
     group = [json.loads(lines[-1])]
     batch = group[0].get("batch")
     while batch and len(group) < len(lines) and json.loads(lines[-1 - len(group)]).get("batch") == batch:
@@ -128,7 +129,7 @@ def undo_last(log: Path, library: Library | None = None) -> list[tuple[Path, Pat
 
     moves = [(here(Path(e["new"])), here(Path(e["old"]))) for e in group if e.get("kind") != "folder"]
     if folder and (not where.is_dir() or Path(folder["old"]).exists()):
-        raise FileExistsError("La carpeta ya no está o su nombre original está ocupado.")
+        raise FileExistsError(_("La carpeta ya no está o su nombre original está ocupado."))
     move_all(moves)
     if library is not None:
         for src, dst in moves:

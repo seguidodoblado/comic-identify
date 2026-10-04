@@ -15,6 +15,8 @@ from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
 
+from .i18n import _
+
 ENTRY_NAME = "ComicInfo.xml"
 MAX_XML_BYTES = 2 * 1024 * 1024          # un ComicInfo.xml real pesa unos pocos KB
 TOOL_TIMEOUT = 1800                      # segundos: reescribir un archivo de cientos de MB en un disco lento
@@ -46,7 +48,7 @@ def parse_info(xml: bytes) -> dict[str, str]:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError as error:
-        raise MetadataError(f"El ComicInfo.xml no es un XML válido: {error}") from error
+        raise MetadataError(_("El ComicInfo.xml no es un XML válido: {error}").format(error=error)) from error
     return {_local(child.tag): (child.text or "").strip() for child in root if _local(child.tag) != "Pages"}
 
 
@@ -61,18 +63,18 @@ def build_xml(existing: bytes | None, changes: Mapping[str, str | None]) -> byte
     """
     for key, value in changes.items():
         if key not in FIELD_ORDER:
-            raise MetadataError(f"Campo desconocido de ComicInfo: {key}")
+            raise MetadataError(_("Campo desconocido de ComicInfo: {key}").format(key=key))
         if key in INTEGER_FIELDS and value:
             low, high = INTEGER_FIELDS[key]
             if not str(value).isdigit() or int(value) < low or (high is not None and int(value) > high):
-                raise MetadataError(f"«{key}» debe ser un número entero válido, no «{value}».")
+                raise MetadataError(_("«{key}» debe ser un número entero válido, no «{value}».").format(key=key, value=value))
     if existing:
         try:
             root = ET.fromstring(existing)
         except ET.ParseError as error:
-            raise MetadataError(f"El ComicInfo.xml existente no es un XML válido: {error}") from error
+            raise MetadataError(_("El ComicInfo.xml existente no es un XML válido: {error}").format(error=error)) from error
         if _local(root.tag) != "ComicInfo":
-            raise MetadataError("El XML existente no es un ComicInfo.")
+            raise MetadataError(_("El XML existente no es un ComicInfo."))
     else:
         root = ET.Element("ComicInfo")
     for child in list(root):
@@ -123,20 +125,20 @@ def _run(command: list[str], cwd: Path | None = None) -> subprocess.CompletedPro
     try:
         return subprocess.run(command, capture_output=True, cwd=cwd, timeout=TOOL_TIMEOUT, check=False)
     except FileNotFoundError as error:
-        raise MetadataError(f"Falta el programa «{command[0]}».") from error
+        raise MetadataError(_("Falta el programa «{command}».").format(command=command[0])) from error
     except (OSError, subprocess.TimeoutExpired) as error:
-        raise MetadataError(f"Falló «{command[0]}»: {error}") from error
+        raise MetadataError(_("Falló «{command}»: {error}").format(command=command[0], error=error)) from error
 
 
 def _tool_error(done: subprocess.CompletedProcess, what: str) -> MetadataError:
     detail = (done.stderr or done.stdout).decode(errors="replace").strip().splitlines()
-    return MetadataError(f"{what}: {detail[-1] if detail else 'código ' + str(done.returncode)}")
+    return MetadataError(f"{what}: {detail[-1] if detail else _('código {code}').format(code=done.returncode)}")
 
 
 def _names_7z(path: Path) -> list[str]:
     done = _run(["7z", "l", "-slt", "-ba", "--", str(path)])
     if done.returncode != 0:
-        raise _tool_error(done, "No se pudo listar el archivo")
+        raise _tool_error(done, _("No se pudo listar el archivo"))
     return [line[7:] for line in done.stdout.decode(errors="replace").splitlines() if line.startswith("Path = ")]
 
 
@@ -148,7 +150,7 @@ def _names_rar(path: Path) -> list[str]:
                 return done.stdout.decode(errors="replace").splitlines()
     if shutil.which("7z"):
         return _names_7z(path)
-    raise MetadataError("Para leer RAR hace falta «unrar» o «7z».")
+    raise MetadataError(_("Para leer RAR hace falta «unrar» o «7z»."))
 
 
 def _extract_rar(path: Path, name: str) -> bytes:
@@ -159,7 +161,7 @@ def _extract_rar(path: Path, name: str) -> bytes:
                 return done.stdout
     done = _run(["7z", "x", "-so", "--", str(path), name])
     if done.returncode != 0:
-        raise _tool_error(done, "No se pudo leer el ComicInfo.xml")
+        raise _tool_error(done, _("No se pudo leer el ComicInfo.xml"))
     return done.stdout
 
 
@@ -174,7 +176,7 @@ def read_xml(path: Path) -> bytes | None:
     """El ComicInfo.xml del archivo tal cual está, o None si no lo tiene."""
     kind = archive_kind(path)
     if kind is None:
-        raise MetadataError("No es un archivo ZIP, RAR ni 7-Zip (¿está dañado?).")
+        raise MetadataError(_("No es un archivo ZIP, RAR ni 7-Zip (¿está dañado?)."))
     try:
         if kind == "zip":
             with zipfile.ZipFile(path) as archive:
@@ -182,7 +184,7 @@ def read_xml(path: Path) -> bytes | None:
                 if name is None:
                     return None
                 if archive.getinfo(name).file_size > MAX_XML_BYTES:
-                    raise MetadataError("El ComicInfo.xml es sospechosamente grande.")
+                    raise MetadataError(_("El ComicInfo.xml es sospechosamente grande."))
                 return archive.read(name)
         names = _names_7z(path) if kind == "7z" else _names_rar(path)
         name = _find(names)
@@ -190,16 +192,16 @@ def read_xml(path: Path) -> bytes | None:
             return None
         data = _extract_rar(path, name) if kind == "rar" else _extract_7z(path, name)
     except (OSError, zipfile.BadZipFile) as error:
-        raise MetadataError(f"No se pudo leer el archivo: {error}") from error
+        raise MetadataError(_("No se pudo leer el archivo: {error}").format(error=error)) from error
     if len(data) > MAX_XML_BYTES:
-        raise MetadataError("El ComicInfo.xml es sospechosamente grande.")
+        raise MetadataError(_("El ComicInfo.xml es sospechosamente grande."))
     return data
 
 
 def _extract_7z(path: Path, name: str) -> bytes:
     done = _run(["7z", "x", "-so", "--", str(path), name])
     if done.returncode != 0:
-        raise _tool_error(done, "No se pudo leer el ComicInfo.xml")
+        raise _tool_error(done, _("No se pudo leer el ComicInfo.xml"))
     return done.stdout
 
 
@@ -216,14 +218,14 @@ def write_xml(path: Path, xml: bytes | None) -> None:
     no cambia. Trabaja sobre una copia junto al original y solo la sustituye si la verificación pasa."""
     kind = archive_kind(path)
     if kind is None:
-        raise MetadataError("No es un archivo ZIP, RAR ni 7-Zip (¿está dañado?).")
+        raise MetadataError(_("No es un archivo ZIP, RAR ni 7-Zip (¿está dañado?)."))
     if xml is not None:
         if len(xml) > MAX_XML_BYTES:
-            raise MetadataError("El ComicInfo.xml es demasiado grande.")
+            raise MetadataError(_("El ComicInfo.xml es demasiado grande."))
         parse_info(xml)   # que sea XML bien formado
     size = path.stat().st_size
     if shutil.disk_usage(path.parent).free < size + SPACE_MARGIN:
-        raise MetadataError("No hay espacio libre suficiente en el disco para reescribir el archivo.")
+        raise MetadataError(_("No hay espacio libre suficiente en el disco para reescribir el archivo."))
     temp = path.with_name(f".{uuid.uuid4().hex[:10]}.tmp.{kind}")
     try:
         {"zip": _write_zip, "rar": _write_rar, "7z": _write_7z}[kind](path, temp, xml)
@@ -231,7 +233,7 @@ def write_xml(path: Path, xml: bytes | None) -> None:
         shutil.copymode(path, temp)
         os.replace(temp, path)
     except OSError as error:
-        raise MetadataError(f"No se pudo escribir el archivo: {error}") from error
+        raise MetadataError(_("No se pudo escribir el archivo: {error}").format(error=error)) from error
     finally:
         with suppress(OSError):
             temp.unlink()
@@ -243,7 +245,7 @@ def _write_zip(source_path: Path, target_path: Path, xml: bytes | None) -> None:
             target.comment = source.comment
             for info in source.infolist():
                 if info.flag_bits & 0x1:
-                    raise MetadataError("El archivo está cifrado.")
+                    raise MetadataError(_("El archivo está cifrado."))
                 if info.filename.replace("\\", "/").lower() == ENTRY_NAME.lower():
                     continue
                 with source.open(info) as reader, target.open(copy.copy(info), "w") as writer:
@@ -251,7 +253,7 @@ def _write_zip(source_path: Path, target_path: Path, xml: bytes | None) -> None:
             if xml is not None:
                 target.writestr(ENTRY_NAME, xml, compress_type=zipfile.ZIP_DEFLATED)
     except zipfile.BadZipFile as error:
-        raise MetadataError(f"ZIP dañado: {error}") from error
+        raise MetadataError(_("ZIP dañado: {error}").format(error=error)) from error
 
 
 def _with_workfile(xml: bytes, action) -> subprocess.CompletedProcess:
@@ -266,7 +268,7 @@ def _existing_name(kind: str, path: Path) -> str | None:
 
 def _write_rar(source_path: Path, target_path: Path, xml: bytes | None) -> None:
     if not shutil.which("rar"):
-        raise MetadataError("Para escribir en un RAR hace falta el programa «rar» (paquete no libre «rar»).")
+        raise MetadataError(_("Para escribir en un RAR hace falta el programa «rar» (paquete no libre «rar»)."))
     shutil.copy2(source_path, target_path)
     existing = _existing_name("rar", target_path)
     if xml is None:
@@ -278,12 +280,12 @@ def _write_rar(source_path: Path, target_path: Path, xml: bytes | None) -> None:
         done = _with_workfile(xml, lambda cwd: _run(["rar", "a", "-ep", "-idq", "-y", "--", str(target_path),
                                                     ENTRY_NAME], cwd))
     if done.returncode != 0:
-        raise _tool_error(done, "«rar» no pudo modificar el archivo")
+        raise _tool_error(done, _("«rar» no pudo modificar el archivo"))
 
 
 def _write_7z(source_path: Path, target_path: Path, xml: bytes | None) -> None:
     if not shutil.which("7z"):
-        raise MetadataError("Para escribir en un 7-Zip hace falta el programa «7z».")
+        raise MetadataError(_("Para escribir en un 7-Zip hace falta el programa «7z»."))
     shutil.copy2(source_path, target_path)
     existing = _existing_name("7z", target_path)
     if xml is None:
@@ -293,7 +295,7 @@ def _write_7z(source_path: Path, target_path: Path, xml: bytes | None) -> None:
     else:
         done = _with_workfile(xml, lambda cwd: _run(["7z", "a", "-y", "-bd", "--", str(target_path), ENTRY_NAME], cwd))
     if done.returncode != 0:
-        raise _tool_error(done, "«7z» no pudo modificar el archivo")
+        raise _tool_error(done, _("«7z» no pudo modificar el archivo"))
 
 
 def _others(names: list[str]) -> list[str]:
@@ -306,11 +308,11 @@ def _verify(kind: str, original: Path, result: Path, xml: bytes | None) -> None:
         if kind == "zip":
             with zipfile.ZipFile(original) as before, zipfile.ZipFile(result) as after:
                 if after.testzip() is not None:
-                    raise MetadataError("La copia reescrita no pasa la prueba de integridad.")
+                    raise MetadataError(_("La copia reescrita no pasa la prueba de integridad."))
                 crc = {i.filename: i.CRC for i in before.infolist() if i.filename.lower() != ENTRY_NAME.lower()}
                 crc_after = {i.filename: i.CRC for i in after.infolist() if i.filename.lower() != ENTRY_NAME.lower()}
                 if crc != crc_after:
-                    raise MetadataError("La copia reescrita no contiene exactamente los mismos archivos.")
+                    raise MetadataError(_("La copia reescrita no contiene exactamente los mismos archivos."))
             names_before, names_after = None, None
         else:
             listing = _names_rar if kind == "rar" else _names_7z
@@ -318,11 +320,11 @@ def _verify(kind: str, original: Path, result: Path, xml: bytes | None) -> None:
             tester = ["rar", "t", "-idq", "--", str(result)] if kind == "rar" else ["7z", "t", "-bd", "--", str(result)]
             done = _run(tester)
             if done.returncode != 0:
-                raise _tool_error(done, "La copia reescrita no pasa la prueba de integridad")
+                raise _tool_error(done, _("La copia reescrita no pasa la prueba de integridad"))
         if names_before != names_after:
-            raise MetadataError("La copia reescrita no contiene exactamente los mismos archivos.")
+            raise MetadataError(_("La copia reescrita no contiene exactamente los mismos archivos."))
     except (OSError, zipfile.BadZipFile) as error:
-        raise MetadataError(f"La copia reescrita no se puede abrir: {error}") from error
+        raise MetadataError(_("La copia reescrita no se puede abrir: {error}").format(error=error)) from error
     if read_xml(result) != xml:
-        raise MetadataError("El ComicInfo.xml de la copia no es el esperado.")
+        raise MetadataError(_("El ComicInfo.xml de la copia no es el esperado."))
 

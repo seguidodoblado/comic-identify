@@ -6,6 +6,8 @@ edición coinciden se omite el paréntesis. El patrón es configurable con las v
 import re
 from dataclasses import dataclass
 
+from .i18n import _
+
 VARIABLES = ("nombre", "volumen", "bandera", "contenido", "edicion", "editorial", "sello", "numero")
 DEFAULT_PATTERN = "{nombre} {volumen} {bandera} [{contenido}] ({edicion}) - {sello} - {editorial}"
 FLAGS = {"es": "🇪🇸", "us": "🇺🇸"}   # los demás países se dejan vacíos: los elige el usuario
@@ -29,10 +31,12 @@ def check_pattern(pattern: str) -> None:
     """Lanza ValueError si el patrón usa variables desconocidas o llaves sueltas."""
     unknown = sorted(set(re.findall(r"\{(\w+)\}", pattern)) - set(VARIABLES))
     if unknown:
-        raise ValueError(f"Variable desconocida: {', '.join('{' + u + '}' for u in unknown)}. "
-                         f"Disponibles: {', '.join('{' + v + '}' for v in VARIABLES)}.")
+        raise ValueError(_("Variable desconocida: {desconocidas}. Disponibles: {disponibles}.").format(
+            desconocidas=", ".join("{" + u + "}" for u in unknown),
+            disponibles=", ".join("{" + v + "}" for v in VARIABLES),
+        ))
     if re.search(r"[{}]", re.sub(r"\{\w+\}", "", pattern)):
-        raise ValueError("Hay una llave { o } sin cerrar en el patrón.")
+        raise ValueError(_("Hay una llave {{ o }} sin cerrar en el patrón.").format())
 
 
 def _years(text: str) -> str:

@@ -48,3 +48,6 @@ __pycache__/
 # Paquete .deb
 .deb-stage/
 *.deb
+
+# Traducciones compiladas (se generan con i18n-compile.sh; el .po/.pot sí se versiona)
+src/comic_identify/i18n/*/LC_MESSAGES/*.mo

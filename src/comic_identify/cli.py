@@ -4,32 +4,33 @@ from pathlib import Path
 
 from . import __version__
 from .gcd import GcdIndex
+from .i18n import _
 from .identify import search_gcd
 from .settings import GCD_DB
 
 
 def buscar(args: list[str]) -> int:
     if not args:
-        print('Uso: comic-identify buscar "título" [número]', file=sys.stderr)
+        print(_('Uso: comic-identify buscar "título" [número]'), file=sys.stderr)
         return 2
     index = GcdIndex(GCD_DB)
     if not index.is_ready():
-        print("No hay índice de GCD: impórtalo desde Ajustes (Importar volcado de GCD).", file=sys.stderr)
+        print(_("No hay índice de GCD: impórtalo desde Ajustes (Importar volcado de GCD)."), file=sys.stderr)
         return 1
     found = search_gcd(index, args[0], args[1] if len(args) > 1 else "")
     for candidate in found:
         print(f"{candidate.title} | {candidate.subtitle} | {candidate.url}")
     if not found:
-        print("Sin resultados.")
+        print(_("Sin resultados."))
     return 0
 
 
-USAGE = """Uso:
+USAGE = _("""Uso:
   comic-identify                              abre la aplicación
   comic-identify portada.jpg                  abre la aplicación con esa portada (imagen, CBR o CBZ)
   comic-identify buscar "título" [número]     busca en el índice local de GCD, sin abrir la aplicación
   comic-identify --version                    muestra la versión
-  comic-identify --help                       muestra esta ayuda"""
+  comic-identify --help                       muestra esta ayuda""")
 
 
 def dispatch(args: list[str]) -> Path | None:
@@ -50,5 +51,5 @@ def dispatch(args: list[str]) -> Path | None:
         raise SystemExit(buscar(args[1:]))
     if len(args) == 1 and Path(args[0]).is_file():
         return Path(args[0])
-    print(f"Orden no reconocida: {' '.join(args)}\n\n{USAGE}", file=sys.stderr)
+    print(_("Orden no reconocida: {args}\n\n{USAGE}").format(args=' '.join(args), USAGE=USAGE), file=sys.stderr)
     raise SystemExit(2)

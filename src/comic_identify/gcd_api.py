@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from . import __version__
 from .gcd import GENRES, GcdHit, IssueDetails, _names, _split, _years
+from .i18n import _
 
 API = "https://www.comics.org/api/"
 HOST = urlparse(API).hostname
@@ -53,7 +54,7 @@ class Fetcher:
 
     def get(self, url: str) -> dict:
         if urlparse(url).hostname != HOST:
-            raise GcdApiError(f"Solo se consulta {HOST}, no «{url}».")
+            raise GcdApiError(_("Solo se consulta {HOST}, no «{url}».").format(HOST=HOST, url=url))
         wait = self._last + self.min_interval - time.monotonic()
         if wait > 0:
             time.sleep(wait)
@@ -62,15 +63,15 @@ class Fetcher:
             with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
                 data = response.read(MAX_BYTES + 1)
         except (urllib.error.URLError, OSError) as error:
-            raise GcdApiError(f"No se pudo consultar {url}: {error}") from error
+            raise GcdApiError(_("No se pudo consultar {url}: {error}").format(url=url, error=error)) from error
         finally:
             self._last = time.monotonic()
         if len(data) > MAX_BYTES:
-            raise GcdApiError(f"{url} es demasiado grande.")
+            raise GcdApiError(_("{url} es demasiado grande.").format(url=url))
         try:
             return json.loads(data)
         except json.JSONDecodeError as error:
-            raise GcdApiError(f"{url} no devolvió JSON válido.") from error
+            raise GcdApiError(_("{url} no devolvió JSON válido.").format(url=url)) from error
 
 
 def _credit_names(text: str, role: str) -> list[tuple[str, str]]:
@@ -142,7 +143,7 @@ class GcdApiClient:
     def issue(self, issue_id: int) -> tuple[GcdHit, IssueDetails]:
         issue = self.fetch(f"{API}issue/{issue_id}/?format=json")
         if "series" not in issue:
-            raise GcdApiError(f"GCD no tiene el número {issue_id} (¿lo han borrado?).")
+            raise GcdApiError(_("GCD no tiene el número {issue_id} (¿lo han borrado?).").format(issue_id=issue_id))
         series = self.fetch(issue["series"])
         publisher_name = ""
         if series.get("publisher"):

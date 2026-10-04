@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from .i18n import _
+
 ISSUE_URL = "https://www.comics.org/issue/{}/"
 SERIES_URL = "https://www.comics.org/series/{}/covers/"   # galería de portadas de la serie
 HOST = urlparse(ISSUE_URL).hostname   # "www.comics.org"
@@ -100,7 +102,7 @@ def _years(began, ended) -> str:
     return f"{began or '?'}–{ended or ''}".rstrip("–") if began or ended else ""
 
 
-def build_index(source: Path, target: Path, progress: Callable[[str], None] = lambda _: None,
+def build_index(source: Path, target: Path, progress: Callable[[str], None] = lambda _message: None,
                 batch: int = 20000) -> tuple[int, int]:
     """Crea `target` a partir del volcado SQLite de GCD. Devuelve (series, números)."""
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -111,11 +113,11 @@ def build_index(source: Path, target: Path, progress: Callable[[str], None] = la
         with closing(origin), closing(sqlite3.connect(temp)) as out:
             tables = {r[0] for r in origin.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             if missing := [t for t in _REQUIRED if t not in tables]:
-                raise ValueError(f"No parece un volcado SQLite de GCD (faltan: {', '.join(missing)}).")
+                raise ValueError(_("No parece un volcado SQLite de GCD (faltan: {missing}).").format(missing=', '.join(missing)))
             spain = origin.execute("SELECT id FROM stddata_country WHERE code = 'es'").fetchone()
             spanish = origin.execute("SELECT id FROM stddata_language WHERE code = 'es'").fetchone()
             if not spain or not spanish:
-                raise ValueError("El volcado no contiene España o el idioma español.")
+                raise ValueError(_("El volcado no contiene España o el idioma español."))
             wanted = "s.deleted = 0 AND (s.country_id = ? OR s.language_id = ?)"
             params = (spain[0], spanish[0])
             out.executescript(_SCHEMA)
@@ -123,7 +125,7 @@ def build_index(source: Path, target: Path, progress: Callable[[str], None] = la
             extra_columns = ", ".join(f"i.{column}" if column in issue_columns else "NULL"
                                       for column in ("price", "on_sale_date"))
 
-            progress("Importando series…")
+            progress(_("Importando series…"))
             series = origin.execute(
                 "SELECT s.id, s.name, p.name, c.code, s.year_began, s.year_ended, s.issue_count "
                 "FROM gcd_series s JOIN gcd_publisher p ON p.id = s.publisher_id "
@@ -131,7 +133,7 @@ def build_index(source: Path, target: Path, progress: Callable[[str], None] = la
             out.executemany("INSERT INTO series VALUES (?, ?, ?, ?, ?, ?, ?)", series)
             out.executemany("INSERT INTO series_fts(rowid, name) VALUES (?, ?)", [(r[0], r[1]) for r in series])
 
-            progress("Importando sellos…")
+            progress(_("Importando sellos…"))
             brands = dict(origin.execute(
                 "SELECT e.issue_id, GROUP_CONCAT(DISTINCT b.name) FROM gcd_issue_brand_emblem e "
                 "JOIN gcd_brand b ON b.id = e.brand_id AND b.deleted = 0 JOIN gcd_issue i ON i.id = e.issue_id "
@@ -149,10 +151,10 @@ def build_index(source: Path, target: Path, progress: Callable[[str], None] = la
                      key_date or "", variant, brands.get(i, ""), price or "", on_sale or "")
                     for i, sid, number, title, barcode, isbn, key_date, variant, price, on_sale in rows])
                 total += len(rows)
-                progress(f"Importando números… {total}")
+                progress(_("Importando números… {total}").format(total=total))
             if all(table in tables for table in _STORY_TABLES):
                 _import_stories(origin, out, wanted, params, progress)
-            progress("Creando índices…")
+            progress(_("Creando índices…"))
             out.executescript(_INDEXES)
             out.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
             out.commit()
@@ -167,7 +169,7 @@ def _import_stories(origin, out, wanted: str, params: tuple, progress: Callable[
     """Historias (género, personajes, sinopsis) y créditos de los números importados. Los créditos salen del modelo nuevo
     de «creadores» de GCD (el que muestra su web); una historia sin créditos propios hereda los de la historia original
     de la que es reimpresión (`inherited` = 1), como cuando una edición española reúne material americano."""
-    progress("Importando historias…")
+    progress(_("Importando historias…"))
     origin.execute("ATTACH ':memory:' AS m")
     origin.execute("CREATE TABLE m.st (id INTEGER PRIMARY KEY)")
     origin.execute("INSERT INTO m.st SELECT st.id FROM gcd_story st JOIN gcd_issue i ON i.id = st.issue_id "
@@ -178,7 +180,7 @@ def _import_stories(origin, out, wanted: str, params: tuple, progress: Callable[
             "SELECT st.id, st.issue_id, st.sequence_number, st.type_id, st.title, st.genre, st.characters, "
             "st.synopsis FROM gcd_story st WHERE st.id IN (SELECT id FROM m.st)")))
 
-    progress("Importando créditos…")
+    progress(_("Importando créditos…"))
     roles = {type_id: credit_roles(name) for type_id, name in origin.execute("SELECT id, name FROM gcd_credit_type")}
     query = ("SELECT sc.story_id, sc.credit_type_id, c.gcd_official_name, sc.credit_name FROM gcd_story_credit sc "
              "JOIN gcd_creator_name_detail d ON d.id = sc.creator_id JOIN gcd_creator c ON c.id = d.creator_id "
@@ -393,26 +395,26 @@ class GcdIndex:
             stories = db.execute("SELECT id, sequence, type_id, title, genre, characters, synopsis FROM stories "
                                  "WHERE issue_id = ? ORDER BY sequence, id", (issue_id,)).fetchall()
             credits = {sid: db.execute("SELECT role, name, inherited FROM credits WHERE story_id = ?", (sid,)).fetchall()
-                       for sid, *_ in stories}
+                       for sid, *_rest in stories}
         details = IssueDetails(price=price, on_sale=on_sale, key_date=key_date, barcode=barcode, isbn=isbn)
-        rows = [(story, [(role, name) for role, name, _ in credits[story[0]]]) for story in stories]
+        rows = [(story, [(role, name) for role, name, _inherited in credits[story[0]]]) for story in stories]
         interior = [(story, pairs) for story, pairs in rows if story[2] not in NON_CONTENT_TYPES]
         cover = [pairs for story, pairs in rows if story[2] == COVER_TYPE]
-        every = [pair for _, pairs in interior for pair in pairs]
+        every = [pair for _story, pairs in interior for pair in pairs]
         fields = {"Writer": _names(every, "script"), "Penciller": _names(every, "pencils"),
                   "Inker": _names(every, "inks"), "Colorist": _names(every, "colors"),
                   "Letterer": _names(every, "letters"), "Editor": _names(every, "editing"),
                   "Translator": _names(every, "translator"),
                   "CoverArtist": _names([pair for pairs in cover for pair in pairs], "pencils", "inks")}
         details.credits = {field_name: ", ".join(names) for field_name, names in fields.items() if names}
-        details.inherited = any(inherited for sid, *_ in stories for _, _, inherited in credits[sid])
+        details.inherited = any(inherited for sid, *_rest in stories for _role, _name, inherited in credits[sid])
         genres, characters = [], []
-        for story, _ in interior:
+        for story, _pairs in interior:
             genres += _split(story[4])
             characters += _split(story[5])
         details.genre = ", ".join(dict.fromkeys(GENRES.get(genre.lower(), genre) for genre in genres))
         details.characters = ", ".join(dict.fromkeys(characters))
-        texts = [(story[3], story[6]) for story, _ in interior if story[6].strip()]
+        texts = [(story[3], story[6]) for story, _pairs in interior if story[6].strip()]
         details.summary = texts[0][1] if len(texts) == 1 else " ".join(f"«{title or 'Historia'}»: {text}" for title, text in texts)
         with_credits = [(story, pairs) for story, pairs in interior if pairs]
         if len(with_credits) > 1:   # varias historias: quién hizo qué en cada una

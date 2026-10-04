@@ -7,6 +7,8 @@ import shlex
 import shutil
 from pathlib import Path
 
+from .i18n import _
+
 DEFAULT_COMMAND = "claude {prompt}"
 PROMPT = ("Identifica el cómic de la portada @{image} y dame título, número, editorial, año, edición "
           "(país e idioma) y autores si los conoces. Puedes buscar en la web y consultar mi índice local de "
@@ -28,7 +30,7 @@ def build_argv(template: str, prompt: str) -> list[str]:
     """Trocea la plantilla del comando y sustituye `{prompt}`; lanza ValueError si está vacía o mal formada."""
     tokens = shlex.split(template)
     if not tokens:
-        raise ValueError("El comando del asistente está vacío.")
+        raise ValueError(_("El comando del asistente está vacío."))
     return [prompt if token == "{prompt}" else token for token in tokens]
 
 

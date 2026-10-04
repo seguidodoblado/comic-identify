@@ -14,6 +14,7 @@ from PIL import Image
 from .comicinfo import MetadataError, category_of, read_info
 from .covers import COMIC_EXTENSIONS, read_cover
 from .hashing import HASH_BYTES, dhash_bytes, distances
+from .i18n import _
 
 Progress = Callable[[int, int], None]
 MAX_FAILED_LISTED = 20
@@ -131,11 +132,11 @@ class Library:
                 try:
                     data = read_cover(path)
                     if not data:
-                        return entry, None, "sin imágenes o archivo dañado", meta
+                        return entry, None, _("sin imágenes o archivo dañado"), meta
                     digest = dhash_bytes(data)
-                    return entry, digest, "" if digest else "imagen no válida", meta
+                    return entry, digest, "" if digest else _("imagen no válida"), meta
                 except Image.DecompressionBombError:   # escaneo enorme que Pillow rechaza por seguridad
-                    return entry, None, "imagen enorme", meta
+                    return entry, None, _("imagen enorme"), meta
                 except Exception as error:  # noqa: BLE001
                     return entry, None, type(error).__name__, meta
 

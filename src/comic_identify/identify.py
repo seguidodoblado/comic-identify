@@ -11,6 +11,7 @@ from .comicvine import ComicVineClient, ComicVineError
 from .covers import read_cover, thumbnail_bytes
 from .gcd import GcdHit, GcdIndex, fold
 from .hashing import dhash_bytes, dhash_file, similarity
+from .i18n import _
 from .library import Library
 from .tbficha import TbFicha
 from .tbficha import edition_notes as tb_edition_notes
@@ -101,7 +102,7 @@ def _issue_candidate(issue: dict) -> Candidate:
 
 def _gcd_candidate(hit: GcdHit, exact: bool = False) -> Candidate:
     title = f"{hit.series} #{hit.number}" if hit.number else hit.series
-    brand = f"Sello: {hit.brand}" if hit.brand else ""
+    brand = _("Sello: {brand}").format(brand=hit.brand) if hit.brand else ""
     date = re.sub(r"(-00)+$", "", hit.date)   # GCD guarda "1969-00-00" cuando solo se conoce el año
     detail = [p for p in (hit.publisher, brand, hit.years if not hit.number else "", hit.title, date) if p]
     return Candidate(title, "GCD", subtitle=" · ".join(detail), url=hit.url, exact=exact, series=hit.series,
@@ -164,7 +165,7 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
     publisher = entry.publisher or PUBLISHER_BY_SITE.get(ficha.publisher, ficha.publisher)
     editorial, brand = EDITION_BY_PUBLISHER.get(publisher, (publisher, ""))
     amount, currency = ficha.price
-    details = [ficha.date_text, f"{ficha.pages} págs." if ficha.pages else "", f"{amount} {currency}" if amount else "",
+    details = [ficha.date_text, _("{pages} págs.").format(pages=ficha.pages) if ficha.pages else "", f"{amount} {currency}" if amount else "",
                ficha.format, ficha.comic_title]
     extra = {"Volume": volume, "Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Web": BASE + issue.page,
              "Translator": ficha.credit("Traducción"), "Letterer": ficha.credit("Rotulación"),
@@ -183,7 +184,7 @@ def marvel_issue_candidate(entry: Entry, issue: SeriesIssue, ficha: Ficha) -> Ca
 def _tebeosfera_candidate(entry: tb.Entry) -> Candidate:
     """Una colección del catálogo (aún sin número): al elegirla con un número escrito se consulta su ficha."""
     name = entry.title.split(" (")[0]
-    where = " · ".join(part for part in (entry.publisher, entry.year, "Número único" if entry.single else "") if part)
+    where = " · ".join(part for part in (entry.publisher, entry.year, _("Número único") if entry.single else "") if part)
     return Candidate(entry.title, "Tebeosfera", subtitle=where, url=entry.url, series=name, publisher=entry.publisher,
                      country="es", extra={"level": "series", "slug": entry.slug, "page": entry.page,
                                           "single": "1" if entry.single else "", "year": entry.year,
@@ -214,7 +215,7 @@ def tebeosfera_issue_candidate(entry: tb.Entry, issue: tb.Issue, ficha: TbFicha)
     créditos, géneros, ISBN…) y los campos de ComicInfo que de ahí salen."""
     name = ficha.series or entry.title.split(" (")[0]
     number = ficha.number or issue.label
-    details = [ficha.date_label, f"{ficha.pages} págs." if ficha.pages else "", ficha.price_label, ficha.format,
+    details = [ficha.date_label, _("{pages} págs.").format(pages=ficha.pages) if ficha.pages else "", ficha.price_label, ficha.format,
                ficha.issue_title]
     credits = ficha.credits
     extra = {"Year": str(ficha.year or ""), "Month": str(ficha.month or ""), "Day": str(ficha.day or ""),
@@ -257,7 +258,7 @@ def search_marvel(index: UniversoMarvelIndex, text: str, publisher: str = "") ->
 
 
 def identify(image: Path, library: Library | None, client: ComicVineClient | None,
-             query: str = "", issue_number: str = "", progress: Progress = lambda _: None,
+             query: str = "", issue_number: str = "", progress: Progress = lambda _message: None,
              gcd: GcdIndex | None = None, publisher: str = "", year: str = "",
              marvel: UniversoMarvelIndex | None = None, tebeosfera: tb.TebeosferaIndex | None = None) -> Outcome:
     """Identifica una portada. El título lo escribe el usuario: el OCR no lee los logotipos de cómic."""
@@ -265,7 +266,7 @@ def identify(image: Path, library: Library | None, client: ComicVineClient | Non
     variants = dhash_file(image)
 
     if library is not None:
-        progress("Buscando en tu colección…")
+        progress(_("Buscando en tu colección…"))
         for path, score in library.find(variants, limit=3):
             if score >= MATCH_THRESHOLD - 0.1:
                 data = read_cover(path)
@@ -273,23 +274,23 @@ def identify(image: Path, library: Library | None, client: ComicVineClient | Non
                     Candidate(path.stem, "Mi colección", score, str(path.parent), path=path,
                               cover=thumbnail_bytes(data) if data else None))
 
-    progress("Leyendo código de barras…")
+    progress(_("Leyendo código de barras…"))
     barcode = read_barcode(image)
     if barcode:
         outcome.barcode = barcode.code + (f" +{barcode.addon}" if barcode.addon else "")
     outcome.issue_number = issue_number or (barcode.issue_number if barcode else "") or ""
 
     if gcd is not None:
-        progress("Consultando Grand Comics Database…")
+        progress(_("Consultando Grand Comics Database…"))
         _add_gcd(gcd, query, barcode, outcome, publisher, year)
     if marvel is not None and query:
         outcome.candidates += search_marvel(marvel, query, publisher)
     if tebeosfera is not None and query:
         outcome.candidates += search_tebeosfera(tebeosfera, query, publisher)
     if client is None and gcd is None and marvel is None and tebeosfera is None:
-        outcome.notes.append("Configura la clave de ComicVine o importa el volcado de GCD (pestaña Ajustes).")
+        outcome.notes.append(_("Configura la clave de ComicVine o importa el volcado de GCD (pestaña Ajustes)."))
     elif not query:
-        outcome.notes.append("Escribe el título del cómic para buscarlo.")
+        outcome.notes.append(_("Escribe el título del cómic para buscarlo."))
     elif client is not None:
         try:
             _add_comicvine(client, query, outcome, variants, progress, publisher, year)
@@ -314,14 +315,14 @@ def _add_gcd(gcd: GcdIndex, query: str, barcode, outcome: Outcome, publisher: st
 
 def _add_comicvine(client, text: str, outcome: Outcome, variants, progress, publisher: str = "",
                    year: str = "") -> None:
-    progress(f"Consultando ComicVine: «{text}»…")
+    progress(_("Consultando ComicVine: «{text}»…").format(text=text))
     wanted = int(year) if year.strip().isdigit() else None
     key = fold(publisher.strip())
     volumes = _matching_volumes(client.search_volumes(text, limit=10), key, wanted)[:MAX_VOLUMES]
     for index, volume in enumerate(volumes, 1):
         # cada serie supone una consulta más (y, si hay número, otra por cada portada a comparar): esto es lo que
         # tarda varios segundos, así que se informa serie a serie en vez de un único mensaje fijo todo el rato
-        progress(f"Comparando con ComicVine ({index}/{len(volumes)}): «{volume.get('name', '')}»…")
+        progress(_("Comparando con ComicVine ({index}/{len}): «{get}»…").format(index=index, len=len(volumes), get=volume.get('name', '')))
         records = client.issues(volume["id"], outcome.issue_number) if outcome.issue_number \
             else [{"volume": volume, "image": volume.get("image"),
                    "site_detail_url": volume.get("site_detail_url")}]

@@ -34,6 +34,7 @@ from ..gcstar import (
 )
 from ..gcstar import transfer as gcstar_transfer
 from ..gcstar import undo_last as undo_gcstar
+from ..i18n import _, ngettext
 from ..identify import (
     CATALOG_SOURCES,
     MARVEL_METADATA,
@@ -120,7 +121,7 @@ GCD_SITE = "https://www.comics.org/"
 COMICVINE_HOST, GCD_HOST = "comicvine.gamespot.com", "www.comics.org"
 FALLBACK_ICON = "applications-internet-symbolic"
 MAX_ALTERNATIVES = 30   # fichas que se ofrecen de una serie cuyo número no se encuentra
-SERIES_FILTERS = ["Incompletas", "Todas", "Sin todos sus metadatos", "Sin total indicado"]
+SERIES_FILTERS = [_("Incompletas"), _("Todas"), _("Sin todos sus metadatos"), _("Sin total indicado")]
 SERIES_SHOWN = 300
 PAGE_MAX_SIDE = 1600   # las páginas se reducen a esto para mostrarlas: un escaneo enorme no bloquea la ventana
 PAGES_CACHED = 8
@@ -129,8 +130,8 @@ TERMINAL_FONT_SIZE = 11
 VIEWER_MAX_SIDE = 3200   # lado máximo de la página en la ventana grande (letra pequeña legible sin agotar la memoria)
 AUTHOR = "Jose Antonio Seguido Doblado"
 REPO_URL = "https://github.com/seguidodoblado/comic-identify"
-LICENSE_TEXT = ("Este programa es software libre: se distribuye bajo la GNU General Public License, versión 3. "
-                "El texto completo está en el archivo LICENSE del repositorio y en https://www.gnu.org/licenses/gpl-3.0.html.")
+LICENSE_TEXT = (_("Este programa es software libre: se distribuye bajo la GNU General Public License, versión 3. "
+                "El texto completo está en el archivo LICENSE del repositorio y en https://www.gnu.org/licenses/gpl-3.0.html."))
 INDEX_ICON = ("view-refresh-symbolic", "emblem-synchronizing-symbolic")
 STOP_ICON = ("process-stop-symbolic", "window-close-symbolic")
 DEFAULT_PATTERN = Settings.pattern
@@ -156,7 +157,7 @@ CSS = b"""
 """
 RESTORE_VARIABLE = "COMIC_IDENTIFY_RESTORE"   # estado que pasa el proceso que se reinicia por el tema
 LIVE_DELAY_MS = 300   # pausa al teclear antes de buscar en GCD
-INITIAL_STATUS = "Escribe un título para buscar, o abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada."
+INITIAL_STATUS = _("Escribe un título para buscar, o abre, pega o arrastra un cómic (CBR/CBZ/CB7) o una imagen de portada.")
 
 
 def run_gui(initial_image: Path | None = None) -> None:
@@ -167,7 +168,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         gi.require_version("Gtk", "4.0")
         from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
     except (ImportError, ValueError) as error:
-        raise RuntimeError("GTK 4/PyGObject no está instalado.") from error
+        raise RuntimeError(_("GTK 4/PyGObject no está instalado.")) from error
 
     # Con "python3 -m" argv[0] es la ruta de __main__.py y GTK derivaría de ahí el WM_CLASS;
     # se fija para que coincida con StartupWMClass del .desktop y el panel muestre el icono.
@@ -275,16 +276,16 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.assistant_terminal = None
             self._panel_width = PREVIEW_WIDTH
             notebook = self.notebook = Gtk.Notebook()
-            notebook.append_page(self._identify_page(), Gtk.Label(label="Identificar"))
-            notebook.append_page(self._library_page(), Gtk.Label(label="Mi colección"))
-            notebook.append_page(self._settings_page(), Gtk.Label(label="Ajustes"))
+            notebook.append_page(self._identify_page(), Gtk.Label(label=_("Identificar")))
+            notebook.append_page(self._library_page(), Gtk.Label(label=_("Mi colección")))
+            notebook.append_page(self._settings_page(), Gtk.Label(label=_("Ajustes")))
             self.set_child(notebook)
             self.connect("close-request", self._auto_backup)
             GLib.idle_add(lambda: (self._restore_session(), GLib.SOURCE_REMOVE)[1])
             self._refresh_library()
             Thread(target=self._load_icons, daemon=True).start()
             paste = Gtk.Shortcut(trigger=Gtk.ShortcutTrigger.parse_string("<Control>v"),
-                                 action=Gtk.CallbackAction.new(lambda *_: self._paste() or True))
+                                 action=Gtk.CallbackAction.new(lambda *_args: self._paste() or True))
             controller = Gtk.ShortcutController()
             controller.add_shortcut(paste)
             self.add_controller(controller)
@@ -317,33 +318,33 @@ def run_gui(initial_image: Path | None = None) -> None:
             page = self._box()
             controls = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=7, column_spacing=8,
                                    row_spacing=6, homogeneous=False)   # los botones pasan a otra línea si no caben
-            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Abrir…", tooltip_text=(
-                "Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes pegarla o arrastrarla"))
-            paste_button = icon_button(("edit-paste-symbolic",), "Pegar", tooltip_text=(
-                "Pega una imagen copiada, o un cómic (CBR, CBZ, CB7) o imagen copiados en el gestor de archivos (Ctrl+V)"))
+            open_button = icon_button(("document-open-symbolic", "folder-open-symbolic"), _("Abrir…"), tooltip_text=(
+                _("Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes pegarla o arrastrarla")))
+            paste_button = icon_button(("edit-paste-symbolic",), _("Pegar"), tooltip_text=(
+                _("Pega una imagen copiada, o un cómic (CBR, CBZ, CB7) o imagen copiados en el gestor de archivos (Ctrl+V)")))
             open_button.connect("clicked", self._choose_image)
-            paste_button.connect("clicked", lambda _: self._paste())
+            paste_button.connect("clicked", lambda _button: self._paste())
             self.ask_button = icon_button(("utilities-terminal-symbolic", "dialog-question-symbolic"),
-                                          "Preguntar a la IA", sensitive=False, tooltip_text=(
-                "Abre un terminal con tu propia sesión (Claude Code, OpenCode…) para que identifique la portada"))
+                                          _("Preguntar a la IA"), sensitive=False, tooltip_text=(
+                _("Abre un terminal con tu propia sesión (Claude Code, OpenCode…) para que identifique la portada")))
             self.ask_button.connect("clicked", self._ask_ai)
-            self.normalize_button = icon_button(("document-edit-symbolic",), "Normalizar nombre…", sensitive=False,
+            self.normalize_button = icon_button(("document-edit-symbolic",), _("Normalizar nombre…"), sensitive=False,
                                                 tooltip_text=(
-                "Renombra el CBR/CBZ con el patrón de Estructura.md (abre un cómic o elige una coincidencia de "
-                "«Mi colección» para activarlo). Actúa sobre el archivo original, no sobre una copia."))
+                _("Renombra el CBR/CBZ con el patrón de Estructura.md (abre un cómic o elige una coincidencia de "
+                "«Mi colección» para activarlo). Actúa sobre el archivo original, no sobre una copia.")))
             self.normalize_button.connect("clicked", self._normalize)
-            folder_button = icon_button(("folder-symbolic", "folder-open-symbolic"), "Normalizar carpeta…",
-                                        tooltip_text=("Renombra una carpeta-serie y numera los archivos de dentro "
-                                                      "(elige antes una serie de GCD para rellenar sus datos)"))
+            folder_button = icon_button(("folder-symbolic", "folder-open-symbolic"), _("Normalizar carpeta…"),
+                                        tooltip_text=(_("Renombra una carpeta-serie y numera los archivos de dentro "
+                                                      "(elige antes una serie de GCD para rellenar sus datos)")))
             folder_button.connect("clicked", self._choose_series_folder)
-            meta_folder = icon_button(("document-properties-symbolic", "document-edit-symbolic"), "Metadatos carpeta…",
-                                      tooltip_text="Escribe el ComicInfo.xml (serie, editorial, categoría…) en todos los "
-                                                   "cómics de una carpeta")
+            meta_folder = icon_button(("document-properties-symbolic", "document-edit-symbolic"), _("Metadatos carpeta…"),
+                                      tooltip_text=_("Escribe el ComicInfo.xml (serie, editorial, categoría…) en todos los "
+                                                   "cómics de una carpeta"))
             meta_folder.connect("clicked", self._choose_metadata_folder)
             self.metadata_button = icon_button(("document-properties-symbolic", "document-edit-symbolic"),
-                                               "Metadatos archivo…", sensitive=False, tooltip_text=(
-                "Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi colección» elegida, en el archivo "
-                "original"))
+                                               _("Metadatos archivo…"), sensitive=False, tooltip_text=(
+                _("Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi colección» elegida, en el archivo "
+                "original")))
             self.metadata_button.connect("clicked", self._metadata_file)
             for widget in (open_button, paste_button, self.ask_button, self.normalize_button, folder_button,
                            self.metadata_button, meta_folder):
@@ -358,29 +359,29 @@ def run_gui(initial_image: Path | None = None) -> None:
                                              halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
             self.cover_placeholder.add_css_class("dim-label")
             self.cover_placeholder.append(Gtk.Image(icon_name="comic-identify", pixel_size=96))
-            self.cover_placeholder.append(Gtk.Label(label="Ningún cómic abierto"))
+            self.cover_placeholder.append(Gtk.Label(label=_("Ningún cómic abierto")))
             self.cover_overlay = Gtk.Overlay(vexpand=True)   # muestra un icono genérico mientras no hay portada
             self.cover_overlay.set_child(self.picture)
             self.cover_overlay.add_overlay(self.cover_placeholder)
 
-            self.query = Gtk.Entry(placeholder_text="Título a buscar", hexpand=True)
-            self.number = Gtk.Entry(placeholder_text="Nº", width_chars=6)
-            self.publisher = Gtk.Entry(placeholder_text="Editorial / distribuidor (Panini, Planeta, Forum…)",
+            self.query = Gtk.Entry(placeholder_text=_("Título a buscar"), hexpand=True)
+            self.number = Gtk.Entry(placeholder_text=_("Nº"), width_chars=6)
+            self.publisher = Gtk.Entry(placeholder_text=_("Editorial / distribuidor (Panini, Planeta, Forum…)"),
                                        hexpand=True)
-            self.year = Gtk.Entry(placeholder_text="Año", width_chars=6)
+            self.year = Gtk.Entry(placeholder_text=_("Año"), width_chars=6)
             content = Gtk.Box(spacing=6)
             content.append(self._icon(COMICVINE_HOST, 16))
-            content.append(Gtk.Label(label="Buscar en ComicVine"))
+            content.append(Gtk.Label(label=_("Buscar en ComicVine")))
             search = Gtk.Button(child=content, tooltip_text=(
-                "Busca en ComicVine con estos datos (necesita su clave gratuita, en Ajustes)"))
-            search.connect("clicked", lambda _: self._search(*self._fields()))
+                _("Busca en ComicVine con estos datos (necesita su clave gratuita, en Ajustes)")))
+            search.connect("clicked", lambda _button: self._search(*self._fields()))
             for entry in (self.query, self.publisher):
                 entry.connect("activate", lambda _e: search.emit("clicked"))
             for entry in (self.query, self.number, self.publisher, self.year):
                 entry.connect("changed", self._typed)
             refine = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-            clear = icon_button(("edit-clear-all-symbolic", "edit-clear-symbolic"), "Limpiar",
-                                tooltip_text="Quita todos los datos: campos, resultados, portada y panel")
+            clear = icon_button(("edit-clear-all-symbolic", "edit-clear-symbolic"), _("Limpiar"),
+                                tooltip_text=_("Quita todos los datos: campos, resultados, portada y panel"))
             clear.add_css_class("suggested-action")   # verde en este tema
             clear.connect("clicked", self._reset)
             for widgets in ((self.query, self.number, search), (self.publisher, self.year, clear)):
@@ -393,22 +394,22 @@ def run_gui(initial_image: Path | None = None) -> None:
             scroll = Gtk.ScrolledWindow(vexpand=True, hexpand=True)
             scroll.set_child(self.results)
 
-            self.web_extra = Gtk.CheckButton(label="Incluir también la editorial y el año", active=True, tooltip_text=(
-                "Añade la editorial y el año a la búsqueda de las webs y de las tiendas; si no salen resultados, desmárcalo"))
+            self.web_extra = Gtk.CheckButton(label=_("Incluir también la editorial y el año"), active=True, tooltip_text=(
+                _("Añade la editorial y el año a la búsqueda de las webs y de las tiendas; si no salen resultados, desmárcalo")))
             menu_content = Gtk.Box(spacing=6)
             menu_content.append(Gtk.Image(icon_name=pick_icon("web-browser-symbolic", FALLBACK_ICON)))
-            menu_content.append(Gtk.Label(label="Buscar en otras webs"))
+            menu_content.append(Gtk.Label(label=_("Buscar en otras webs")))
             menu_content.append(Gtk.Image(icon_name=pick_icon("pan-down-symbolic")))
             popover = Gtk.Popover()
             entries = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, margin_top=6, margin_bottom=6,
                               margin_start=6, margin_end=6)
-            entries.append(Gtk.Label(label="Se abre en tu navegador", xalign=0, margin_start=6, margin_bottom=4,
+            entries.append(Gtk.Label(label=_("Se abre en tu navegador"), xalign=0, margin_start=6, margin_bottom=4,
                                      css_classes=["dim-label"]))
             all_content = Gtk.Box(spacing=8)
             all_content.append(Gtk.Image(icon_name=pick_icon("edit-select-all-symbolic", FALLBACK_ICON), pixel_size=16))
-            all_content.append(Gtk.Label(label="Todas", xalign=0))
+            all_content.append(Gtk.Label(label=_("Todas"), xalign=0))
             all_button = Gtk.Button(child=all_content, has_frame=False,
-                                    tooltip_text=f"Busca en las {len(SOURCES)} webs, cada una en su pestaña")
+                                    tooltip_text=_("Busca en las {SOURCES_count} webs, cada una en su pestaña").format(SOURCES_count=len(SOURCES)))
             all_button.connect("clicked", lambda _b: (popover.popdown(), self._open_all_sources()))
             entries.append(all_button)
             entries.append(Gtk.Separator(margin_top=2, margin_bottom=2))
@@ -419,28 +420,28 @@ def run_gui(initial_image: Path | None = None) -> None:
                     content = Gtk.Box(spacing=8)
                     content.append(self._icon(source.host, 16))
                     content.append(Gtk.Label(label=source.name, xalign=0))
-                    entry = Gtk.Button(child=content, has_frame=False, tooltip_text=f"Busca en {source.host}")
+                    entry = Gtk.Button(child=content, has_frame=False, tooltip_text=_("Busca en {source_host}").format(source_host=source.host))
                     entry.connect("clicked", lambda _b, n=source.name: (popover.popdown(), self._open_source(n)))
                     entries.append(entry)
             popover.set_child(entries)
             web_menu = Gtk.MenuButton(child=menu_content, popover=popover, tooltip_text=(
-                "Abre en tu navegador la búsqueda del título en la web que elijas"))
+                _("Abre en tu navegador la búsqueda del título en la web que elijas")))
             self.web_menu = web_menu
             buy_content = Gtk.Box(spacing=6)
             buy_content.append(Gtk.Image(icon_name=pick_icon("shopping-cart-symbolic", "package-x-generic-symbolic",
                                                              "emblem-shared-symbolic", FALLBACK_ICON)))
-            buy_content.append(Gtk.Label(label="Comprar"))
+            buy_content.append(Gtk.Label(label=_("Comprar")))
             buy_content.append(Gtk.Image(icon_name=pick_icon("pan-down-symbolic")))
             buy_popover = Gtk.Popover()
             buy_entries = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, margin_top=6, margin_bottom=6,
                                   margin_start=6, margin_end=6)
-            buy_entries.append(Gtk.Label(label="Busca el ejemplar en tu navegador", xalign=0, margin_start=6,
+            buy_entries.append(Gtk.Label(label=_("Busca el ejemplar en tu navegador"), xalign=0, margin_start=6,
                                          margin_bottom=4, css_classes=["dim-label"]))
             all_shops = Gtk.Box(spacing=8)
             all_shops.append(Gtk.Image(icon_name=pick_icon("edit-select-all-symbolic", FALLBACK_ICON), pixel_size=16))
-            all_shops.append(Gtk.Label(label="Todas", xalign=0))
+            all_shops.append(Gtk.Label(label=_("Todas"), xalign=0))
             all_shops_button = Gtk.Button(child=all_shops, has_frame=False,
-                                          tooltip_text=f"Busca en las {len(SHOPS)} tiendas, cada una en su pestaña")
+                                          tooltip_text=_("Busca en las {SHOPS_count} tiendas, cada una en su pestaña").format(SHOPS_count=len(SHOPS)))
             all_shops_button.connect("clicked", lambda _b: (buy_popover.popdown(), self._open_all_shops()))
             buy_entries.append(all_shops_button)
             buy_entries.append(Gtk.Separator(margin_top=2, margin_bottom=2))
@@ -451,13 +452,13 @@ def run_gui(initial_image: Path | None = None) -> None:
                     shop_line = Gtk.Box(spacing=8)
                     shop_line.append(self._icon(shop.host, 16))
                     shop_line.append(Gtk.Label(label=shop.name, xalign=0))
-                    shop_button = Gtk.Button(child=shop_line, has_frame=False, tooltip_text=f"Busca en {shop.host}")
+                    shop_button = Gtk.Button(child=shop_line, has_frame=False, tooltip_text=_("Busca en {shop_host}").format(shop_host=shop.host))
                     shop_button.connect("clicked", lambda _b, n=shop.name: (buy_popover.popdown(), self._open_shop(n)))
                     buy_entries.append(shop_button)
             buy_popover.set_child(buy_entries)
             buy_menu = Gtk.MenuButton(child=buy_content, popover=buy_popover, tooltip_text=(
-                "Abre en tu navegador la búsqueda del ejemplar en una tienda o en una web de segunda mano "
-                "(Forum y Vértice ya no publican: solo se encuentran de segunda mano)"))
+                _("Abre en tu navegador la búsqueda del ejemplar en una tienda o en una web de segunda mano "
+                "(Forum y Vértice ya no publican: solo se encuentran de segunda mano)")))
             self.buy_menu = buy_menu
             sources = Gtk.Box(spacing=12)
             sources.append(web_menu)
@@ -471,10 +472,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.page_index = self._page_request = 0
             self._page_cache: dict[int, bytes] = {}
             self.page_buttons = []
-            for icon, tip, target in (("go-first-symbolic", "Primera página (la portada)", lambda: 0),
-                                      ("go-previous-symbolic", "Página anterior", lambda: self.page_index - 1),
-                                      ("go-next-symbolic", "Página siguiente", lambda: self.page_index + 1),
-                                      ("go-last-symbolic", "Última página (la contraportada)", lambda: len(self.pages) - 1)):
+            for icon, tip, target in (("go-first-symbolic", _("Primera página (la portada)"), lambda: 0),
+                                      ("go-previous-symbolic", _("Página anterior"), lambda: self.page_index - 1),
+                                      ("go-next-symbolic", _("Página siguiente"), lambda: self.page_index + 1),
+                                      ("go-last-symbolic", _("Última página (la contraportada)"), lambda: len(self.pages) - 1)):
                 button = Gtk.Button(icon_name=pick_icon(icon), tooltip_text=tip)
                 button.connect("clicked", lambda _b, t=target: self._go_page(t()))
                 self.page_buttons.append(button)
@@ -483,15 +484,15 @@ def run_gui(initial_image: Path | None = None) -> None:
             for widget in (*self.page_buttons[:2], self.page_label, *self.page_buttons[2:]):
                 self.page_nav.append(widget)
             self.export_cover_button = icon_button(("image-x-generic-symbolic", "insert-image-symbolic"),
-                                                    "Extraer portada…", sensitive=False, halign=Gtk.Align.CENTER,
+                                                    _("Extraer portada…"), sensitive=False, halign=Gtk.Align.CENTER,
                                                     tooltip_text=(
-                "Guarda la portada como imagen junto al archivo, con su mismo nombre (para usarla, por ejemplo, "
-                "de portada en GCstar); no la recodifica, así que conserva su calidad original"))
+                _("Guarda la portada como imagen junto al archivo, con su mismo nombre (para usarla, por ejemplo, "
+                "de portada en GCstar); no la recodifica, así que conserva su calidad original")))
             self.export_cover_button.connect("clicked", self._export_cover)
-            self.gcstar_button = icon_button(("send-to-symbolic", "document-send-symbolic"), "Transferir a GCstar…",
+            self.gcstar_button = icon_button(("send-to-symbolic", "document-send-symbolic"), _("Transferir a GCstar…"),
                                              sensitive=False, halign=Gtk.Align.CENTER, tooltip_text=(
-                "Añade el cómic a tu colección de GCstar (créditos, editorial, año, páginas, portada y "
-                "contraportada) sin tocar el resto de su archivo .gcs; configúralo en Ajustes"))
+                _("Añade el cómic a tu colección de GCstar (créditos, editorial, año, páginas, portada y "
+                "contraportada) sin tocar el resto de su archivo .gcs; configúralo en Ajustes")))
             self.gcstar_button.connect("clicked", self._open_gcstar_transfer)
             cover_actions = Gtk.Box(spacing=6, halign=Gtk.Align.CENTER)
             cover_actions.append(self.export_cover_button)
@@ -499,12 +500,12 @@ def run_gui(initial_image: Path | None = None) -> None:
             click = Gtk.GestureClick()   # doble clic: la página a la vista, en una ventana grande
             click.connect("pressed", lambda _g, presses, _x, _y: presses == 2 and self._open_viewer())
             self.picture.add_controller(click)
-            self.meta_heading = Gtk.Label(label="ComicInfo.xml", xalign=0)
+            self.meta_heading = Gtk.Label(label=_("ComicInfo.xml"), xalign=0)
             self.meta_heading.add_css_class("heading")
-            self.delete_meta_button = icon_button(("edit-delete-symbolic", "user-trash-symbolic"), "Eliminar datos",
+            self.delete_meta_button = icon_button(("edit-delete-symbolic", "user-trash-symbolic"), _("Eliminar datos"),
                                                   sensitive=False, tooltip_text=(
-                "Quita el ComicInfo.xml entero de este archivo (el propio archivo no se toca); se puede deshacer con "
-                "«Deshacer» en Ajustes, como cualquier otra escritura de metadatos"))
+                _("Quita el ComicInfo.xml entero de este archivo (el propio archivo no se toca); se puede deshacer con "
+                "«Deshacer» en Ajustes, como cualquier otra escritura de metadatos")))
             self.delete_meta_button.add_css_class("destructive-action")
             self.delete_meta_button.connect("clicked", self._delete_meta)
             meta_header = Gtk.Box(spacing=6)
@@ -542,9 +543,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 url = search_url(name, title, number, publisher, year)
             except ValueError:
-                self.status.set_text(f"Escribe un título para buscarlo en {name}.")
+                self.status.set_text(_("Escribe un título para buscarlo en {name}.").format(name=name))
                 return
-            Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+            Gtk.UriLauncher.new(url).launch(self, None, lambda *_args: None)
 
         def _shop_terms(self) -> tuple[str, str, str, str]:
             """Qué buscar al comprar: el resultado elegido (serie, número y editorial o sello) o, si no hay ninguno con
@@ -562,38 +563,38 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 url = shop_url(name, *self._shop_terms())
             except ValueError:
-                self.status.set_text(f"Escribe un título (o elige un resultado) para buscarlo en {name}.")
+                self.status.set_text(_("Escribe un título (o elige un resultado) para buscarlo en {name}.").format(name=name))
                 return
-            Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
+            Gtk.UriLauncher.new(url).launch(self, None, lambda *_args: None)
 
         def _open_all_shops(self):
             try:
                 urls = [shop_url(shop.name, *self._shop_terms()) for shop in SHOPS]
             except ValueError:
-                self.status.set_text("Escribe un título (o elige un resultado) para buscarlo en las tiendas.")
+                self.status.set_text(_("Escribe un título (o elige un resultado) para buscarlo en las tiendas."))
                 return
             for url in urls:
-                Gtk.UriLauncher.new(url).launch(self, None, lambda *_: None)
-            self.status.set_text(f"Abriendo la búsqueda en {len(SHOPS)} tiendas, cada una en su pestaña…")
+                Gtk.UriLauncher.new(url).launch(self, None, lambda *_args: None)
+            self.status.set_text(_("Abriendo la búsqueda en {SHOPS_count} tiendas, cada una en su pestaña…").format(SHOPS_count=len(SHOPS)))
 
         def _open_all_sources(self, _button=None):
             title, number, publisher, year = self._fields()
             if not title.strip():
-                self.status.set_text("Escribe un título para buscarlo.")
+                self.status.set_text(_("Escribe un título para buscarlo."))
                 return
             if not self.web_extra.get_active():
                 publisher = year = ""
             for source in SOURCES:
                 Gtk.UriLauncher.new(search_url(source.name, title, number, publisher, year)).launch(
-                    self, None, lambda *_: None)
-            self.status.set_text(f"Abriendo la búsqueda en {len(SOURCES)} webs, cada una en su pestaña…")
+                    self, None, lambda *_args: None)
+            self.status.set_text(_("Abriendo la búsqueda en {SOURCES_count} webs, cada una en su pestaña…").format(SOURCES_count=len(SOURCES)))
 
         def _choose_image(self, _button):
-            images = Gtk.FileFilter(name="Cómics (CBR/CBZ/CB7) e imágenes")
+            images = Gtk.FileFilter(name=_("Cómics (CBR/CBZ/CB7) e imágenes"))
             images.add_mime_type("image/*")
             for extension in COMIC_EXTENSIONS:
                 images.add_suffix(extension.lstrip("."))
-            dialog = Gtk.FileDialog(title="Abrir cómic o imagen de portada", default_filter=images)
+            dialog = Gtk.FileDialog(title=_("Abrir cómic o imagen de portada"), default_filter=images)
             dialog.open(self, None, self._image_chosen)
 
         def _image_chosen(self, dialog, result):
@@ -607,7 +608,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             if path.suffix.lower() in (*COMIC_EXTENSIONS, *IMAGE_EXTENSIONS):
                 self._load(path)
             else:
-                self.status.set_text(f"«{path.name}» no es un cómic (CBR, CBZ, CB7) ni una imagen.")
+                self.status.set_text(_("«{path_name}» no es un cómic (CBR, CBZ, CB7) ni una imagen.").format(path_name=path.name))
 
         def _dropped(self, _target, files, _x, _y):
             paths = [f.get_path() for f in files.get_files() if f.get_path()]
@@ -632,7 +633,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             if paths:
                 self._open_file(Path(paths[0]))
             else:
-                self.status.set_text("El portapapeles no contiene un archivo que se pueda abrir.")
+                self.status.set_text(_("El portapapeles no contiene un archivo que se pueda abrir."))
 
         def _pasted(self, clipboard, result):
             try:
@@ -640,7 +641,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             except GLib.Error:
                 texture = None
             if texture is None:
-                self.status.set_text("El portapapeles no contiene una imagen ni un cómic copiado.")
+                self.status.set_text(_("El portapapeles no contiene una imagen ni un cómic copiado."))
                 return
             target = Path(GLib.get_user_cache_dir()) / "comic-identify" / "pegada.png"
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -655,7 +656,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             if path.suffix.lower() not in COMIC_EXTENSIONS:
                 self._finish_load(path, None, generation)
                 return
-            self.status.set_text(f"Leyendo la portada de {path.name}…")
+            self.status.set_text(_("Leyendo la portada de {path_name}…").format(path_name=path.name))
             Thread(target=self._extract_cover, args=(path, generation), daemon=True).start()
 
         def _extract_cover(self, comic: Path, generation: int):
@@ -670,7 +671,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _load_failed(self, comic: Path, error, generation: int):
             if generation == self._generation:   # si llegó otra carga, este error ya no importa
-                self.status.set_text(f"No se pudo leer la portada de {comic.name}: {error}")
+                self.status.set_text(_("No se pudo leer la portada de {comic_name}: {error}").format(comic_name=comic.name, error=error))
 
         def _finish_load(self, image: Path, source: Path | None, generation: int):
             if generation != self._generation:
@@ -687,7 +688,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._set_pages([])
             self.meta_box.set_visible(False)
             self.delete_meta_button.set_sensitive(False)
-            self.picture.set_tooltip_text("Doble clic para verla más grande")
+            self.picture.set_tooltip_text(_("Doble clic para verla más grande"))
             if source is not None:
                 Thread(target=self._read_source, args=(source, generation), daemon=True).start()
             self.ask_button.set_sensitive(True)
@@ -740,11 +741,11 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _meta_deleted(self, target: Path, removed: bool | None, error):
             if error is not None:
-                self.status.set_text(f"No se pudo eliminar el ComicInfo.xml de {target.name}: {error}")
+                self.status.set_text(_("No se pudo eliminar el ComicInfo.xml de {target_name}: {error}").format(target_name=target.name, error=error))
             elif removed:
-                self.status.set_text(f"ComicInfo.xml de {target.name} eliminado. «Deshacer» en Ajustes lo recupera.")
+                self.status.set_text(_("ComicInfo.xml de {target_name} eliminado. «Deshacer» en Ajustes lo recupera.").format(target_name=target.name))
             else:
-                self.status.set_text(f"{target.name} ya no tenía ComicInfo.xml.")
+                self.status.set_text(_("{target_name} ya no tenía ComicInfo.xml.").format(target_name=target.name))
             self._refresh_series()
             if target == self.source_file:
                 self._refresh_meta()
@@ -757,7 +758,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             rows = describe_info(info)
             self.delete_meta_button.set_sensitive(bool(rows))
             if error or not rows:
-                text = f"No se pudo leer: {error}" if error else "Este archivo no tiene ComicInfo.xml."
+                text = _("No se pudo leer: {error}").format(error=error) if error else _("Este archivo no tiene ComicInfo.xml.")
                 self.meta_grid.attach(Gtk.Label(label=text, xalign=0, wrap=True, css_classes=["dim-label"]), 0, 0, 2, 1)
             for row, (label, value) in enumerate(rows):
                 key = Gtk.Label(label=label, xalign=0, yalign=0, css_classes=["dim-label"])
@@ -796,11 +797,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
             scroll.set_child(picture)
             buttons = [Gtk.Button(icon_name=pick_icon(icon), tooltip_text=tip) for icon, tip in (
-                ("go-first-symbolic", "Primera página"), ("go-previous-symbolic", "Página anterior"),
-                ("go-next-symbolic", "Página siguiente"), ("go-last-symbolic", "Última página"))]
+                ("go-first-symbolic", _("Primera página")), ("go-previous-symbolic", _("Página anterior")),
+                ("go-next-symbolic", _("Página siguiente")), ("go-last-symbolic", _("Última página")))]
             label = Gtk.Label(width_chars=17)
-            actual = Gtk.ToggleButton(label="Tamaño real", tooltip_text="Muestra la página sin reducirla (con barras de desplazamiento)")
-            close = icon_button(("window-close-symbolic",), "Cerrar")
+            actual = Gtk.ToggleButton(label=_("Tamaño real"), tooltip_text=_("Muestra la página sin reducirla (con barras de desplazamiento)"))
+            close = icon_button(("window-close-symbolic",), _("Cerrar"))
             bar = Gtk.Box(spacing=6, margin_top=6, margin_bottom=6, margin_start=8, margin_end=8)
             for widget in (*buttons[:2], label, *buttons[2:], actual):
                 bar.append(widget)
@@ -813,8 +814,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             window.set_child(box)
 
             def refresh_bar(loading=False):
-                label.set_text(f"Página {state['index'] + 1} de {count}" + ("…" if loading else ""))
-                window.set_title(f"{name} — página {state['index'] + 1} de {count}" if count > 1 else name)
+                label.set_text(_("Página {state} de {count}").format(state=state['index'] + 1, count=count) + ("…" if loading else ""))
+                window.set_title(_("{name} — página {state} de {count}").format(name=name, state=state['index'] + 1, count=count) if count > 1 else name)
                 for button in buttons[:2]:
                     button.set_sensitive(state["index"] > 0)
                 for button in buttons[2:]:
@@ -825,13 +826,13 @@ def run_gui(initial_image: Path | None = None) -> None:
                     return
                 if data is None:
                     refresh_bar()
-                    self.status.set_text(f"No se pudo leer la página {index + 1} para ampliarla.")
+                    self.status.set_text(_("No se pudo leer la página {index} para ampliarla.").format(index=index + 1))
                     return
                 cache[index] = data
                 try:
                     picture.set_paintable(Gdk.Texture.new_from_bytes(GLib.Bytes.new(data)))
                 except GLib.Error:
-                    self.status.set_text("No se pudo mostrar esta página.")
+                    self.status.set_text(_("No se pudo mostrar esta página."))
                 refresh_bar()
 
             def read(index, request):
@@ -881,7 +882,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _update_pages(self, loading: bool = False):
             count = len(self.pages)
             self.page_nav.set_visible(count > 1)
-            self.page_label.set_text(f"Página {self.page_index + 1} de {count}" + ("…" if loading else ""))
+            self.page_label.set_text(_("Página {page_index} de {count}").format(page_index=self.page_index + 1, count=count) + ("…" if loading else ""))
             for button in self.page_buttons[:2]:
                 button.set_sensitive(self.page_index > 0)
             for button in self.page_buttons[2:]:
@@ -912,7 +913,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 return
             if data is None:
                 self._update_pages()
-                self.status.set_text(f"No se pudo leer la página {index + 1} de este archivo.")
+                self.status.set_text(_("No se pudo leer la página {index} de este archivo.").format(index=index + 1))
                 return
             if len(self._page_cache) >= PAGES_CACHED:
                 self._page_cache.pop(next(iter(self._page_cache)))
@@ -923,7 +924,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 self.picture.set_paintable(Gdk.Texture.new_from_bytes(GLib.Bytes.new(data)))
             except GLib.Error:
-                self.status.set_text("No se pudo mostrar esta página.")
+                self.status.set_text(_("No se pudo mostrar esta página."))
             self._update_pages()
 
         def _reset(self, _button=None):
@@ -1010,7 +1011,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 return   # se ha limpiado mientras tanto
             self.busy = False
             self._stop_search_progress("comicvine")
-            self.status.set_text(f"No se pudo procesar la imagen: {error}")
+            self.status.set_text(_("No se pudo procesar la imagen: {error}").format(error=error))
 
         def _show(self, outcome, generation=None):
             if generation is not None and generation != self._generation:
@@ -1021,19 +1022,19 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self._set_fields(number=outcome.issue_number)
             self.library_matches = [c for c in outcome.candidates if c.source == "Mi colección"]
             self._show_candidates(outcome.candidates)
-            summary = [f"Código de barras: {outcome.barcode}"] if outcome.barcode else []
+            summary = [_("Código de barras: {outcome_barcode}").format(outcome_barcode=outcome.barcode)] if outcome.barcode else []
             summary += outcome.notes
             if not outcome.candidates and not outcome.notes:
-                summary.append("Sin resultados; prueba a corregir el título o el número.")
+                summary.append(_("Sin resultados; prueba a corregir el título o el número."))
             if outcome.candidates:
-                summary.append(f"{len(outcome.candidates)} candidato(s), de más a menos parecido.")
+                summary.append(_("{outcome_candidates_count} candidato(s), de más a menos parecido.").format(outcome_candidates_count=len(outcome.candidates)))
             self._add_panel_hint(summary, outcome.candidates)
             self.status.set_text(" · ".join(summary))
 
         def _add_panel_hint(self, summary, candidates):
             if any(c.source == "ComicVine" or (c.source in ("GCD", *CATALOG_SOURCES) and webkit_available())
                    for c in candidates):
-                summary.append("Haz clic en una sugerencia para ver su ficha a la derecha.")
+                summary.append(_("Haz clic en una sugerencia para ver su ficha a la derecha."))
 
         def _show_candidates(self, candidates):
             self.results.unselect_all()
@@ -1079,8 +1080,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             query, number, publisher, year = self._fields()
             gcd, marvel, tebeosfera = self._gcd(), self._marvel(), self._tebeosfera()
             if gcd is None and marvel is None and tebeosfera is None:
-                self.status.set_text("Importa el volcado de GCD o descarga el índice de Universo Marvel o de Tebeosfera "
-                                     "(pestaña Ajustes) para buscar mientras escribes; «Buscar en ComicVine» consulta ComicVine.")
+                self.status.set_text(_("Importa el volcado de GCD o descarga el índice de Universo Marvel o de Tebeosfera "
+                                     "(pestaña Ajustes) para buscar mientras escribes; «Buscar en ComicVine» consulta ComicVine."))
             elif len(query) < 2:
                 self._show_candidates(self.library_matches)
             else:
@@ -1089,12 +1090,12 @@ def run_gui(initial_image: Path | None = None) -> None:
                 tebeosfera_hits = search_tebeosfera(tebeosfera, query, publisher) if tebeosfera is not None else []
                 catalog_hits = marvel_hits + tebeosfera_hits
                 self._show_candidates(self.library_matches + tebeosfera_hits + marvel_hits + hits)
-                found = ([f"{len(hits)} de GCD"] if gcd is not None else []) + (
-                    [f"{len(marvel_hits)} de Universo Marvel"] if marvel is not None else []) + (
-                    [f"{len(tebeosfera_hits)} de Tebeosfera"] if tebeosfera is not None else [])
-                summary = [f"Sugerencias para «{query}»: {', '.join(found)}" if hits or catalog_hits
-                           else f"Sin resultados para «{query}»"]
-                summary.append("«Buscar en ComicVine» lo consulta también.")
+                found = ([_("{hits_count} de GCD").format(hits_count=len(hits))] if gcd is not None else []) + (
+                    [_("{marvel_hits_count} de Universo Marvel").format(marvel_hits_count=len(marvel_hits))] if marvel is not None else []) + (
+                    [_("{tebeosfera_hits_count} de Tebeosfera").format(tebeosfera_hits_count=len(tebeosfera_hits))] if tebeosfera is not None else [])
+                summary = [_("Sugerencias para «{query}»: {found}").format(query=query, found=', '.join(found)) if hits or catalog_hits
+                           else _("Sin resultados para «{query}»").format(query=query)]
+                summary.append(_("«Buscar en ComicVine» lo consulta también."))
                 self._add_panel_hint(summary, hits + catalog_hits)
                 self.status.set_text(" · ".join(summary))
             return GLib.SOURCE_REMOVE
@@ -1120,7 +1121,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             target = self._normalize_target()
             if target is None:
                 return
-            self.status.set_text(f"Extrayendo la portada de {target.name}…")
+            self.status.set_text(_("Extrayendo la portada de {target_name}…").format(target_name=target.name))
 
             def work():
                 try:
@@ -1132,10 +1133,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             Thread(target=work, daemon=True).start()
 
         def _export_cover_done(self, saved: Path):
-            self.status.set_text(f"Portada guardada como «{saved.name}», junto al archivo.")
+            self.status.set_text(_("Portada guardada como «{saved_name}», junto al archivo.").format(saved_name=saved.name))
 
         def _export_cover_failed(self, error):
-            self.status.set_text(f"No se pudo extraer la portada: {error}")
+            self.status.set_text(_("No se pudo extraer la portada: {error}").format(error=error))
 
         # ---- Transferir a GCstar ---------------------------------------------------------------------
         def _open_gcstar_transfer(self, _button):
@@ -1143,7 +1144,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             gcs_path = Path(self.settings.gcstar_path.strip()) if self.settings.gcstar_path.strip() else None
             if target is None or gcs_path is None:
                 return
-            self.status.set_text(f"Leyendo {target.name} y {gcs_path.name}…")
+            self.status.set_text(_("Leyendo {target_name} y {gcs_path_name}…").format(target_name=target.name, gcs_path_name=gcs_path.name))
 
             def work():
                 try:
@@ -1163,23 +1164,22 @@ def run_gui(initial_image: Path | None = None) -> None:
             Thread(target=work, daemon=True).start()
 
         def _gcstar_prep_failed(self, message: str):
-            self.status.set_text(f"No se pudo preparar la transferencia a GCstar: {message}")
+            self.status.set_text(_("No se pudo preparar la transferencia a GCstar: {message}").format(message=message))
 
         def _open_gcstar_dialog(self, target: Path, info: dict, read_error: str, gcs_path: Path, vocab: dict,
                                 page_count: int, origin: str):
-            window = Gtk.Window(title="Transferir a GCstar", transient_for=self, modal=True, default_width=640)
+            window = Gtk.Window(title=_("Transferir a GCstar"), transient_for=self, modal=True, default_width=640)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=14, margin_bottom=14,
                           margin_start=16, margin_end=16)
             window.set_child(box)
             head = Gtk.Label(xalign=0, wrap=True)
-            head.set_markup(f"<b>Archivo:</b> {GLib.markup_escape_text(target.name)}\n"
-                            f"<b>Colección:</b> {GLib.markup_escape_text(str(gcs_path))}")
+            head.set_markup(_("<b>Archivo:</b> {markup_escape_text}\n<b>Colección:</b> {markup_escape_text_2}").format(markup_escape_text=GLib.markup_escape_text(target.name), markup_escape_text_2=GLib.markup_escape_text(str(gcs_path))))
             box.append(head)
             if read_error or not info:
                 warning = Gtk.Label(xalign=0, wrap=True, label=(
-                    f"No se pudo leer el ComicInfo.xml: {read_error}" if read_error else
-                    "Este archivo no tiene ComicInfo.xml todavía: se transferirá con muy pocos datos. Si quieres "
-                    "los créditos, la editorial, el año…, escribe antes los metadatos."))
+                    _("No se pudo leer el ComicInfo.xml: {read_error}").format(read_error=read_error) if read_error else
+                    _("Este archivo no tiene ComicInfo.xml todavía: se transferirá con muy pocos datos. Si quieres "
+                    "los créditos, la editorial, el año…, escribe antes los metadatos.")))
                 warning.add_css_class("warning" if read_error else "dim-label")
                 box.append(warning)
             series = series_text(info.get("Series", ""), info.get("Volume", ""))
@@ -1187,11 +1187,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             preview.set_markup(f"<b>{GLib.markup_escape_text(format_name(series, info.get('Number', ''), info.get('Title', '')))}</b>")
             box.append(preview)
             details = ", ".join(part for part in (
-                info.get("Publisher", ""), info.get("Year", ""), f"{page_count} páginas" if page_count else "") if part)
+                info.get("Publisher", ""), info.get("Year", ""), _("{page_count} páginas").format(page_count=page_count) if page_count else "") if part)
             if details:
                 box.append(Gtk.Label(label=details, xalign=0, wrap=True, css_classes=["dim-label"]))
 
-            box.append(Gtk.Label(label="Campos propios de GCstar (se sugiere lo que ya usas en tu colección):",
+            box.append(Gtk.Label(label=_("Campos propios de GCstar (se sugiere lo que ya usas en tu colección):"),
                                  xalign=0))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
             fields = {"type": "Tipo", "category": "Categoría", "format": "Formato", "collection": "Colección",
@@ -1217,14 +1217,14 @@ def run_gui(initial_image: Path | None = None) -> None:
                 grid.attach(Gtk.Label(label=label, xalign=0), (row % 2) * 2, row // 2, 1, 1)
                 grid.attach(entry, (row % 2) * 2 + 1, row // 2, 1, 1)
             box.append(grid)
-            back_check = Gtk.CheckButton(label="Incluir también la contraportada (última página)", active=True,
+            back_check = Gtk.CheckButton(label=_("Incluir también la contraportada (última página)"), active=True,
                                         sensitive=page_count > 1)
             box.append(back_check)
 
             problem = Gtk.Label(xalign=0, wrap=True, css_classes=["error"])
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(STOP_ICON, "Cancelar")
-            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Transferir")
+            cancel = icon_button(STOP_ICON, _("Cancelar"))
+            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), _("Transferir"))
             apply.add_css_class("suggested-action")
             for widget in (cancel, apply):
                 buttons.append(widget)
@@ -1261,14 +1261,14 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _gcstar_transfer_done(self, window, result):
             window.close()
-            where = (f" Portada en «{result.image.name}»" + (f" y contraportada en «{result.backpic.name}»."
-                    if result.backpic else ".") if result.image else " Sin portada (el archivo no está bajo "
-                    "ninguna carpeta de «Mi colección»).")
-            self.status.set_text(f"Transferido a GCstar (elemento nº {result.item_id}).{where}")
+            where = (_(" Portada en «{name}»").format(name=result.image.name) + (_(" y contraportada en «{name}».").format(name=result.backpic.name)
+                    if result.backpic else ".") if result.image else _(" Sin portada (el archivo no está bajo "
+                    "ninguna carpeta de «Mi colección»)."))
+            self.status.set_text(_("Transferido a GCstar (elemento nº {result_item_id}).{where}").format(result_item_id=result.item_id, where=where))
 
         def _undo_gcstar(self, _button):
             self.gcstar_undo_button.set_sensitive(False)
-            self.gcstar_info.set_text("Deshaciendo…")
+            self.gcstar_info.set_text(_("Deshaciendo…"))
 
             def run():
                 try:
@@ -1280,14 +1280,14 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _gcstar_undone(self, result, error):
             self.gcstar_undo_button.set_sensitive(True)
             if error is not None:
-                self.gcstar_info.set_text(f"No se pudo deshacer: {error}")
+                self.gcstar_info.set_text(_("No se pudo deshacer: {error}").format(error=error))
                 return
-            text = ("Deshecha la última transferencia." if result.removed else
-                   "El elemento ya no estaba tal cual en el .gcs (se ha editado desde entonces): no se ha tocado.")
+            text = (_("Deshecha la última transferencia.") if result.removed else
+                   _("El elemento ya no estaba tal cual en el .gcs (se ha editado desde entonces): no se ha tocado."))
             if result.images:
-                text += f" Se borraron {len(result.images)} imagen(es)."
+                text += _(" Se borraron {result_images_count} imagen(es).").format(result_images_count=len(result.images))
             if result.skipped_images:
-                text += f" {len(result.skipped_images)} imagen(es) habían cambiado desde entonces y no se tocaron."
+                text += _(" {result_skipped_images_count} imagen(es) habían cambiado desde entonces y no se tocaron.").format(result_skipped_images_count=len(result.skipped_images))
             self.gcstar_info.set_text(text)
 
         def _normalize(self, _button):
@@ -1302,28 +1302,28 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._open_normalizer(target, values, from_gcd)
 
         def _open_normalizer(self, target: Path, values: Values, from_gcd: bool):
-            window = Gtk.Window(title="Normalizar nombre", transient_for=self, modal=True, default_width=720)
+            window = Gtk.Window(title=_("Normalizar nombre"), transient_for=self, modal=True, default_width=720)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=14, margin_bottom=14,
                           margin_start=16, margin_end=16)
             window.set_child(box)
             current = Gtk.Label(xalign=0, wrap=True, selectable=False)
-            current.set_markup(f"<b>Archivo:</b> {GLib.markup_escape_text(target.name)}")
+            current.set_markup(_("<b>Archivo:</b> {markup_escape_text}").format(markup_escape_text=GLib.markup_escape_text(target.name)))
             box.append(current)
             where = Gtk.Label(xalign=0, wrap=True, label=(
-                f"En {target.parent}. Se renombra este mismo archivo, no una copia; se puede deshacer desde Ajustes."))
+                _("En {target_parent}. Se renombra este mismo archivo, no una copia; se puede deshacer desde Ajustes.").format(target_parent=target.parent)))
             where.add_css_class("dim-label")
             box.append(where)
 
             grid = Gtk.Grid(column_spacing=12, row_spacing=6)
             entries: dict[str, Gtk.Editable] = {}
-            fields = (("nombre", "Nombre", "serie u OneShot"), ("volumen", "Volumen", "8 → «Volumen 8»"),
-                      ("contenido", "Contenido [años]", "años del material original: 1991 o 1991-1993"),
-                      ("edicion", "Edición (años)", "años de la edición que tienes"),
-                      ("editorial", "Editorial", "quién la publica: Planeta DeAgostini, Panini…"),
-                      ("sello", "Sello", "solo el que ves impreso en el ejemplar"), ("numero", "Nº", "opcional"))
-            flag = Gtk.DropDown.new_from_strings(["(ninguna)", *FLAGS.values()])
+            fields = (("nombre", _("Nombre"), _("serie u OneShot")), ("volumen", _("Volumen"), _("8 → «Volumen 8»")),
+                      ("contenido", _("Contenido [años]"), _("años del material original: 1991 o 1991-1993")),
+                      ("edicion", _("Edición (años)"), _("años de la edición que tienes")),
+                      ("editorial", _("Editorial"), _("quién la publica: Planeta DeAgostini, Panini…")),
+                      ("sello", _("Sello"), _("solo el que ves impreso en el ejemplar")), ("numero", _("Nº"), _("opcional")))
+            flag = Gtk.DropDown.new_from_strings([_("(ninguna)"), *FLAGS.values()])
             flag.set_selected(([""] + list(FLAGS.values())).index(values.bandera) if values.bandera in FLAGS.values() else 0)
-            for row, (key, label, hint) in enumerate(fields[:2] + (("bandera", "Bandera", ""),) + fields[2:]):
+            for row, (key, label, hint) in enumerate(fields[:2] + (("bandera", _("Bandera"), ""),) + fields[2:]):
                 grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
                 widget = flag if key == "bandera" else Gtk.Entry(text=getattr(values, key), hexpand=True,
                                                                   placeholder_text=hint)
@@ -1331,24 +1331,24 @@ def run_gui(initial_image: Path | None = None) -> None:
                     entries[key] = widget
                 grid.attach(widget, 1, row, 1, 1)
                 if key == "contenido":   # el dato que no se sabe solo: ayuda para averiguarlo en ComicVine
-                    find = Gtk.Button(child=self._button_content("Buscar en ComicVine…"), tooltip_text=(
-                        "Busca los años originales en ComicVine a partir del título original y los números"))
+                    find = Gtk.Button(child=self._button_content(_("Buscar en ComicVine…")), tooltip_text=(
+                        _("Busca los años originales en ComicVine a partir del título original y los números")))
                     find.connect("clicked", lambda _b: self._open_original_lookup(window, entries))
                     grid.attach(find, 2, row, 1, 1)
             box.append(grid)
             if from_gcd:
                 note = Gtk.Label(xalign=0, wrap=True, label=(
-                    "El sello y los años vienen de GCD, transcritos por otro colaborador: compruébalos con el "
+                    _("El sello y los años vienen de GCD, transcritos por otro colaborador: compruébalos con el "
                     "ejemplar. El año real del contenido en ediciones españolas no se sabe solo: ponlo tú o "
-                    "búscalo con el botón de ComicVine."))
+                    "búscalo con el botón de ComicVine.")))
                 note.add_css_class("dim-label")
                 box.append(note)
 
-            box.append(Gtk.Label(label="Patrón (variables: " + ", ".join("{" + v + "}" for v in VARIABLES) + "):",
+            box.append(Gtk.Label(label=_("Patrón (variables: ") + ", ".join("{" + v + "}" for v in VARIABLES) + "):",
                                  xalign=0, wrap=True))
             pattern_row = Gtk.Box(spacing=8)
             pattern = Gtk.Entry(text=self.settings.pattern, hexpand=True)
-            reset = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), "Restablecer")
+            reset = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), _("Restablecer"))
             reset.connect("clicked", lambda _b: pattern.set_text(DEFAULT_PATTERN))
             pattern_row.append(pattern)
             pattern_row.append(reset)
@@ -1359,14 +1359,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             problem.add_css_class("error")
             hint = Gtk.Label(xalign=0, wrap=True)
             hint.add_css_class("dim-label")
-            box.append(Gtk.Label(label="Nombre resultante:", xalign=0))
+            box.append(Gtk.Label(label=_("Nombre resultante:"), xalign=0))
             box.append(preview)
             box.append(hint)
             box.append(problem)
 
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), "Cancelar")
-            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Renombrar")
+            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), _("Cancelar"))
+            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), _("Renombrar"))
             apply.add_css_class("suggested-action")
             buttons.append(cancel)
             buttons.append(apply)
@@ -1390,15 +1390,15 @@ def run_gui(initial_image: Path | None = None) -> None:
                     return
                 new = target.with_name(stem + target.suffix)
                 preview.set_markup(f"<big><b>{GLib.markup_escape_text(new.name)}</b></big>")
-                hint.set_text("Sin años del contenido: el nombre llevará solo (años de la edición). Si más adelante "
-                              "los averiguas, se completa volviendo a normalizar."
+                hint.set_text(_("Sin años del contenido: el nombre llevará solo (años de la edición). Si más adelante "
+                              "los averiguas, se completa volviendo a normalizar.")
                               if missing_content_years(pattern.get_text(), current_values()) else "")
                 if not stem:
-                    problem.set_text("El nombre resultante está vacío.")
+                    problem.set_text(_("El nombre resultante está vacío."))
                 elif new == target:
-                    problem.set_text("Es el nombre que ya tiene.")
+                    problem.set_text(_("Es el nombre que ya tiene."))
                 elif new.exists():
-                    problem.set_text("Ya existe un archivo con ese nombre en la carpeta; no se sobrescribe.")
+                    problem.set_text(_("Ya existe un archivo con ese nombre en la carpeta; no se sobrescribe."))
                 else:
                     problem.set_text("")
                     state["stem"] = stem
@@ -1410,7 +1410,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     check_pattern(pattern.get_text())
                     new = rename_file(target, state["stem"], RENAME_LOG, library)
                 except (OSError, ValueError) as error:
-                    problem.set_text(f"No se pudo renombrar: {error}")
+                    problem.set_text(_("No se pudo renombrar: {error}").format(error=error))
                     return
                 self.settings.pattern = pattern.get_text()
                 self.settings.save()
@@ -1418,7 +1418,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     self.source_file = new
                 if self.selected is not None and self.selected.path == target:
                     self.selected.path = new
-                self.status.set_text(f"Renombrado: {target.name} → {new.name}")
+                self.status.set_text(_("Renombrado: {target_name} → {new_name}").format(target_name=target.name, new_name=new.name))
                 self._update_normalize()
                 window.close()
 
@@ -1443,19 +1443,19 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _open_original_lookup(self, parent, entries, first_default: str = "", last_default: str = ""):
             """Averigua los años del material original con ComicVine: título original → serie → años."""
-            window = Gtk.Window(title="Años del material original", transient_for=parent, modal=True,
+            window = Gtk.Window(title=_("Años del material original"), transient_for=parent, modal=True,
                                 default_width=560, default_height=460)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
                           margin_start=14, margin_end=14)
             window.set_child(box)
             box.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Escribe el título original (en inglés) y los números americanos que recoge la edición; "
-                "los años salen de las fechas de portada de ComicVine.")))
-            title = Gtk.Entry(placeholder_text="Título original, p. ej. Captain Marvel", hexpand=True)
-            first = Gtk.Entry(placeholder_text="Nº inicial", width_chars=9, text=first_default or (
+                _("Escribe el título original (en inglés) y los números americanos que recoge la edición; "
+                "los años salen de las fechas de portada de ComicVine."))))
+            title = Gtk.Entry(placeholder_text=_("Título original, p. ej. Captain Marvel"), hexpand=True)
+            first = Gtk.Entry(placeholder_text=_("Nº inicial"), width_chars=9, text=first_default or (
                 entries["numero"].get_text() if "numero" in entries else ""))
-            last = Gtk.Entry(placeholder_text="Nº final (opcional)", width_chars=16, text=last_default)
-            search = Gtk.Button(child=self._button_content("Buscar series"))
+            last = Gtk.Entry(placeholder_text=_("Nº final (opcional)"), width_chars=16, text=last_default)
+            search = Gtk.Button(child=self._button_content(_("Buscar series")))
             line = Gtk.Box(spacing=8)
             for widget in (first, last, search):
                 line.append(widget)
@@ -1464,8 +1464,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             scroll.set_child(listing)
             info = Gtk.Label(xalign=0, wrap=True)
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), "Cancelar")
-            use = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Usar estos años", sensitive=False)
+            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), _("Cancelar"))
+            use = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), _("Usar estos años"), sensitive=False)
             use.add_css_class("suggested-action")
             buttons.append(cancel)
             buttons.append(use)
@@ -1475,7 +1475,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             volumes: list = []
             key = self.settings.api_key.strip()
             if not key:
-                info.set_text("Necesitas la clave gratuita de ComicVine (pestaña Ajustes) para esta búsqueda.")
+                info.set_text(_("Necesitas la clave gratuita de ComicVine (pestaña Ajustes) para esta búsqueda."))
                 search.set_sensitive(False)
 
             def fail(error):
@@ -1489,13 +1489,13 @@ def run_gui(initial_image: Path | None = None) -> None:
                 for volume in found:
                     listing.append(Gtk.Label(label=volume.label, xalign=0, margin_top=4, margin_bottom=4,
                                              margin_start=6))
-                info.set_text(f"{len(found)} serie(s). Elige la que recoge tu edición." if found
-                              else "ComicVine no encuentra esa serie: prueba con el título original en inglés.")
+                info.set_text(_("{found_count} serie(s). Elige la que recoge tu edición.").format(found_count=len(found)) if found
+                              else _("ComicVine no encuentra esa serie: prueba con el título original en inglés."))
                 search.set_sensitive(True)
 
             def do_search(_widget):
                 search.set_sensitive(False)
-                info.set_text("Buscando en ComicVine…")
+                info.set_text(_("Buscando en ComicVine…"))
 
                 def work():
                     try:
@@ -1512,7 +1512,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     return
                 volume = volumes[row.get_index()]
                 use.set_sensitive(False)
-                info.set_text("Consultando las fechas de portada…")
+                info.set_text(_("Consultando las fechas de portada…"))
 
                 def work():
                     try:
@@ -1525,7 +1525,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             def finish(years, volume):
                 entries["contenido"].set_text(years)
-                self.status.set_text(f"Años del contenido: {years} (portadas de {volume.name} {volume.start_year} en ComicVine).")
+                self.status.set_text(_("Años del contenido: {years} (portadas de {volume_name} {volume_start_year} en ComicVine).").format(years=years, volume_name=volume.name, volume_start_year=volume.start_year))
                 window.close()
 
             search.connect("clicked", do_search)
@@ -1540,7 +1540,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         # ---- Normalizar una carpeta-serie y renumerar su contenido --------------------------------
         def _choose_series_folder(self, _button):
-            Gtk.FileDialog(title="Carpeta de la serie").select_folder(self, None, self._series_folder_chosen)
+            Gtk.FileDialog(title=_("Carpeta de la serie")).select_folder(self, None, self._series_folder_chosen)
 
         def _series_folder_chosen(self, dialog, result):
             try:
@@ -1553,7 +1553,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             files = sorted((p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in COMIC_EXTENSIONS),
                            key=lambda p: natural_key(p.name))
             if not files:
-                self.status.set_text(f"No hay archivos CBR/CBZ directamente en {folder.name}.")
+                self.status.set_text(_("No hay archivos CBR/CBZ directamente en {folder_name}.").format(folder_name=folder.name))
                 return
             info, gcd = None, self._gcd()
             if gcd is not None and self.selected is not None and self.selected.series_id:
@@ -1566,27 +1566,27 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._open_series_normalizer(folder, files, values, from_gcd)
 
         def _open_series_normalizer(self, folder: Path, files: list[Path], values: Values, from_gcd: bool):
-            window = Gtk.Window(title="Normalizar carpeta", transient_for=self, modal=True, default_width=900,
+            window = Gtk.Window(title=_("Normalizar carpeta"), transient_for=self, modal=True, default_width=900,
                                 default_height=760)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
                           margin_start=14, margin_end=14)
             window.set_child(box)
             head = Gtk.Label(xalign=0, wrap=True)
-            head.set_markup(f"<b>Carpeta:</b> {GLib.markup_escape_text(str(folder))}  ({len(files)} archivos)")
+            head.set_markup(_("<b>Carpeta:</b> {markup_escape_text}  ({files_count} archivos)").format(markup_escape_text=GLib.markup_escape_text(str(folder)), files_count=len(files)))
             box.append(head)
 
             detected = [(path, *detect_number(path.stem)) for path in files]
             numbers = [int(n) for _p, n, _d in detected if n]
             grid = Gtk.Grid(column_spacing=12, row_spacing=6)
             entries: dict[str, Gtk.Entry] = {}
-            flag = Gtk.DropDown.new_from_strings(["(ninguna)", *FLAGS.values()])
+            flag = Gtk.DropDown.new_from_strings([_("(ninguna)"), *FLAGS.values()])
             flag.set_selected(([""] + list(FLAGS.values())).index(values.bandera)
                               if values.bandera in FLAGS.values() else 0)
-            fields = (("nombre", "Nombre (serie)", ""), ("volumen", "Volumen", "8 → «Volumen 8»"), ("bandera", "Bandera", ""),
-                      ("contenido", "Contenido [años]", "años del material original: 1999-2001"),
-                      ("edicion", "Edición (años)", "2000-2002; 2011- si sigue publicándose"),
-                      ("editorial", "Editorial", "quién la publica: Planeta DeAgostini, Panini…"),
-                      ("sello", "Sello", "solo el que ves impreso en los ejemplares"))
+            fields = (("nombre", _("Nombre (serie)"), ""), ("volumen", _("Volumen"), _("8 → «Volumen 8»")), ("bandera", _("Bandera"), ""),
+                      ("contenido", _("Contenido [años]"), _("años del material original: 1999-2001")),
+                      ("edicion", _("Edición (años)"), _("2000-2002; 2011- si sigue publicándose")),
+                      ("editorial", _("Editorial"), _("quién la publica: Planeta DeAgostini, Panini…")),
+                      ("sello", _("Sello"), _("solo el que ves impreso en los ejemplares")))
             for row, (key, label, hint) in enumerate(fields):
                 grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
                 widget = flag if key == "bandera" else Gtk.Entry(text=getattr(values, key), hexpand=True,
@@ -1595,8 +1595,8 @@ def run_gui(initial_image: Path | None = None) -> None:
                     entries[key] = widget
                 grid.attach(widget, 1, row, 1, 1)
                 if key == "contenido":
-                    find = icon_button(("system-search-symbolic",), "Buscar en ComicVine…", tooltip_text=(
-                        "Averigua los años del material original a partir del título original y los números"))
+                    find = icon_button(("system-search-symbolic",), _("Buscar en ComicVine…"), tooltip_text=(
+                        _("Averigua los años del material original a partir del título original y los números")))
                     find.connect("clicked", lambda _b: self._open_original_lookup(
                         window, entries, str(min(numbers)) if numbers else "",
                         str(max(numbers)) if len(numbers) > 1 else ""))
@@ -1604,31 +1604,31 @@ def run_gui(initial_image: Path | None = None) -> None:
             box.append(grid)
             if from_gcd:
                 note = Gtk.Label(xalign=0, wrap=True, label=(
-                    "Nombre, país, años de la serie y sello vienen de GCD (transcritos por otro colaborador): "
-                    "compruébalos. Los años del contenido original no se saben solos: ponlos tú o búscalos en ComicVine."))
+                    _("Nombre, país, años de la serie y sello vienen de GCD (transcritos por otro colaborador): "
+                    "compruébalos. Los años del contenido original no se saben solos: ponlos tú o búscalos en ComicVine.")))
                 note.add_css_class("dim-label")
                 box.append(note)
 
-            box.append(Gtk.Label(label="Patrón de la carpeta:", xalign=0))
+            box.append(Gtk.Label(label=_("Patrón de la carpeta:"), xalign=0))
             folder_pattern = Gtk.Entry(text=self.settings.pattern, hexpand=True)
             box.append(folder_pattern)
             box.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Cada archivo se llamará como la carpeta resultante más « #01», « #02»… Se usa el número que ya trae "
-                "cada nombre, así que los huecos se respetan.")))
+                _("Cada archivo se llamará como la carpeta resultante más « #01», « #02»… Se usa el número que ya trae "
+                "cada nombre, así que los huecos se respetan."))))
 
             result = Gtk.Label(xalign=0, wrap=True)
-            box.append(Gtk.Label(label="Carpeta resultante:", xalign=0))
+            box.append(Gtk.Label(label=_("Carpeta resultante:"), xalign=0))
             box.append(result)
 
             listing = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
             rows = []
             for path, number, doubtful in detected:
                 line = Gtk.Box(spacing=8, margin_top=3, margin_bottom=3, margin_start=6, margin_end=6)
-                include = Gtk.CheckButton(active=True, tooltip_text="Renombrar este archivo")
+                include = Gtk.CheckButton(active=True, tooltip_text=_("Renombrar este archivo"))
                 old = Gtk.Label(label=path.name, xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.MIDDLE,
                                 width_chars=28, max_width_chars=40)
-                entry = Gtk.Entry(text=str(int(number)) if number else "", width_chars=5, placeholder_text="Nº",
-                                  tooltip_text="Número de ejemplar de este archivo")
+                entry = Gtk.Entry(text=str(int(number)) if number else "", width_chars=5, placeholder_text=_("Nº"),
+                                  tooltip_text=_("Número de ejemplar de este archivo"))
                 new = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.MIDDLE, width_chars=28,
                                 max_width_chars=44)
                 note = Gtk.Label(xalign=0, width_chars=22)
@@ -1644,8 +1644,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             problem = Gtk.Label(xalign=0, wrap=True)
             problem.add_css_class("error")
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), "Cancelar")
-            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Renombrar carpeta y archivos")
+            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), _("Cancelar"))
+            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), _("Renombrar carpeta y archivos"))
             apply.add_css_class("suggested-action")
             for widget in (cancel, apply):
                 buttons.append(widget)
@@ -1671,9 +1671,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                 new_folder = folder.with_name(folder_stem) if folder_stem else folder
                 result.set_markup(f"<big><b>{GLib.markup_escape_text(new_folder.name)}</b></big>")
                 if not folder_stem:
-                    blocking.append("El nombre de la carpeta resultante está vacío.")
+                    blocking.append(_("El nombre de la carpeta resultante está vacío."))
                 elif new_folder != folder and new_folder.exists():
-                    blocking.append(f"Ya existe una carpeta llamada «{new_folder.name}».")
+                    blocking.append(_("Ya existe una carpeta llamada «{new_folder_name}».").format(new_folder_name=new_folder.name))
                 included = [r for r in rows if r["include"].get_active()]
                 for r in rows:
                     text = r["entry"].get_text().strip()
@@ -1684,38 +1684,36 @@ def run_gui(initial_image: Path | None = None) -> None:
                 for r in rows:
                     r["name"], message = None, ""
                     if not r["include"].get_active():
-                        r["new"].set_text("(no se renombra)")
+                        r["new"].set_text(_("(no se renombra)"))
                     elif r["number"] is None:
                         r["new"].set_text("—")
-                        message = "Sin número"
-                        blocking.append(f"{r['path'].name}: escribe su número o exclúyelo.")
+                        message = _("Sin número")
+                        blocking.append(_("{name}: escribe su número o exclúyelo.").format(name=r['path'].name))
                     else:
                         if not folder_stem:
-                            message = "Nombre vacío"
+                            message = _("Nombre vacío")
                         else:
                             r["name"] = f"{folder_stem} #{pad_number(r['number'], width)}{r['path'].suffix}"
                             if len(r["name"].encode()) > MAX_NAME_BYTES:
-                                message = "Nombre demasiado largo"
-                                blocking.append("El nombre de los archivos es demasiado largo para el sistema de archivos.")
+                                message = _("Nombre demasiado largo")
+                                blocking.append(_("El nombre de los archivos es demasiado largo para el sistema de archivos."))
                             r["new"].set_text(r["name"])
                             taken[r["name"]] = taken.get(r["name"], 0) + 1
-                            message = "revisa el número" if r["doubtful"] else ""
+                            message = _("revisa el número") if r["doubtful"] else ""
                     r["note"].set_text(message)
                 existing = {p.name for p in folder.iterdir()}
                 for r in rows:
                     if r["name"] is None:
                         continue
                     if taken[r["name"]] > 1:
-                        r["note"].set_text("Repetido")
-                        blocking.append(f"Hay varios archivos con el número de «{r['name']}».")
+                        r["note"].set_text(_("Repetido"))
+                        blocking.append(_("Hay varios archivos con el número de «{r}».").format(r=r['name']))
                     elif r["name"] in existing and r["name"] not in moving:
-                        r["note"].set_text("Ya existe")
-                        blocking.append(f"«{r['name']}» ya existe y no forma parte del lote.")
+                        r["note"].set_text(_("Ya existe"))
+                        blocking.append(_("«{r}» ya existe y no forma parte del lote.").format(r=r['name']))
                 changes = [r for r in rows if r["name"] and r["name"] != r["path"].name]
-                summary.set_text(f"{len(changes)} archivo(s) se renombran · "
-                                 f"{sum(1 for r in rows if r['name'] == r['path'].name)} ya tienen ese nombre · "
-                                 f"{sum(1 for r in rows if not r['include'].get_active())} sin tocar")
-                extra = f" (y {len(blocking) - 1} problema(s) más)" if len(blocking) > 1 else ""
+                summary.set_text(_("{changes_count} archivo(s) se renombran · {sum} ya tienen ese nombre · {sum_2} sin tocar").format(changes_count=len(changes), sum=sum(1 for r in rows if r['name'] == r['path'].name), sum_2=sum(1 for r in rows if not r['include'].get_active())))
+                extra = _(" (y {blocking_count} problema(s) más)").format(blocking_count=len(blocking) - 1) if len(blocking) > 1 else ""
                 problem.set_text(blocking[0] + extra if blocking else "")
                 apply.set_sensitive(not blocking and (bool(changes) or new_folder != folder))
                 state["folder_stem"] = folder_stem
@@ -1726,14 +1724,14 @@ def run_gui(initial_image: Path | None = None) -> None:
                 try:
                     new_folder = rename_series(folder, state["folder_stem"], moves, RENAME_LOG, library)
                 except (OSError, ValueError) as error:
-                    problem.set_text(f"No se pudo renombrar (no se ha cambiado nada): {error}")
+                    problem.set_text(_("No se pudo renombrar (no se ha cambiado nada): {error}").format(error=error))
                     return
                 self.settings.pattern = folder_pattern.get_text()
                 self.settings.save()
                 if self.source_file is not None and folder in self.source_file.parents:
                     renamed = dict(moves).get(self.source_file, self.source_file)
                     self.source_file = new_folder / renamed.name
-                self.status.set_text(f"Carpeta renombrada a «{new_folder.name}» y {len(moves)} archivo(s) renumerados.")
+                self.status.set_text(_("Carpeta renombrada a «{new_folder_name}» y {moves_count} archivo(s) renumerados.").format(new_folder_name=new_folder.name, moves_count=len(moves)))
                 self._update_normalize()
                 window.close()
 
@@ -1755,7 +1753,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         # ---- Metadatos (ComicInfo.xml) de una carpeta o de un archivo ----------------------------
         def _choose_metadata_folder(self, _button):
-            Gtk.FileDialog(title="Carpeta con los cómics").select_folder(self, None, self._metadata_folder_chosen)
+            Gtk.FileDialog(title=_("Carpeta con los cómics")).select_folder(self, None, self._metadata_folder_chosen)
 
         def _metadata_folder_chosen(self, dialog, result):
             try:
@@ -1765,7 +1763,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             files = sorted((p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in COMIC_EXTENSIONS),
                            key=lambda p: natural_key(p.name))
             if not files:
-                self.status.set_text(f"No hay archivos de cómic directamente en {folder.name}.")
+                self.status.set_text(_("No hay archivos de cómic directamente en {folder_name}.").format(folder_name=folder.name))
                 return
             self._start_metadata(folder, files)
 
@@ -1775,7 +1773,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self._start_metadata(target, [target])
 
         def _start_metadata(self, where: Path, files: list[Path]):
-            self.status.set_text(f"Leyendo los metadatos de {len(files)} archivo(s)…")
+            self.status.set_text(_("Leyendo los metadatos de {files_count} archivo(s)…").format(files_count=len(files)))
             chosen = self.selected   # con una ficha de Universo Marvel y un solo archivo, también las fichas USA
             wants_usa = (len(files) == 1 and chosen is not None and chosen.source == "Universo Marvel"
                          and chosen.extra.get("level") == "issue")
@@ -1806,7 +1804,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _metadata_loaded(self, where: Path, files: list[Path], infos: list, counts: dict, usa=None,
                              usa_error: str = ""):
             self._stop_search_progress("usa")
-            self.status.set_text(f"Metadatos leídos de {len(files)} archivo(s).")
+            self.status.set_text(_("Metadatos leídos de {files_count} archivo(s).").format(files_count=len(files)))
             gcd = self._gcd()
             info = None
             if gcd is not None and self.selected is not None and self.selected.series_id:
@@ -1827,6 +1825,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 if self.selected.brand:
                     extra["Imprint"] = self.selected.brand
             notice = ""
+            notice_warning = False   # el aviso se pinta como advertencia (no por su texto, que se traduce)
             details = self._gcd_issue_details(gcd) if len(files) == 1 else None
             if details is not None:   # créditos, género y personajes del número de GCD elegido
                 extra.update({key: value for key, value in details.credits.items() if value})
@@ -1836,8 +1835,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                 per_issue.update({"GTIN": details.barcode or details.isbn, "Summary": details.summary})
                 if details.story_lines:   # varias historias: quién hizo qué en cada una, en las Notas
                     per_issue["NotesBlock"] = "\n".join([GCD_CREDITS_HEADING, *details.story_lines])
-                notice = "Créditos, género y personajes: de la ficha del número en GCD" + (
-                    " (los de alguna historia, de la original reimpresa)." if details.inherited else ".")
+                notice = (_("Créditos, género y personajes: de la ficha del número en GCD (los de alguna historia, de la "
+                            "original reimpresa).") if details.inherited else
+                          _("Créditos, género y personajes: de la ficha del número en GCD."))
             if usa is not None:
                 extra.update({key: value for key, value in usa.credits.items() if value})
                 if usa.summary:   # la sinopsis de las historias, para el Resumen (solo si el archivo no lo tiene ya)
@@ -1846,17 +1846,22 @@ def run_gui(initial_image: Path | None = None) -> None:
                     per_issue["NotesBlock"] = compose_notes(self.selected.extra.get("NotesUsa", ""), usa.story_lines,
                                                             self.selected.extra.get("NotesComments", ""))
                 if any(usa.credits.values()):
-                    notice = ("Guion, lápiz, tinta y color: de las fichas USA de los originales que recoge este ejemplar"
-                              + (f" ({', '.join(str(year) for year in usa.years)})" if usa.years else "") + ".")
+                    years = f" ({', '.join(str(year) for year in usa.years)})" if usa.years else ""
+                    notice = _("Guion, lápiz, tinta y color: de las fichas USA de los originales que recoge este "
+                               "ejemplar{years}.").format(years=years)
                     if usa.approximate:
-                        notice += (" Revisa: de " + ", ".join(usa.approximate) + " no se pudo saber qué historias son "
-                                   "las de este ejemplar, y se han incluido todas.")
+                        notice += " " + _("Revisa: de {titles} no se pudo saber qué historias son las de este ejemplar, "
+                                          "y se han incluido todas.").format(titles=", ".join(usa.approximate))
+                        notice_warning = True
                 if usa.missing:
-                    unread = "No se pudo leer la ficha USA de: " + ", ".join(usa.missing) + "."
+                    unread = _("No se pudo leer la ficha USA de: {titles}.").format(titles=", ".join(usa.missing))
                     notice = f"{notice} {unread}" if notice else unread
+                    notice_warning = True
             elif usa_error:
-                notice = f"No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): {usa_error}"
-            self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue, notice)
+                notice = _("No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): {usa_error}").format(usa_error=usa_error)
+                notice_warning = True
+            self._open_metadata_dialog(where, files, infos, values, publisher, info, extra, counts, per_issue, notice,
+                                       notice_warning)
 
         def _gcd_issue_details(self, gcd):
             """Los datos que GCD tiene del número elegido (no de la serie): del índice local si los trae, o los ya
@@ -1871,14 +1876,15 @@ def run_gui(initial_image: Path | None = None) -> None:
             return gcd.issue_details(int(chosen.extra["issue_id"]))
 
         def _open_metadata_dialog(self, where: Path, files: list[Path], infos: list, values: Values, publisher: str,
-                                  gcd_info, extra=None, counts=None, per_issue=None, notice: str = ""):
+                                  gcd_info, extra=None, counts=None, per_issue=None, notice: str = "",
+                                  notice_warning: bool = False):
             good = [i for i, _error in infos if i is not None]
             suggested = suggest_fields(values, publisher, gcd_info)
             suggested.update({key: value for key, value in (extra or {}).items() if value})   # la ficha manda
             texts, baseline = initial_form(good, suggested)
             if (per_issue or {}).get("NotesBlock"):   # ejemplares USA y comentarios de la ficha, bajo lo que ya haya
                 texts["Notes"] = append_block(texts.get("Notes", ""), per_issue["NotesBlock"])
-            window = Gtk.Window(title="Metadatos", transient_for=self, modal=True, default_width=960, default_height=780)
+            window = Gtk.Window(title=_("Metadatos"), transient_for=self, modal=True, default_width=960, default_height=780)
             outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
                             margin_start=14, margin_end=14)
             window.set_child(outer)
@@ -1887,27 +1893,28 @@ def run_gui(initial_image: Path | None = None) -> None:
             content.set_child(box)                                          # abajo siempre quedan a la vista
             outer.append(content)
             head = Gtk.Label(xalign=0, wrap=True)
-            head.set_markup(f"<b>{'Carpeta' if where.is_dir() else 'Archivo'}:</b> {GLib.markup_escape_text(str(where))}"
-                            f"  ({len(files)} archivo{'s' if len(files) != 1 else ''})")
+            head.set_markup(_("<b>{kind}:</b> {path}  ({files})").format(
+                kind=_("Carpeta") if where.is_dir() else _("Archivo"), path=GLib.markup_escape_text(str(where)),
+                files=ngettext("{count} archivo", "{count} archivos", len(files)).format(count=len(files))))
             box.append(head)
             original = Gtk.Label(xalign=0, wrap=True, label=(
-                "Los metadatos se escriben en los propios archivos, no en copias (antes se verifica una copia de cada "
-                "uno); cada lote se puede deshacer desde Ajustes."))
+                _("Los metadatos se escriben en los propios archivos, no en copias (antes se verifica una copia de cada "
+                "uno); cada lote se puede deshacer desde Ajustes.")))
             original.add_css_class("dim-label")
             box.append(original)
             if notice:
                 note_label = Gtk.Label(xalign=0, wrap=True, label=notice)
-                note_label.add_css_class("warning" if "Revisa" in notice or "No se pudo" in notice else "dim-label")
+                note_label.add_css_class("warning" if notice_warning else "dim-label")
                 box.append(note_label)
 
-            labels = {"Series": ("Serie", "nombre de la serie"), "Volume": ("Volumen", "8"),
-                      "Publisher": ("Editorial", "Panini, Planeta…"), "Imprint": ("Sello", "el impreso en el ejemplar"),
-                      "Year": ("Año", "2000"), "Month": ("Mes", "opcional, 01-12"), "Day": ("Día", "opcional, 01-31"),
-                      "Count": ("Total de números", "los que tiene la serie"),
-                      "LanguageISO": ("Idioma", "es, en…"), "Format": ("Formato", "Tomo tapa blanda, Grapa…"),
-                      "Genre": ("Género", "crimen, superhéroes…"), "Characters": ("Personajes", "Punisher, Micro…"),
-                      "Web": ("Web", "ficha de GCD u otra"),
-                      "Notes": ("Notas", "años del contenido original…")}
+            labels = {"Series": (_("Serie"), _("nombre de la serie")), "Volume": (_("Volumen"), "8"),
+                      "Publisher": (_("Editorial"), _("Panini, Planeta…")), "Imprint": (_("Sello"), _("el impreso en el ejemplar")),
+                      "Year": (_("Año"), "2000"), "Month": (_("Mes"), _("opcional, 01-12")), "Day": (_("Día"), _("opcional, 01-31")),
+                      "Count": (_("Total de números"), _("los que tiene la serie")),
+                      "LanguageISO": (_("Idioma"), _("es, en…")), "Format": (_("Formato"), _("Tomo tapa blanda, Grapa…")),
+                      "Genre": (_("Género"), _("crimen, superhéroes…")), "Characters": (_("Personajes"), _("Punisher, Micro…")),
+                      "Web": ("Web", _("ficha de GCD u otra")),
+                      "Notes": (_("Notas"), _("años del contenido original…"))}
             layout = (("Series", "Volume"), ("Publisher", "Imprint"), ("Year", "Month", "Day", "Count"),
                       ("LanguageISO", "Format"), ("Genre", "Characters"), ("Web",), ("Notes",))
             grid = Gtk.Grid(column_spacing=10, row_spacing=6)
@@ -1918,7 +1925,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     value, absent = common_value(good, key)
                     varied = not value and not absent
                     narrow = key in ("Month", "Day")
-                    shown = "(distinto en cada archivo: se deja como está)" if varied else hint
+                    shown = _("(distinto en cada archivo: se deja como está)") if varied else hint
                     if key == "Notes":   # varias líneas: contenido original, ejemplares USA y comentarios de la edición
                         entry = NotesBox(texts[key], shown)
                     else:
@@ -1931,16 +1938,16 @@ def run_gui(initial_image: Path | None = None) -> None:
                     grid.attach(entry, index * 2 + 1, row, span, 1)
             box.append(grid)
             note = Gtk.Label(xalign=0, wrap=True, label=(
-                "Se rellena con lo que ya tienen los archivos y, en lo demás, con la serie de GCD y el nombre. Un campo "
-                "vacío no se toca; si quitas un valor que todos tenían, se borra. Revisa lo que viene de GCD."))
+                _("Se rellena con lo que ya tienen los archivos y, en lo demás, con la serie de GCD y el nombre. Un campo "
+                "vacío no se toca; si quitas un valor que todos tenían, se borra. Revisa lo que viene de GCD.")))
             note.add_css_class("dim-label")
             box.append(note)
 
-            box.append(Gtk.Label(label="Créditos (se aplican a todos los archivos del lote):", xalign=0))
-            credit_labels = {"Writer": ("Guion", "quien escribe"), "Penciller": ("Lápiz", "quien dibuja"),
-                             "Inker": ("Tinta", "quien entinta"), "Colorist": ("Color", "quien colorea"),
-                             "Letterer": ("Rotulación", "quien rotula"), "CoverArtist": ("Portada", "quien dibuja la portada"),
-                             "Translator": ("Traducción", "quien traduce"), "Editor": ("Edición", "quien edita")}
+            box.append(Gtk.Label(label=_("Créditos (se aplican a todos los archivos del lote):"), xalign=0))
+            credit_labels = {"Writer": (_("Guion"), _("quien escribe")), "Penciller": (_("Lápiz"), _("quien dibuja")),
+                             "Inker": (_("Tinta"), _("quien entinta")), "Colorist": (_("Color"), _("quien colorea")),
+                             "Letterer": (_("Rotulación"), _("quien rotula")), "CoverArtist": (_("Portada"), _("quien dibuja la portada")),
+                             "Translator": (_("Traducción"), _("quien traduce")), "Editor": (_("Edición"), _("quien edita"))}
             credit_layout = (("Writer", "Penciller", "Inker"), ("Colorist", "Letterer", "CoverArtist"),
                              ("Translator", "Editor"))
             credit_grid = Gtk.Grid(column_spacing=10, row_spacing=6)
@@ -1950,19 +1957,19 @@ def run_gui(initial_image: Path | None = None) -> None:
                     value, absent = common_value(good, key)
                     varied = not value and not absent
                     entry = Gtk.Entry(text=texts[key], hexpand=True, placeholder_text=(
-                        "(distinto en cada archivo: se deja como está)" if varied else hint))
+                        _("(distinto en cada archivo: se deja como está)") if varied else hint))
                     entries[key] = entry
                     credit_grid.attach(Gtk.Label(label=label, xalign=0), index * 2, row, 1, 1)
                     credit_grid.attach(entry, index * 2 + 1, row, 1, 1)
             box.append(credit_grid)
 
-            box.append(Gtk.Label(label="Categoría (la eliges tú; se guarda en las etiquetas):", xalign=0))
+            box.append(Gtk.Label(label=_("Categoría (la eliges tú; se guarda en las etiquetas):"), xalign=0))
             radios = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=4, column_spacing=12,
                                  row_spacing=4, homogeneous=False)
             first, wanted = None, initial_category(good)
             options = {}
             for name in ("", *CATEGORIES):
-                radio = Gtk.CheckButton(label=name or "(no cambiar)", active=(name == wanted))
+                radio = Gtk.CheckButton(label=name or _("(no cambiar)"), active=(name == wanted))
                 if first is None:
                     first = radio
                 else:
@@ -1977,17 +1984,17 @@ def run_gui(initial_image: Path | None = None) -> None:
                 number = detect_number(path.stem)[0] or (info or {}).get("Number", "")
                 line = Gtk.Box(spacing=8, margin_top=3, margin_bottom=3, margin_start=6, margin_end=6)
                 include = Gtk.CheckButton(active=info is not None, sensitive=info is not None,
-                                          tooltip_text="Escribir los metadatos de este archivo")
+                                          tooltip_text=_("Escribir los metadatos de este archivo"))
                 name = Gtk.Label(label=path.name, xalign=0, ellipsize=Pango.EllipsizeMode.MIDDLE,
                                  width_chars=20, max_width_chars=28, tooltip_text=error or str(path))
-                number_entry = Gtk.Entry(text=number, width_chars=5, placeholder_text="Nº",
-                                         tooltip_text="Número de ejemplar (se toma del nombre del archivo)")
+                number_entry = Gtk.Entry(text=number, width_chars=5, placeholder_text=_("Nº"),
+                                         tooltip_text=_("Número de ejemplar (se toma del nombre del archivo)"))
                 title_entry = Gtk.Entry(text=(info or {}).get("Title", "") or (per_issue or {}).get("Title", ""),
                                         width_chars=16, hexpand=True,
-                                        placeholder_text="Título del ejemplar (opcional)")
+                                        placeholder_text=_("Título del ejemplar (opcional)"))
                 summary_entry = Gtk.Entry(text=(info or {}).get("Summary", "") or (per_issue or {}).get("Summary", ""),
                                           width_chars=16, hexpand=True,
-                                          placeholder_text="Resumen del ejemplar (opcional)")
+                                          placeholder_text=_("Resumen del ejemplar (opcional)"))
                 state_label = Gtk.Label(xalign=0, width_chars=14, ellipsize=Pango.EllipsizeMode.END, tooltip_text=error)
                 for widget in (include, name, number_entry, title_entry, summary_entry, state_label):
                     line.append(widget)
@@ -2002,8 +2009,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             problem = Gtk.Label(xalign=0, wrap=True)
             problem.add_css_class("error")
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(STOP_ICON, "Cancelar")
-            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), "Escribir metadatos")
+            cancel = icon_button(STOP_ICON, _("Cancelar"))
+            apply = icon_button(("emblem-ok-symbolic", "object-select-symbolic"), _("Escribir metadatos"))
             apply.add_css_class("suggested-action")
             for widget in (cancel, apply):
                 buttons.append(widget)
@@ -2028,9 +2035,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                 for r in rows:
                     r["changes"] = None
                     if r["error"]:
-                        r["state"].set_text("no se puede leer")
+                        r["state"].set_text(_("no se puede leer"))
                     elif not r["include"].get_active():
-                        r["state"].set_text("sin tocar")
+                        r["state"].set_text(_("sin tocar"))
                     elif blocking:
                         r["state"].set_text("—")
                     else:
@@ -2039,13 +2046,13 @@ def run_gui(initial_image: Path | None = None) -> None:
                                                {key: (per_issue or {}).get(key, "") for key in ("GTIN", "BlackAndWhite")})
                         if differs(r["info"], changes):
                             r["changes"] = changes
-                            r["state"].set_text("se modifica" if r["info"] else "se crea")
+                            r["state"].set_text(_("se modifica") if r["info"] else _("se crea"))
                             pending += 1
                         else:
-                            r["state"].set_text("ya está igual")
+                            r["state"].set_text(_("ya está igual"))
                             same += 1
                 skipped = sum(1 for r in rows if not r["include"].get_active() or r["error"])
-                summary.set_text(f"{pending} archivo(s) se modifican · {same} ya están igual · {skipped} sin tocar")
+                summary.set_text(_("{pending} archivo(s) se modifican · {same} ya están igual · {skipped} sin tocar").format(pending=pending, same=same, skipped=skipped))
                 problem.set_text(blocking)
                 apply.set_sensitive(bool(pending) and not blocking)
 
@@ -2055,12 +2062,12 @@ def run_gui(initial_image: Path | None = None) -> None:
                 if self.source_file in result.written:
                     self._refresh_meta()
                 self.status.set_text(
-                    f"Metadatos escritos en {len(result.written)} archivo(s)"
-                    + (f"; {len(result.unchanged)} ya estaban igual" if result.unchanged else "")
-                    + (f". {len(result.failed)} fallaron: " + "; ".join(f"{p.name}: {e}" for p, e in result.failed[:3])
+                    _("Metadatos escritos en {result_written_count} archivo(s)").format(result_written_count=len(result.written))
+                    + (_("; {result_unchanged_count} ya estaban igual").format(result_unchanged_count=len(result.unchanged)) if result.unchanged else "")
+                    + (_(". {result_failed_count} fallaron: ").format(result_failed_count=len(result.failed)) + "; ".join(f"{p.name}: {e}" for p, e in result.failed[:3])
                        if result.failed else "."))
                 if result.failed and not result.written:
-                    problem.set_text("No se ha escrito nada: " + "; ".join(f"{p.name}: {e}" for p, e in result.failed[:3]))
+                    problem.set_text(_("No se ha escrito nada: ") + "; ".join(f"{p.name}: {e}" for p, e in result.failed[:3]))
                     for widget in (cancel, apply):
                         widget.set_sensitive(True)
                     return
@@ -2074,7 +2081,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 library = Library(LIBRARY_DB) if LIBRARY_DB.exists() else None
 
                 def progress(done, total):
-                    later(summary.set_text, f"Escribiendo… {done}/{total}")
+                    later(summary.set_text, _("Escribiendo… {done}/{total}").format(done=done, total=total))
 
                 def run():
                     later(finished, write_batch(items, METADATA_LOG, library, progress))
@@ -2098,7 +2105,7 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _undo_metadata(self, _button):
             library = Library(LIBRARY_DB) if LIBRARY_DB.exists() else None
             self.metadata_undo_button.set_sensitive(False)
-            self.metadata_undo_info.set_text("Deshaciendo…")
+            self.metadata_undo_info.set_text(_("Deshaciendo…"))
 
             def run():
                 try:
@@ -2112,11 +2119,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._refresh_series()
             self._refresh_meta()
             if error is not None:
-                self.metadata_undo_info.set_text(f"No se pudo deshacer: {error}")
+                self.metadata_undo_info.set_text(_("No se pudo deshacer: {error}").format(error=error))
                 return
-            text = f"Deshecho el último lote: {len(result.restored)} archivo(s) restaurados."
+            text = _("Deshecho el último lote: {result_restored_count} archivo(s) restaurados.").format(result_restored_count=len(result.restored))
             if result.skipped:
-                text += f" {len(result.skipped)} omitidos: " + "; ".join(f"{p.name} ({why})" for p, why in result.skipped[:3])
+                text += _(" {result_skipped_count} omitidos: ").format(result_skipped_count=len(result.skipped)) + "; ".join(f"{p.name} ({why})" for p, why in result.skipped[:3])
             self.metadata_undo_info.set_text(text)
 
         def _undo_rename(self, _button):
@@ -2124,15 +2131,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 pairs = undo_last(RENAME_LOG, library)
             except (OSError, LookupError, ValueError) as error:
-                self.undo_info.set_text(f"No se pudo deshacer: {error}")
+                self.undo_info.set_text(_("No se pudo deshacer: {error}").format(error=error))
                 return
             for current, original in pairs:
                 if self.source_file == current:
                     self.source_file = original
             first, last = pairs[0], pairs[-1]
-            self.undo_info.set_text(f"Deshecho: {first[0].name} → {first[1].name}" if len(pairs) == 1 else
-                                    f"Deshecho un lote de {len(pairs)} renombrado(s), el último: "
-                                    f"{last[0].name} → {last[1].name}")
+            self.undo_info.set_text(_("Deshecho: {name} → {name_2}").format(name=first[0].name, name_2=first[1].name) if len(pairs) == 1 else
+                                    _("Deshecho un lote de {pairs_count} renombrado(s), el último: {name} → {name_2}").format(pairs_count=len(pairs), name=last[0].name, name_2=last[1].name))
             self._update_normalize()
 
         # ---- Asistente de IA: terminal embebido con la CLI del usuario, en el panel --------------
@@ -2140,7 +2146,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             if self.image is None:
                 return
             if not vte_available():
-                self.status.set_text("Falta el terminal embebido: instala el paquete gir1.2-vte-3.91.")
+                self.status.set_text(_("Falta el terminal embebido: instala el paquete gir1.2-vte-3.91."))
                 return
             work = Path(GLib.get_user_cache_dir()) / "comic-identify" / "ai"
             try:
@@ -2148,7 +2154,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 image_name = next(work.glob("portada.*")).name
                 argv = build_argv(self.settings.assistant, build_prompt(image_name, self.settings.prompt))
             except (OSError, ValueError) as error:
-                self.status.set_text(f"No se pudo preparar el asistente: {error}")
+                self.status.set_text(_("No se pudo preparar el asistente: {error}").format(error=error))
                 return
             self._open_assistant(work, argv)
 
@@ -2158,8 +2164,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._drop_assistant()   # una sola sesión a la vez
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             self.assistant_note = Gtk.Label(xalign=0, wrap=True, label=(
-                f"Sesión de «{argv[0]}» con tu propia cuenta. Revisa cada permiso que te pida: "
-                "esta aplicación no ve tus credenciales."))
+                _("Sesión de «{argv}» con tu propia cuenta. Revisa cada permiso que te pida: esta aplicación no ve tus credenciales.").format(argv=argv[0])))
             terminal = Vte.Terminal(vexpand=True, hexpand=True)
             font = Pango.FontDescription()
             font.set_family(TERMINAL_FONT)
@@ -2168,12 +2173,12 @@ def run_gui(initial_image: Path | None = None) -> None:
             terminal.set_font(font)
             terminal.set_scrollback_lines(10000)
             terminal.connect("child-exited", lambda _t, _status: self.assistant_note.set_text(
-                "La sesión ha terminado. Pulsa × para cerrar el panel."))
+                _("La sesión ha terminado. Pulsa × para cerrar el panel.")))
             box.append(self.assistant_note)
             box.append(terminal)
             self.preview_stack.add_named(box, "assistant")
             self.assistant_box, self.assistant_terminal = box, terminal
-            self._open_preview("Asistente de IA", "", "assistant", ASSISTANT_WIDTH)
+            self._open_preview(_("Asistente de IA"), "", "assistant", ASSISTANT_WIDTH)
             # child_setup y child_setup_data quedan a None; -1 = sin límite de tiempo; sin cancelable.
             terminal.spawn_async(Vte.PtyFlags.DEFAULT, str(work), shell_argv(argv), None, GLib.SpawnFlags.SEARCH_PATH,
                                  None, None, -1, None, self._assistant_spawned)
@@ -2181,7 +2186,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _assistant_spawned(self, _terminal, _pid, error, *_data):
             if error is not None:
-                self.status.set_text(f"No se pudo lanzar el asistente: {error.message}")
+                self.status.set_text(_("No se pudo lanzar el asistente: {error_message}").format(error_message=error.message))
                 self._close_preview(None)
 
         def _drop_assistant(self):
@@ -2197,14 +2202,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.preview.set_size_request(PREVIEW_WIDTH, -1)
             header = Gtk.Box(spacing=8)
             self.preview_title = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END)   # se recorta antes que ensanchar el panel
-            self.assistant_back = icon_button(("go-previous-symbolic",), "Volver al asistente", visible=False)
+            self.assistant_back = icon_button(("go-previous-symbolic",), _("Volver al asistente"), visible=False)
             self.assistant_back.connect("clicked", lambda _b: self._open_preview(
-                "Asistente de IA", "", "assistant", ASSISTANT_WIDTH))
-            self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label="Abrir en el navegador")
-            self.use_ficha = Gtk.Button(label="Usar esta ficha", visible=False, css_classes=["suggested-action"], tooltip_text=(
-                "Es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD: la usa para rellenar los metadatos"))
+                _("Asistente de IA"), "", "assistant", ASSISTANT_WIDTH))
+            self.preview_link = Gtk.LinkButton(uri=GCD_SITE, label=_("Abrir en el navegador"))
+            self.use_ficha = Gtk.Button(label=_("Usar esta ficha"), visible=False, css_classes=["suggested-action"], tooltip_text=(
+                _("Es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD: la usa para rellenar los metadatos")))
             self.use_ficha.connect("clicked", self._use_web_ficha)
-            close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text="Cerrar el panel")
+            close = Gtk.Button(icon_name=pick_icon("window-close-symbolic"), tooltip_text=_("Cerrar el panel"))
             close.connect("clicked", self._close_preview)
             for widget in (self.preview_title, self.use_ficha, self.preview_link, self.assistant_back, close):
                 header.append(widget)
@@ -2221,7 +2226,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
             grid = Gtk.Grid(column_spacing=14, row_spacing=6)
             self.native_values = {}
-            for row, (key, label) in enumerate((("name", "Nombre:"), ("year", "Año:"), ("issue", "Issue:"))):
+            for row, (key, label) in enumerate((("name", _("Nombre:")), ("year", _("Año:")), ("issue", _("Issue:")))):
                 caption = Gtk.Label(xalign=0, yalign=0)
                 caption.set_markup(f"<big><b>{label}</b></big>")
                 value = Gtk.Label(xalign=0, wrap=True, hexpand=True)
@@ -2230,7 +2235,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.native_values[key] = value
             self.native_picture = Gtk.Picture(can_shrink=True, content_fit=Gtk.ContentFit.CONTAIN, vexpand=True)
             attribution = Gtk.LinkButton(uri="https://comicvine.gamespot.com/", halign=Gtk.Align.START,
-                                         label="Datos e imagen de Comic Vine")
+                                         label=_("Datos e imagen de Comic Vine"))
             for widget in (grid, self.native_picture, attribution):
                 box.append(widget)
             return box
@@ -2251,10 +2256,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             elif (candidate.source == "GCD" and candidate.url.startswith(GCD_SITE)) or (
                     candidate.source in CATALOG_SOURCES and candidate.url):
                 if webkit_available():
-                    self._show_web(candidate.url, f"Ficha de {candidate.source}" if candidate.source in CATALOG_SOURCES
-                                   else "Ficha de Grand Comics Database")
+                    self._show_web(candidate.url, _("Ficha de {candidate_source}").format(candidate_source=candidate.source) if candidate.source in CATALOG_SOURCES
+                                   else _("Ficha de Grand Comics Database"))
                 else:   # sin WebKit no hay panel para esas webs: se abre en el navegador
-                    Gtk.UriLauncher.new(candidate.url).launch(self, None, lambda *_: None)
+                    Gtk.UriLauncher.new(candidate.url).launch(self, None, lambda *_args: None)
 
         @staticmethod
         def _is_single_issue(series: Candidate) -> bool:
@@ -2274,20 +2279,19 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._start_search_progress("marvel")
             image = self.image   # la portada abierta, para compararla con la de la ficha
             if webkit_available() and not (self.webview and self.webview.get_uri() == series.url):
-                self._show_web(series.url, f"Serie en {site}")   # mientras tanto, la propia web
-            self.status.set_text(f"Consultando la ficha en {site}…" if single else
-                                 f"Buscando el nº {number} de «{series.title}» en {site}…")
+                self._show_web(series.url, _("Serie en {site}").format(site=site))   # mientras tanto, la propia web
+            self.status.set_text(_("Consultando la ficha en {site}…").format(site=site) if single else
+                                 _("Buscando el nº {number} de «{series_title}» en {site}…").format(number=number, series_title=series.title, site=site))
 
             def run():
                 try:
                     candidate, others = (self._fetch_tebeosfera if site == "Tebeosfera" else self._fetch_marvel)(
                         series, number, image)
                 except (UniversoMarvelError, TebeosferaError, OSError) as error:
-                    later(self._marvel_resolved, request, series, None, f"No se pudo consultar {site}: {error}")
+                    later(self._marvel_resolved, request, series, None, _("No se pudo consultar {site}: {error}").format(site=site, error=error))
                     return
                 if candidate is None:
-                    later(self._marvel_resolved, request, series, None, f"«{series.title}» no tiene el nº {number} en "
-                          f"{site} (o no está catalogado todavía)." + (" Elige una de sus fichas en la lista." if others else ""),
+                    later(self._marvel_resolved, request, series, None, _("«{series_title}» no tiene el nº {number} en {site} (o no está catalogado todavía).").format(series_title=series.title, number=number, site=site) + (_(" Elige una de sus fichas en la lista.") if others else ""),
                           others)
                 else:
                     later(self._marvel_resolved, request, series, candidate, "")
@@ -2344,8 +2348,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             rest = [c for c in self.candidates if c is not series]
             self._show_candidates([candidate, *rest])
             self.results.select_row(self.results.get_row_at_index(0))
-            match = f" · {candidate.similarity:.0%} de parecido con tu portada" if candidate.similarity is not None else ""
-            self.status.set_text(f"Ficha de {candidate.source}: {candidate.title} · {candidate.subtitle}{match}")
+            match = _(" · {candidate_similarity:.0%} de parecido con tu portada").format(candidate_similarity=candidate.similarity) if candidate.similarity is not None else ""
+            self.status.set_text(_("Ficha de {candidate_source}: {candidate_title} · {candidate_subtitle}{match}").format(candidate_source=candidate.source, candidate_title=candidate.title, candidate_subtitle=candidate.subtitle, match=match))
 
         def _screen_width(self) -> int | None:
             monitor = Gdk.Display.get_default().get_monitor_at_surface(self.get_surface()) if self.get_surface() else None
@@ -2385,7 +2389,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.preview_stack.set_visible_child_name(page)
             self.assistant_back.set_visible(self.assistant_box is not None and page != "assistant")
 
-        def _show_web(self, url: str, title: str = "Ficha de Grand Comics Database"):
+        def _show_web(self, url: str, title: str = _("Ficha de Grand Comics Database")):
             if self.webview is None:
                 gi.require_version("WebKit", "6.0")
                 from gi.repository import WebKit
@@ -2467,7 +2471,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._gcd_api_request += 1
             request = self._gcd_api_request
             self._start_search_progress("gcd_api")
-            self.status.set_text("Ese número no está en tu índice de GCD: consultando su API pública…")
+            self.status.set_text(_("Ese número no está en tu índice de GCD: consultando su API pública…"))
 
             def run():
                 try:
@@ -2483,7 +2487,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 return   # se ha limpiado o elegido otra cosa mientras tanto
             self._stop_search_progress("gcd_api")
             if hit is None:
-                self.status.set_text(f"No se pudo consultar la API pública de GCD: {problem}")
+                self.status.set_text(_("No se pudo consultar la API pública de GCD: {problem}").format(problem=problem))
                 return
             candidate = gcd_issue_candidate(hit)
             candidate.extra["ApiIssueDetails"] = json.dumps(asdict(details), ensure_ascii=False)
@@ -2493,7 +2497,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.results.unselect_all()
             self._show_candidates([candidate, *self.candidates])
             self.results.select_row(self.results.get_row_at_index(0))
-            self.status.set_text(f"Ficha de GCD: {candidate.title} · {candidate.subtitle}")
+            self.status.set_text(_("Ficha de GCD: {candidate_title} · {candidate_subtitle}").format(candidate_title=candidate.title, candidate_subtitle=candidate.subtitle))
 
         def _favicon_changed(self, webview, _param):
             """comics.org bloquea la descarga directa de su icono; el motor del panel sí lo recibe al mostrar una ficha."""
@@ -2516,7 +2520,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             for key, text in shown.items():
                 self.native_values[key].set_markup(f"<big>{GLib.markup_escape_text(text)}</big>")
             self._set_picture(candidate.cover)   # la miniatura ya descargada, mientras llega la grande
-            self._open_preview("Ficha de ComicVine", candidate.url, "native")
+            self._open_preview(_("Ficha de ComicVine"), candidate.url, "native")
             self._native_url = candidate.image_url
             if candidate.image_url and candidate.image_url in self._big_covers:
                 self._set_picture(self._big_covers[candidate.image_url])
@@ -2609,7 +2613,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 slot.append(Gtk.Label(label=short_name(name), hexpand=True, halign=Gtk.Align.END,
                                       ellipsize=Pango.EllipsizeMode.END, max_width_chars=16,
                                       css_classes=["publisher-badge"], tooltip_text=(
-                    f"{name}\nPara poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}")))
+                    _("{name}\nPara poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}").format(name=name, slug=slug, LOGO_DIR=LOGO_DIR))))
                 return slot
             slot.set_tooltip_text(LOGO_NAMES[key])
             # los descargados van ya reducidos: sin can_shrink se ven del tamaño exacto (GTK no los reescala a su gusto)
@@ -2648,22 +2652,22 @@ def run_gui(initial_image: Path | None = None) -> None:
             if candidate.subtitle:
                 text.append(Gtk.Label(label=candidate.subtitle, xalign=0, wrap=True))
             if candidate.similarity is not None:
-                verdict = "Coincidencia probable" if candidate.is_match else "Poco parecida"
-                score = Gtk.Label(label=f"{verdict} · {candidate.similarity:.0%} de parecido", xalign=0)
+                verdict = _("Coincidencia probable") if candidate.is_match else _("Poco parecida")
+                score = Gtk.Label(label=_("{verdict} · {candidate_similarity:.0%} de parecido").format(verdict=verdict, candidate_similarity=candidate.similarity), xalign=0)
                 score.add_css_class("success" if candidate.is_match else "dim-label")
                 text.append(score)
             elif candidate.source in CATALOG_SOURCES:
                 if candidate.extra.get("level") != "series":
-                    how = f"Datos de la ficha de {candidate.source}"
+                    how = _("Datos de la ficha de {candidate_source}").format(candidate_source=candidate.source)
                 elif self._is_single_issue(candidate):
-                    how = "Número suelto del catálogo: elígelo para ver su ficha"
+                    how = _("Número suelto del catálogo: elígelo para ver su ficha")
                 else:
-                    how = "Serie del catálogo: escribe el número y elígela para consultar su ficha"
+                    how = _("Serie del catálogo: escribe el número y elígela para consultar su ficha")
                 score = Gtk.Label(label=how, xalign=0, wrap=True)
                 score.add_css_class("dim-label")
                 text.append(score)
             elif candidate.source == "GCD":
-                how = "Coincide el código de barras" if candidate.exact else "Por título; portada sin comparar"
+                how = _("Coincide el código de barras") if candidate.exact else _("Por título; portada sin comparar")
                 score = Gtk.Label(label=how, xalign=0)
                 score.add_css_class("success" if candidate.exact else "dim-label")
                 text.append(score)
@@ -2672,9 +2676,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             if (logo := self._publisher_logo(candidate)) is not None:
                 row.append(logo)
             if candidate.path:
-                open_folder = icon_button(("folder-open-symbolic",), "Abrir carpeta", valign=Gtk.Align.CENTER)
+                open_folder = icon_button(("folder-open-symbolic",), _("Abrir carpeta"), valign=Gtk.Align.CENTER)
                 open_folder.connect("clicked", lambda _b, p=candidate.path: Gtk.FileLauncher.new(
-                    Gio.File.new_for_path(str(p))).open_containing_folder(None, None, lambda *_: None))
+                    Gio.File.new_for_path(str(p))).open_containing_folder(None, None, lambda *_args: None))
                 row.append(open_folder)
             return row
 
@@ -2682,9 +2686,9 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _library_page(self):
             page = self._box()
             controls = Gtk.Box(spacing=8)
-            add = icon_button(("folder-new-symbolic", "list-add-symbolic"), "Añadir carpeta…")
+            add = icon_button(("folder-new-symbolic", "list-add-symbolic"), _("Añadir carpeta…"))
             add.connect("clicked", self._add_folder)
-            self.index_button = icon_button(INDEX_ICON, "Indexar / actualizar")
+            self.index_button = icon_button(INDEX_ICON, _("Indexar / actualizar"))
             self.index_button.connect("clicked", self._toggle_index)
             controls.append(add)
             controls.append(self.index_button)
@@ -2694,14 +2698,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.index_progress = Gtk.ProgressBar(show_text=True)
             self.index_info = Gtk.Label(xalign=0, wrap=True)
 
-            title = Gtk.Label(xalign=0, label="Series de la colección (por carpeta y metadatos):")
+            title = Gtk.Label(xalign=0, label=_("Series de la colección (por carpeta y metadatos):"))
             title.add_css_class("heading")
             self.series_filter = Gtk.DropDown.new_from_strings(SERIES_FILTERS)
             self.series_filter.connect("notify::selected", self._show_series)
-            self.series_search = Gtk.SearchEntry(placeholder_text="Buscar una serie…", hexpand=True)
+            self.series_search = Gtk.SearchEntry(placeholder_text=_("Buscar una serie…"), hexpand=True)
             self.series_search.connect("search-changed", self._show_series)
-            refresh = icon_button(("view-refresh-symbolic",), "Actualizar lista", tooltip_text=(
-                "Vuelve a calcular la lista con lo indexado (indexa antes para leer los metadatos nuevos)"))
+            refresh = icon_button(("view-refresh-symbolic",), _("Actualizar lista"), tooltip_text=(
+                _("Vuelve a calcular la lista con lo indexado (indexa antes para leer los metadatos nuevos)")))
             refresh.connect("clicked", lambda _b: self._refresh_series())
             filters = Gtk.Box(spacing=8)
             for widget in (self.series_filter, self.series_search, refresh):
@@ -2720,11 +2724,11 @@ def run_gui(initial_image: Path | None = None) -> None:
             about = Gtk.AboutDialog(
                 transient_for=self, modal=True, program_name="Comic Identify", version=__version__,
                 logo_icon_name="comic-identify", authors=[AUTHOR], copyright=f"© 2026 {AUTHOR}",
-                comments=("Identifica un cómic a partir de su portada, normaliza los nombres de archivos y carpetas y "
-                          "escribe metadatos ComicInfo.xml."),
+                comments=(_("Identifica un cómic a partir de su portada, normaliza los nombres de archivos y carpetas y "
+                          "escribe metadatos ComicInfo.xml.")),
                 website=REPO_URL, website_label=REPO_URL.removeprefix("https://"),
                 license_type=Gtk.License.CUSTOM, license=LICENSE_TEXT, wrap_license=True)
-            about.add_credit_section("Datos de terceros", [
+            about.add_credit_section(_("Datos de terceros"), [
                 "Grand Comics Database (CC BY-SA 4.0) https://www.comics.org/",
                 "Comic Vine https://comicvine.gamespot.com/",
                 "Universo Marvel https://fichas.universomarvel.com/",
@@ -2739,29 +2743,29 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _show_series(self, *_args):
             while (row := self.series_list.get_first_child()) is not None:
                 self.series_list.remove(row)
-            mode, needle = SERIES_FILTERS[self.series_filter.get_selected()], self.series_search.get_text().strip().lower()
-            keep = {"Incompletas": lambda r: bool(r.missing), "Todas": lambda r: True,
-                    "Sin todos sus metadatos": lambda r: r.tagged < r.files,
-                    "Sin total indicado": lambda r: r.count is None}[mode]
+            needle = self.series_search.get_text().strip().lower()
+            # en el orden de SERIES_FILTERS: incompletas, todas, sin todos sus metadatos y sin total indicado
+            keep = (lambda r: bool(r.missing), lambda r: True, lambda r: r.tagged < r.files,
+                    lambda r: r.count is None)[self.series_filter.get_selected()]
             shown = [r for r in self.series_reports if keep(r) and needle in r.name.lower()]
             for report in shown[:SERIES_SHOWN]:
-                parts = [f"{len(report.owned)} de {report.count}" if report.count else
-                         f"{len(report.owned)} números (total sin indicar)"]
+                parts = [_("{owned} de {total}").format(owned=len(report.owned), total=report.count) if report.count else
+                         _("{report_owned_count} números (total sin indicar)").format(report_owned_count=len(report.owned))]
                 if report.mixed:
-                    parts.append("varias series en la carpeta (números repetidos): sin comprobar")
+                    parts.append(_("varias series en la carpeta (números repetidos): sin comprobar"))
                 if report.starts_at:
-                    parts.append(f"empieza en el {report.starts_at}")
+                    parts.append(_("empieza en el {report_starts_at}").format(report_starts_at=report.starts_at))
                 if report.missing:
-                    parts.append("faltan " + ranges(report.missing))
+                    parts.append(_("faltan ") + ranges(report.missing))
                 if report.sparse:
-                    parts.append("números sueltos: no se buscan huecos sin el total")
+                    parts.append(_("números sueltos: no se buscan huecos sin el total"))
                 if report.strays:
-                    parts.append("fuera de la serie: " + ranges(report.strays) + " (¿de otra serie?)")
+                    parts.append(_("fuera de la serie: ") + ranges(report.strays) + _(" (¿de otra serie?)"))
                 if report.duplicated and not report.mixed:
-                    parts.append("repetidos: " + ranges(report.duplicated))
+                    parts.append(_("repetidos: ") + ranges(report.duplicated))
                 if report.other:
-                    parts.append(f"{report.other} sin número entero")
-                parts.append(f"metadatos {report.tagged}/{report.files}")
+                    parts.append(_("{report_other} sin número entero").format(report_other=report.other))
+                parts.append(_("metadatos {report_tagged}/{report_files}").format(report_tagged=report.tagged, report_files=report.files))
                 if report.category:
                     parts.append(report.category)
                 line = Gtk.Box(spacing=8, margin_top=4, margin_bottom=4, margin_start=6, margin_end=6)
@@ -2769,23 +2773,23 @@ def run_gui(initial_image: Path | None = None) -> None:
                 name = Gtk.Label(xalign=0, wrap=True, tooltip_text=report.folder)
                 name.set_markup(f"<b>{GLib.markup_escape_text(report.name)}</b>")
                 detail = Gtk.Label(label=" · ".join(parts), xalign=0, wrap=True)
-                detail.add_css_class({"completa": "success", "incompleta": "warning"}.get(report.status, "dim-label"))
+                detail.add_css_class({"complete": "success", "incomplete": "warning"}.get(report.status_key, "dim-label"))
                 text.append(name)
                 text.append(detail)
-                open_folder = icon_button(("folder-open-symbolic",), "Abrir carpeta", valign=Gtk.Align.CENTER)
+                open_folder = icon_button(("folder-open-symbolic",), _("Abrir carpeta"), valign=Gtk.Align.CENTER)
                 open_folder.connect("clicked", lambda _b, f=report.folder: Gtk.FileLauncher.new(
-                    Gio.File.new_for_path(f)).launch(None, None, lambda *_: None))
+                    Gio.File.new_for_path(f)).launch(None, None, lambda *_args: None))
                 line.append(text)
                 line.append(open_folder)
                 self.series_list.append(line)
             incomplete = sum(1 for r in self.series_reports if r.missing)
             self.series_info.set_text(
-                f"{len(self.series_reports)} serie(s) reconocidas, {incomplete} con huecos"
-                + (f" · se muestran las primeras {SERIES_SHOWN} de {len(shown)}: afina el filtro" if len(shown) > SERIES_SHOWN
-                   else f" · {len(shown)} en la lista")
-                + ". Una carpeta suelta sin metadatos ni nombre normalizado no cuenta como serie."
+                _("{series_reports_count} serie(s) reconocidas, {incomplete} con huecos").format(series_reports_count=len(self.series_reports), incomplete=incomplete)
+                + (_(" · se muestran las primeras {SERIES_SHOWN} de {shown_count}: afina el filtro").format(SERIES_SHOWN=SERIES_SHOWN, shown_count=len(shown)) if len(shown) > SERIES_SHOWN
+                   else _(" · {shown_count} en la lista").format(shown_count=len(shown)))
+                + _(". Una carpeta suelta sin metadatos ni nombre normalizado no cuenta como serie.")
                 if self.series_reports else
-                "Todavía no hay series: indexa la colección y escribe metadatos o normaliza los nombres de las carpetas.")
+                _("Todavía no hay series: indexa la colección y escribe metadatos o normaliza los nombres de las carpetas."))
 
         def _refresh_library(self):
             while (row := self.folders.get_first_child()) is not None:
@@ -2793,17 +2797,16 @@ def run_gui(initial_image: Path | None = None) -> None:
             for folder in self.settings.folders:
                 line = Gtk.Box(spacing=8, margin_top=4, margin_bottom=4, margin_start=6, margin_end=6)
                 line.append(Gtk.Label(label=folder, xalign=0, hexpand=True))
-                remove = icon_button(("list-remove-symbolic",), "Quitar")
+                remove = icon_button(("list-remove-symbolic",), _("Quitar"))
                 remove.connect("clicked", lambda _b, f=folder: self._remove_folder(f))
                 line.append(remove)
                 self.folders.append(line)
             total = Library(LIBRARY_DB).count() if LIBRARY_DB.exists() else 0
-            self.index_info.set_text(f"{total} portada(s) indexada(s). Las carpetas se recorren "
-                                     "con subcarpetas; los archivos ya indexados no se releen.")
+            self.index_info.set_text(_("{total} portada(s) indexada(s). Las carpetas se recorren con subcarpetas; los archivos ya indexados no se releen.").format(total=total))
             self._refresh_series()
 
         def _add_folder(self, _button):
-            Gtk.FileDialog(title="Carpeta de cómics").select_folder(self, None, self._folder_chosen)
+            Gtk.FileDialog(title=_("Carpeta de cómics")).select_folder(self, None, self._folder_chosen)
 
         def _folder_chosen(self, dialog, result):
             try:
@@ -2817,7 +2820,7 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _remove_folder(self, folder):
             if self.indexing:   # el índice está en uso: SQLite bloquearía el borrado
-                self.index_info.set_text("Espera a que termine la indexación (o cancélala) para quitar carpetas.")
+                self.index_info.set_text(_("Espera a que termine la indexación (o cancélala) para quitar carpetas."))
                 return
             self.settings.folders.remove(folder)
             self.settings.save()
@@ -2830,11 +2833,11 @@ def run_gui(initial_image: Path | None = None) -> None:
                 self.cancel.set()
                 return
             if not self.settings.folders:
-                self.index_info.set_text("Añade primero alguna carpeta.")
+                self.index_info.set_text(_("Añade primero alguna carpeta."))
                 return
             self.cancel.clear()
             self.indexing = True
-            set_icon_button(self.index_button, STOP_ICON, "Cancelar")
+            set_icon_button(self.index_button, STOP_ICON, _("Cancelar"))
             Thread(target=self._index, args=([Path(f) for f in self.settings.folders],), daemon=True).start()
 
         def _index(self, folders):
@@ -2843,24 +2846,22 @@ def run_gui(initial_image: Path | None = None) -> None:
                 later(self.index_progress.set_text, f"{done}/{total}")
             try:
                 stats = Library(LIBRARY_DB).index(folders, progress, self.cancel)
-                message = (f"Nuevas: {stats.indexed} · sin cambios: {stats.unchanged} · "
-                           f"ilegibles: {stats.failed} · eliminadas: {stats.removed} · "
-                           f"metadatos leídos en archivos ya indexados: {stats.refreshed}")
+                message = (_("Nuevas: {stats_indexed} · sin cambios: {stats_unchanged} · ilegibles: {stats_failed} · eliminadas: {stats_removed} · metadatos leídos en archivos ya indexados: {stats_refreshed}").format(stats_indexed=stats.indexed, stats_unchanged=stats.unchanged, stats_failed=stats.failed, stats_removed=stats.removed, stats_refreshed=stats.refreshed))
                 if stats.failed_files:
                     shown = stats.failed_files[:5]
-                    more = f" (y {stats.failed - len(shown)} más)" if stats.failed > len(shown) else ""
-                    message += ("\nIlegibles: " + ", ".join(f"{Path(f).name} ({reason})" for f, reason in shown)
+                    more = _(" (y {stats_failed} más)").format(stats_failed=stats.failed - len(shown)) if stats.failed > len(shown) else ""
+                    message += (_("\nIlegibles: ") + ", ".join(f"{Path(f).name} ({reason})" for f, reason in shown)
                                 + more)
                 if stats.unavailable:
-                    message += ("\nSin acceso o vacías (su índice se conserva): "
+                    message += (_("\nSin acceso o vacías (su índice se conserva): ")
                                 + ", ".join(stats.unavailable))
             except Exception as error:  # noqa: BLE001
-                message = f"Error al indexar: {error}"
+                message = _("Error al indexar: {error}").format(error=error)
             later(self._index_done, message)
 
         def _index_done(self, message):
             self.indexing = False
-            set_icon_button(self.index_button, INDEX_ICON, "Indexar / actualizar")
+            set_icon_button(self.index_button, INDEX_ICON, _("Indexar / actualizar"))
             self._refresh_library()
             self.index_info.set_text(self.index_info.get_text() + "\n" + message)
 
@@ -2881,64 +2882,64 @@ def run_gui(initial_image: Path | None = None) -> None:
 
         def _settings_page(self):
             page = self._box()
-            about = icon_button(("help-about-symbolic", "dialog-information-symbolic"), "Acerca de…",
-                                halign=Gtk.Align.END, tooltip_text="Versión, autor, licencia y datos de terceros")
+            about = icon_button(("help-about-symbolic", "dialog-information-symbolic"), _("Acerca de…"),
+                                halign=Gtk.Align.END, tooltip_text=_("Versión, autor, licencia y datos de terceros"))
             about.connect("clicked", self._about)
             page.append(about)   # arriba: la página es larga y así se ve al entrar
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Esta aplicación se apoya en el trabajo de cuatro comunidades de colaboradores, que son las que "
-                "han hecho el trabajo duro:")))
+                _("Esta aplicación se apoya en el trabajo de cuatro comunidades de colaboradores, que son las que "
+                "han hecho el trabajo duro:"))))
             page.append(self._credit(COMICVINE_HOST, "Comic Vine", (
-                "Enciclopedia colaborativa de cómics con una API gratuita. Aporta series, números y portadas, "
-                "que la aplicación compara visualmente con la tuya; es más fuerte en ediciones americanas."),
+                _("Enciclopedia colaborativa de cómics con una API gratuita. Aporta series, números y portadas, "
+                "que la aplicación compara visualmente con la tuya; es más fuerte en ediciones americanas.")),
                 "https://comicvine.gamespot.com/"))
             page.append(self._credit(GCD_HOST, "Grand Comics Database (GCD)", (
-                "Base de datos abierta y colaborativa de cómics de todo el mundo, mantenida por voluntarios. "
+                _("Base de datos abierta y colaborativa de cómics de todo el mundo, mantenida por voluntarios. "
                 "De ella sale el índice de ediciones en español (España y Latinoamérica): títulos, números, "
-                "editoriales y sellos. Datos con licencia CC BY-SA 4.0."), GCD_SITE))
+                "editoriales y sellos. Datos con licencia CC BY-SA 4.0.")), GCD_SITE))
             page.append(self._credit("fichas.universomarvel.com", "Universo Marvel", (
-                "Catálogo, mantenido por sus autores, de las ediciones españolas de Marvel de 31 editoriales (Forum/"
+                _("Catálogo, mantenido por sus autores, de las ediciones españolas de Marvel de 31 editoriales (Forum/"
                 "Planeta, Panini, Vértice, Bruguera, Zinco…): fecha, precio, páginas, créditos, comentarios y el "
                 "ejemplar USA original de cada número. De él salen las fichas que consultas, una a una, y los "
-                "logotipos de algunas editoriales."), "https://fichas.universomarvel.com/"))
+                "logotipos de algunas editoriales.")), "https://fichas.universomarvel.com/"))
             page.append(self._credit("www.tebeosfera.com", "Tebeosfera", (
-                "El gran catálogo de la historieta editada en España, de todas las editoriales y épocas, hecho por "
+                _("El gran catálogo de la historieta editada en España, de todas las editoriales y épocas, hecho por "
                 "la Asociación Cultural Tebeosfera y sus colaboradores. De él salen las colecciones y las fichas de "
                 "cada ejemplar: fecha, precio, créditos, géneros, ISBN y portada. Sus textos tienen licencia "
-                "CC BY-SA 4.0 y las imágenes son de sus titulares."), "https://www.tebeosfera.com/"))
+                "CC BY-SA 4.0 y las imágenes son de sus titulares.")), "https://www.tebeosfera.com/"))
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
-            page.append(Gtk.Label(label="Clave de la API de ComicVine (gratuita):", xalign=0))
+            page.append(Gtk.Label(label=_("Clave de la API de ComicVine (gratuita):"), xalign=0))
             self.key = Gtk.PasswordEntry(show_peek_icon=True, text=self.settings.api_key)
-            save = icon_button(("document-save-symbolic",), "Guardar", halign=Gtk.Align.START)
+            save = icon_button(("document-save-symbolic",), _("Guardar"), halign=Gtk.Align.START)
             save.connect("clicked", self._save_key)
             self.key_info = Gtk.Label(xalign=0)
-            for widget in (self.key, save, Gtk.LinkButton(uri=COMICVINE_API_URL, label="Obtener una clave",
+            for widget in (self.key, save, Gtk.LinkButton(uri=COMICVINE_API_URL, label=_("Obtener una clave"),
                                                           halign=Gtk.Align.START), self.key_info):
                 page.append(widget)
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Grand Comics Database (ediciones en español, sin límites ni conexión). Descarga el volcado "
-                "SQLite desde comics.org (requiere cuenta gratuita), descomprímelo e impórtalo aquí una vez.")))
+                _("Grand Comics Database (ediciones en español, sin límites ni conexión). Descarga el volcado "
+                "SQLite desde comics.org (requiere cuenta gratuita), descomprímelo e impórtalo aquí una vez."))))
             self.gcd_button = icon_button(("document-open-symbolic", "folder-download-symbolic"),
-                                          "Importar volcado de GCD…", halign=Gtk.Align.START)
+                                          _("Importar volcado de GCD…"), halign=Gtk.Align.START)
             self.gcd_button.connect("clicked", self._choose_gcd)
             self.gcd_info = Gtk.Label(xalign=0, wrap=True)
             attribution = Gtk.LinkButton(uri="https://www.comics.org/", halign=Gtk.Align.START,
-                                         label="Datos de Grand Comics Database (CC BY-SA 4.0)")
-            for widget in (Gtk.LinkButton(uri=GCD_DOWNLOAD_URL, label="Descargar el volcado",
+                                         label=_("Datos de Grand Comics Database (CC BY-SA 4.0)"))
+            for widget in (Gtk.LinkButton(uri=GCD_DOWNLOAD_URL, label=_("Descargar el volcado"),
                                           halign=Gtk.Align.START), self.gcd_button, self.gcd_info, attribution):
                 page.append(widget)
             self._refresh_gcd()
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Tema: claro (iconos de color de tu tema), oscuro (iconos simbólicos) o el del sistema. Se recuerda al "
-                "reiniciar; cambiarlo reinicia la aplicación conservando el cómic abierto y los campos.")))
+                _("Tema: claro (iconos de color de tu tema), oscuro (iconos simbólicos) o el del sistema. Se recuerda al "
+                "reiniciar; cambiarlo reinicia la aplicación conservando el cómic abierto y los campos."))))
             theme_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
             self.theme_buttons = {}
-            for dark, text, icons in ((False, "Claro", ("weather-clear",)), (True, "Oscuro", ("weather-clear-night",)),
-                                       (None, "Sistema", ("preferences-desktop-theme",))):
+            for dark, text, icons in ((False, _("Claro"), ("weather-clear",)), (True, _("Oscuro"), ("weather-clear-night",)),
+                                       (None, _("Sistema"), ("preferences-desktop-theme",))):
                 button = icon_button(icons, text)
                 button.connect("clicked", lambda _b, d=dark: self._set_theme(d))
                 self.theme_buttons[dark] = button
@@ -2950,12 +2951,12 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones españolas de Marvel (Forum/"
+                _("Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones españolas de Marvel (Forum/"
                 "Planeta, Panini, Vértice, Bruguera y otras 27 editoriales). Es una web personal, así que no se rastrea: "
                 "se descarga el índice de series (una petición por editorial, espaciadas: casi un minuto) para buscar al escribir y, al elegir una serie con su número "
-                "escrito, solo la ficha de ese ejemplar, una vez; queda guardada en la base local.")))
+                "escrito, solo la ficha de ese ejemplar, una vez; queda guardada en la base local."))))
             self.marvel_button = icon_button(("folder-download-symbolic", "document-save-symbolic"),
-                                             "Descargar el índice de Universo Marvel", halign=Gtk.Align.START)
+                                             _("Descargar el índice de Universo Marvel"), halign=Gtk.Align.START)
             self.marvel_button.connect("clicked", self._download_marvel)
             self.marvel_info = Gtk.Label(xalign=0, wrap=True)
             self.marvel_progress = Gtk.ProgressBar(visible=False)   # pulsa mientras se descarga el índice
@@ -2966,13 +2967,13 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Tebeosfera (www.tebeosfera.com): el catálogo de la historieta editada en España, de todas las editoriales "
+                _("Tebeosfera (www.tebeosfera.com): el catálogo de la historieta editada en España, de todas las editoriales "
                 "(Panini, ECC, Norma, Planeta, Zinco, Forum, Vértice…). Es el proyecto de una asociación cultural, así "
                 "que no se rastrea: el índice sale de sus sitemaps públicos (unas 13 peticiones espaciadas, unos 20 "
                 "segundos) para buscar al escribir y, al elegir una colección con su número escrito, solo la ficha "
-                "de ese ejemplar, una vez; queda guardada en la base local. Las imágenes son de sus titulares.")))
+                "de ese ejemplar, una vez; queda guardada en la base local. Las imágenes son de sus titulares."))))
             self.tebeosfera_button = icon_button(("folder-download-symbolic", "document-save-symbolic"),
-                                                 "Descargar el índice de Tebeosfera", halign=Gtk.Align.START)
+                                                 _("Descargar el índice de Tebeosfera"), halign=Gtk.Align.START)
             self.tebeosfera_button.connect("clicked", self._download_tebeosfera)
             self.tebeosfera_info = Gtk.Label(xalign=0, wrap=True)
             self.tebeosfera_progress = Gtk.ProgressBar(visible=False)
@@ -2983,24 +2984,24 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Asistente de IA (botón «Preguntar a la IA»): comando que se abre en un terminal con tu propia "
-                "sesión. {prompt} se sustituye por el mensaje. Ejemplos: «claude {prompt}», «codex {prompt}», "
-                "«opencode --prompt {prompt}».")))
+                _("Asistente de IA (botón «Preguntar a la IA»): comando que se abre en un terminal con tu propia "
+                "sesión. {{prompt}} se sustituye por el mensaje. Ejemplos: «claude {{prompt}}», «codex {{prompt}}», "
+                "«opencode --prompt {{prompt}}».").format())))
             self.assistant_entry = Gtk.Entry(text=self.settings.assistant)
             page.append(self.assistant_entry)
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Mensaje que sustituye a {prompt} ({image} es la portada que se le pasa). Se puede cambiar para "
-                "pedirle otras cosas o usar otras webs:")))
+                _("Mensaje que sustituye a {{prompt}} ({{image}} es la portada que se le pasa). Se puede cambiar para "
+                "pedirle otras cosas o usar otras webs:").format())))
             self.prompt_view = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD, top_margin=6, bottom_margin=6, left_margin=8,
                                             right_margin=8)
             self.prompt_view.get_buffer().set_text(self.settings.prompt)
             prompt_scroll = Gtk.ScrolledWindow(min_content_height=130, max_content_height=220,
                                                propagate_natural_height=True, has_frame=True)
             prompt_scroll.set_child(self.prompt_view)
-            save_command = icon_button(("document-save-symbolic",), "Guardar comando y mensaje")
+            save_command = icon_button(("document-save-symbolic",), _("Guardar comando y mensaje"))
             save_command.connect("clicked", self._save_assistant)
-            reset_prompt = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), "Restablecer el mensaje",
-                                       tooltip_text="Vuelve al mensaje que trae la aplicación")
+            reset_prompt = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), _("Restablecer el mensaje"),
+                                       tooltip_text=_("Vuelve al mensaje que trae la aplicación"))
             reset_prompt.connect("clicked", lambda _b: self.prompt_view.get_buffer().set_text(PROMPT))
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
             buttons.append(save_command)
@@ -3011,19 +3012,19 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Normalización de nombres: cada renombrado queda registrado y se puede deshacer, de uno en uno, "
-                "del último al primero.")))
-            undo = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), "Deshacer el último renombrado",
+                _("Normalización de nombres: cada renombrado queda registrado y se puede deshacer, de uno en uno, "
+                "del último al primero."))))
+            undo = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"), _("Deshacer el último renombrado"),
                                halign=Gtk.Align.START)
             undo.connect("clicked", self._undo_rename)
             self.undo_info = Gtk.Label(xalign=0, wrap=True)
             for widget in (undo, self.undo_info):
                 page.append(widget)
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Metadatos: cada escritura queda registrada con el ComicInfo.xml anterior. Deshacer revierte el último "
-                "lote entero, sin pisar archivos que se hayan modificado o movido después.")))
+                _("Metadatos: cada escritura queda registrada con el ComicInfo.xml anterior. Deshacer revierte el último "
+                "lote entero, sin pisar archivos que se hayan modificado o movido después."))))
             self.metadata_undo_button = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"),
-                                                    "Deshacer el último lote de metadatos", halign=Gtk.Align.START)
+                                                    _("Deshacer el último lote de metadatos"), halign=Gtk.Align.START)
             self.metadata_undo_button.connect("clicked", self._undo_metadata)
             self.metadata_undo_info = Gtk.Label(xalign=0, wrap=True)
             for widget in (self.metadata_undo_button, self.metadata_undo_info):
@@ -3031,21 +3032,21 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Transferir a GCstar (botón «Transferir a GCstar…»): añade el cómic a una colección de GCstar sin "
+                _("Transferir a GCstar (botón «Transferir a GCstar…»): añade el cómic a una colección de GCstar sin "
                 "tocar el resto de su archivo .gcs, con su portada y contraportada junto a él, con la misma "
                 "convención de nombres que ya uses. Necesita que la carpeta del cómic esté en «Mi colección», "
-                "arriba, para saber dónde ponerlas.")))
+                "arriba, para saber dónde ponerlas."))))
             self.gcstar_entry = Gtk.Entry(text=self.settings.gcstar_path, hexpand=True,
-                                          placeholder_text="Archivo .gcs de tu colección")
-            choose_gcstar = icon_button(("document-open-symbolic", "folder-open-symbolic"), "Elegir archivo .gcs…")
+                                          placeholder_text=_("Archivo .gcs de tu colección"))
+            choose_gcstar = icon_button(("document-open-symbolic", "folder-open-symbolic"), _("Elegir archivo .gcs…"))
             choose_gcstar.connect("clicked", self._choose_gcstar)
             gcstar_line = Gtk.Box(spacing=8)
             gcstar_line.append(self.gcstar_entry)
             gcstar_line.append(choose_gcstar)
-            save_gcstar = icon_button(("document-save-symbolic",), "Guardar", halign=Gtk.Align.START)
+            save_gcstar = icon_button(("document-save-symbolic",), _("Guardar"), halign=Gtk.Align.START)
             save_gcstar.connect("clicked", self._save_gcstar_path)
             self.gcstar_undo_button = icon_button(("edit-undo-symbolic", "view-refresh-symbolic"),
-                                                  "Deshacer la última transferencia a GCstar", halign=Gtk.Align.START)
+                                                  _("Deshacer la última transferencia a GCstar"), halign=Gtk.Align.START)
             self.gcstar_undo_button.connect("clicked", self._undo_gcstar)
             self.gcstar_info = Gtk.Label(xalign=0, wrap=True)
             for widget in (gcstar_line, save_gcstar, self.gcstar_undo_button, self.gcstar_info):
@@ -3053,13 +3054,13 @@ def run_gui(initial_image: Path | None = None) -> None:
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Copias de seguridad: guardan tus índices (colección y GCD), los ajustes y los registros de deshacer "
+                _("Copias de seguridad: guardan tus índices (colección y GCD), los ajustes y los registros de deshacer "
                 "en un .zip verificado. Se hace una automática al cerrar la aplicación (solo si algo ha cambiado) y "
                 "las que quieras a mano. Las automáticas más antiguas se borran; las manuales, nunca. Ojo: el zip "
-                "incluye tu clave de ComicVine.")))
+                "incluye tu clave de ComicVine."))))
             self.backup_entry = Gtk.Entry(text=self.settings.backup_dir, hexpand=True,
-                                          placeholder_text="Carpeta donde guardar las copias")
-            choose_backup = icon_button(("folder-open-symbolic", "document-open-symbolic"), "Elegir carpeta…")
+                                          placeholder_text=_("Carpeta donde guardar las copias"))
+            choose_backup = icon_button(("folder-open-symbolic", "document-open-symbolic"), _("Elegir carpeta…"))
             choose_backup.connect("clicked", self._choose_backup_dir)
             backup_line = Gtk.Box(spacing=8)
             backup_line.append(self.backup_entry)
@@ -3067,15 +3068,15 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.backup_keep = Gtk.SpinButton.new_with_range(1, 99, 1)
             self.backup_keep.set_value(self.settings.backup_keep)
             keep_line = Gtk.Box(spacing=8)
-            keep_line.append(Gtk.Label(label="Copias automáticas que se conservan:"))
+            keep_line.append(Gtk.Label(label=_("Copias automáticas que se conservan:")))
             keep_line.append(self.backup_keep)
-            save_backup = icon_button(("document-save-symbolic",), "Guardar", halign=Gtk.Align.START)
+            save_backup = icon_button(("document-save-symbolic",), _("Guardar"), halign=Gtk.Align.START)
             save_backup.connect("clicked", self._save_backup_settings)
             self.backup_now_button = icon_button(("document-save-as-symbolic", "document-save-symbolic"),
-                                                 "Copiar ahora")
+                                                 _("Copiar ahora"))
             self.backup_now_button.connect("clicked", self._backup_now)
             self.backup_restore_button = icon_button(("document-revert-symbolic", "edit-undo-symbolic"),
-                                                     "Restaurar una copia…")
+                                                     _("Restaurar una copia…"))
             self.backup_restore_button.connect("clicked", self._open_restore)
             backup_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
             backup_buttons.append(save_backup)
@@ -3099,18 +3100,17 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.backup_now_button.set_sensitive(folder is not None)
             self.backup_restore_button.set_sensitive(folder is not None)
             if folder is None:
-                self.backup_info.set_text("Elige una carpeta para activar las copias.")
+                self.backup_info.set_text(_("Elige una carpeta para activar las copias."))
                 return
             backups = backup_module.list_backups(folder)
             if not backups:
-                self.backup_info.set_text("Todavía no hay copias en esa carpeta.")
+                self.backup_info.set_text(_("Todavía no hay copias en esa carpeta."))
                 return
             last = backups[0]
-            self.backup_info.set_text(f"{len(backups)} copia(s). La última: {last.created:%d/%m/%Y %H:%M} "
-                                      f"({backup_module.KIND_LABELS.get(last.kind, last.kind)}).")
+            self.backup_info.set_text(_("{backups_count} copia(s). La última: {last_created:%d/%m/%Y %H:%M} ({get}).").format(backups_count=len(backups), last_created=last.created, get=backup_module.KIND_LABELS.get(last.kind, last.kind)))
 
         def _choose_backup_dir(self, _button):
-            Gtk.FileDialog(title="Carpeta de las copias de seguridad").select_folder(self, None, self._backup_dir_chosen)
+            Gtk.FileDialog(title=_("Carpeta de las copias de seguridad")).select_folder(self, None, self._backup_dir_chosen)
 
         def _backup_dir_chosen(self, dialog, result):
             try:
@@ -3129,10 +3129,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             if folder is None:
                 return
             if self.indexing:
-                self.backup_info.set_text("Hay una indexación en marcha: espera a que termine para copiar.")
+                self.backup_info.set_text(_("Hay una indexación en marcha: espera a que termine para copiar."))
                 return
             self.backup_now_button.set_sensitive(False)
-            self.backup_info.set_text("Copiando…")
+            self.backup_info.set_text(_("Copiando…"))
 
             def run():
                 try:
@@ -3146,10 +3146,10 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _backup_done(self, archive, error):
             self.backup_now_button.set_sensitive(True)
             if error is not None:
-                self.backup_info.set_text(f"No se pudo copiar: {error}")
+                self.backup_info.set_text(_("No se pudo copiar: {error}").format(error=error))
                 return
             self._refresh_backup_info()
-            self.backup_info.set_text(f"Copia guardada: {archive.name}. {self.backup_info.get_text()}")
+            self.backup_info.set_text(_("Copia guardada: {archive_name}. {get_text}").format(archive_name=archive.name, get_text=self.backup_info.get_text()))
 
         def _auto_backup(self, _window):
             """Al cerrar: una copia automática si algo ha cambiado desde la última. Nunca impide cerrar."""
@@ -3161,7 +3161,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     backup_module.create(folder, backup_module.AUTO, version=__version__)
                     backup_module.prune(folder, self.settings.backup_keep)
             except (backup_module.BackupError, OSError) as error:
-                print(f"Copia de seguridad automática fallida: {error}", file=sys.stderr)
+                print(_("Copia de seguridad automática fallida: {error}").format(error=error), file=sys.stderr)
             return False
 
         def _reload_settings(self):
@@ -3181,20 +3181,20 @@ def run_gui(initial_image: Path | None = None) -> None:
             if folder is None:
                 return
             if self.indexing:
-                self.backup_info.set_text("Hay una indexación en marcha: espera a que termine para restaurar.")
+                self.backup_info.set_text(_("Hay una indexación en marcha: espera a que termine para restaurar."))
                 return
             backups = backup_module.list_backups(folder)
             if not backups:
-                self.backup_info.set_text("No hay copias que restaurar en esa carpeta.")
+                self.backup_info.set_text(_("No hay copias que restaurar en esa carpeta."))
                 return
-            window = Gtk.Window(title="Restaurar una copia", transient_for=self, modal=True, default_width=640,
+            window = Gtk.Window(title=_("Restaurar una copia"), transient_for=self, modal=True, default_width=640,
                                 default_height=460)
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12,
                           margin_start=14, margin_end=14)
             window.set_child(box)
             box.append(Gtk.Label(xalign=0, wrap=True, label=(
-                "Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se guarda una copia del "
-                "estado actual («antes de restaurar»), por si te arrepientes.")))
+                _("Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se guarda una copia del "
+                "estado actual («antes de restaurar»), por si te arrepientes."))))
             listing = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
             for info in backups:
                 what = ", ".join(info.names)
@@ -3208,8 +3208,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             info_label = Gtk.Label(xalign=0, wrap=True)
             box.append(info_label)
             buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
-            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), "Cancelar")
-            restore = icon_button(("document-revert-symbolic", "edit-undo-symbolic"), "Restaurar", sensitive=False)
+            cancel = icon_button(("process-stop-symbolic", "window-close-symbolic"), _("Cancelar"))
+            restore = icon_button(("document-revert-symbolic", "edit-undo-symbolic"), _("Restaurar"), sensitive=False)
             restore.add_css_class("destructive-action")
             buttons.append(cancel)
             buttons.append(restore)
@@ -3224,7 +3224,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 archive = backups[row.get_index()].path
                 restore.set_sensitive(False)
                 cancel.set_sensitive(False)
-                info_label.set_text("Restaurando…")
+                info_label.set_text(_("Restaurando…"))
 
                 def run():
                     try:
@@ -3235,7 +3235,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                         later(done, result)
 
                 def failed(error):
-                    info_label.set_text(f"No se ha restaurado nada: {error}")
+                    info_label.set_text(_("No se ha restaurado nada: {error}").format(error=error))
                     cancel.set_sensitive(True)
                     restore.set_sensitive(True)
 
@@ -3248,8 +3248,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     self._refresh_library()
                     self._refresh_backup_info()
                     self.backup_info.set_text(
-                        f"Restaurado: {', '.join(result.restored)}. Estado anterior guardado en "
-                        f"«{result.safety.name if result.safety else 'ninguna copia (no había datos)'}».")
+                        _("Restaurado: {result_restored}. Estado anterior guardado en «{name}».").format(result_restored=', '.join(result.restored), name=result.safety.name if result.safety else _("ninguna copia (no había datos)")))
                 Thread(target=run, daemon=True).start()
             restore.connect("clicked", do_restore)
             window.present()
@@ -3259,32 +3258,32 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 build_argv(command, "prueba")
             except ValueError as error:
-                self.assistant_info.set_text(f"Comando no válido: {error}")
+                self.assistant_info.set_text(_("Comando no válido: {error}").format(error=error))
                 return
             buffer = self.prompt_view.get_buffer()
             prompt = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False).strip()
             self.settings.assistant, self.settings.prompt = command, prompt or PROMPT
             self.settings.save()
-            self.assistant_info.set_text("Comando y mensaje guardados." if prompt else
-                                         "Comando guardado; el mensaje estaba vacío y se usa el de la aplicación.")
+            self.assistant_info.set_text(_("Comando y mensaje guardados.") if prompt else
+                                         _("Comando guardado; el mensaje estaba vacío y se usa el de la aplicación."))
 
         def _refresh_gcd(self):
             index = GcdIndex(GCD_DB)
             if index.is_ready():
                 series, issues = index.counts()
-                self.gcd_info.set_text(f"Índice de GCD: {series} series y {issues} números." + (
-                    "" if index.has_details() else " Es de una versión anterior y no trae los créditos, el género ni los "
-                    "personajes de cada número: vuelve a importar el volcado para tenerlos (tarda unos segundos)."))
+                self.gcd_info.set_text(_("Índice de GCD: {series} series y {issues} números.").format(series=series, issues=issues) + (
+                    "" if index.has_details() else _(" Es de una versión anterior y no trae los créditos, el género ni los "
+                    "personajes de cada número: vuelve a importar el volcado para tenerlos (tarda unos segundos).")))
             elif GCD_DB.exists():
-                self.gcd_info.set_text("El índice de GCD es de una versión anterior: vuelve a importar el "
-                                       "volcado para actualizarlo (tarda unos segundos).")
+                self.gcd_info.set_text(_("El índice de GCD es de una versión anterior: vuelve a importar el "
+                                       "volcado para actualizarlo (tarda unos segundos)."))
             else:
-                self.gcd_info.set_text("Todavía no has importado el volcado de GCD.")
+                self.gcd_info.set_text(_("Todavía no has importado el volcado de GCD."))
 
         def _refresh_theme_info(self):
-            mode = "oscuro" if theme_state["dark"] else "claro"
-            origin = "elegido" if self.settings.dark_mode is not None else "el del sistema"
-            self.theme_info.set_text(f"Tema actual: {mode} ({origin}).")
+            mode = _("oscuro") if theme_state["dark"] else _("claro")
+            origin = _("elegido") if self.settings.dark_mode is not None else _("el del sistema")
+            self.theme_info.set_text(_("Tema actual: {mode} ({origin}).").format(mode=mode, origin=origin))
             for dark, button in self.theme_buttons.items():
                 button.set_sensitive(dark != self.settings.dark_mode)
 
@@ -3292,7 +3291,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             """Guarda el tema y reinicia el proceso para aplicarlo (Cinnamon/Mint no repinta una ventana ya presentada),
             con el mismo cómic abierto y los mismos campos."""
             if self.indexing:
-                self.theme_info.set_text("Hay una indexación en marcha: espera a que termine para cambiar el tema.")
+                self.theme_info.set_text(_("Hay una indexación en marcha: espera a que termine para cambiar el tema."))
                 return
             self.settings.dark_mode = dark
             self.settings.save()
@@ -3319,10 +3318,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             index = UniversoMarvelIndex(UNIVERSOMARVEL_DB)
             if index.is_ready():
                 counts = index.counts()
-                self.marvel_info.set_text(f"Índice de Universo Marvel: {sum(counts.values())} series ("
+                self.marvel_info.set_text(_("Índice de Universo Marvel: {sum} series (").format(sum=sum(counts.values()))
                                           + ", ".join(f"{name}: {number}" for name, number in counts.items()) + ").")
             else:
-                self.marvel_info.set_text("Todavía no has descargado el índice de Universo Marvel.")
+                self.marvel_info.set_text(_("Todavía no has descargado el índice de Universo Marvel."))
 
         def _download_marvel(self, _button):
             self.marvel_button.set_sensitive(False)
@@ -3334,7 +3333,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                 try:
                     build_marvel_index(UNIVERSOMARVEL_DB, progress=lambda message: later(self.marvel_info.set_text, message))
                 except (UniversoMarvelError, OSError) as error:
-                    later(self.marvel_info.set_text, f"No se pudo descargar: {error}")
+                    later(self.marvel_info.set_text, _("No se pudo descargar: {error}").format(error=error))
                 else:
                     later(self._refresh_marvel)
                 later(self._marvel_download_finished)
@@ -3351,10 +3350,9 @@ def run_gui(initial_image: Path | None = None) -> None:
             index = TebeosferaIndex(TEBEOSFERA_DB)
             if index.is_ready():
                 counts = index.counts()
-                self.tebeosfera_info.set_text(f"Índice de Tebeosfera: {counts['colecciones']} colecciones y "
-                                              f"{counts['números']} números.")
+                self.tebeosfera_info.set_text(_("Índice de Tebeosfera: {counts} colecciones y {counts_2} números.").format(counts=counts['colecciones'], counts_2=counts['números']))
             else:
-                self.tebeosfera_info.set_text("Todavía no has descargado el índice de Tebeosfera.")
+                self.tebeosfera_info.set_text(_("Todavía no has descargado el índice de Tebeosfera."))
 
         def _download_tebeosfera(self, _button):
             self.tebeosfera_button.set_sensitive(False)
@@ -3367,7 +3365,7 @@ def run_gui(initial_image: Path | None = None) -> None:
                     build_tebeosfera_index(TEBEOSFERA_DB,
                                            progress=lambda message: later(self.tebeosfera_info.set_text, message))
                 except (TebeosferaError, OSError) as error:
-                    later(self.tebeosfera_info.set_text, f"No se pudo descargar: {error}")
+                    later(self.tebeosfera_info.set_text, _("No se pudo descargar: {error}").format(error=error))
                 else:
                     later(self._refresh_tebeosfera)
                 later(self._tebeosfera_download_finished)
@@ -3381,10 +3379,10 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.tebeosfera_button.set_sensitive(True)
 
         def _choose_gcd(self, _button):
-            dump = Gtk.FileFilter(name="Volcado SQLite de GCD")
+            dump = Gtk.FileFilter(name=_("Volcado SQLite de GCD"))
             for pattern in ("*.db", "*.sqlite", "*.sqlite3"):
                 dump.add_pattern(pattern)
-            Gtk.FileDialog(title="Volcado de GCD", default_filter=dump).open(self, None, self._gcd_chosen)
+            Gtk.FileDialog(title=_("Volcado de GCD"), default_filter=dump).open(self, None, self._gcd_chosen)
 
         def _gcd_chosen(self, dialog, result):
             try:
@@ -3398,7 +3396,7 @@ def run_gui(initial_image: Path | None = None) -> None:
             try:
                 build_index(source, GCD_DB, lambda message: later(self.gcd_info.set_text, message))
             except Exception as error:  # noqa: BLE001 - se muestra al usuario
-                later(self.gcd_info.set_text, f"No se pudo importar: {error}")
+                later(self.gcd_info.set_text, _("No se pudo importar: {error}").format(error=error))
             else:
                 later(self._refresh_gcd)
             later(self.gcd_button.set_sensitive, True)
@@ -3406,12 +3404,12 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _save_key(self, _button):
             self.settings.api_key = self.key.get_text().strip()
             self.settings.save()
-            self.key_info.set_text("Clave guardada.")
+            self.key_info.set_text(_("Clave guardada."))
 
         def _choose_gcstar(self, _button):
-            gcs_filter = Gtk.FileFilter(name="Colección de GCstar")
+            gcs_filter = Gtk.FileFilter(name=_("Colección de GCstar"))
             gcs_filter.add_pattern("*.gcs")
-            Gtk.FileDialog(title="Archivo .gcs de GCstar", default_filter=gcs_filter).open(self, None,
+            Gtk.FileDialog(title=_("Archivo .gcs de GCstar"), default_filter=gcs_filter).open(self, None,
                                                                                           self._gcstar_path_chosen)
 
         def _gcstar_path_chosen(self, dialog, result):
@@ -3424,8 +3422,8 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.settings.gcstar_path = self.gcstar_entry.get_text().strip()
             self.settings.save()
             self._update_normalize()
-            self.gcstar_info.set_text("Ruta guardada." if self.settings.gcstar_path else
-                                      "Ruta guardada (vacía): el botón «Transferir a GCstar…» queda desactivado.")
+            self.gcstar_info.set_text(_("Ruta guardada.") if self.settings.gcstar_path else
+                                      _("Ruta guardada (vacía): el botón «Transferir a GCstar…» queda desactivado."))
 
     class App(Gtk.Application):
         def __init__(self):

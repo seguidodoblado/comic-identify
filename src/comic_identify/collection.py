@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .i18n import _
 from .naming import detect_number, looks_normalized, natural_key, parse_name
 
 STRAY_GAP = 20        # un número a más de esta distancia del resto de la serie es «aislado»
@@ -39,14 +40,21 @@ class SeriesReport:
         return self.count or max([0, *(n for n in self.owned if n not in self.strays)])
 
     @property
-    def status(self) -> str:
+    def status_key(self) -> str:
+        """Estado estable (no se traduce): mixed, incomplete, sparse o complete."""
         if self.mixed:
-            return "mezcla"
+            return "mixed"
         if self.missing:
-            return "incompleta"
-        if self.sparse:
-            return "sin total"
-        return "completa" if self.count else "sin total"
+            return "incomplete"
+        if self.sparse or not self.count:
+            return "sparse"
+        return "complete"
+
+    @property
+    def status(self) -> str:
+        """Etiqueta del estado, en el idioma de la interfaz."""
+        return {"mixed": _("mezcla"), "incomplete": _("incompleta"), "sparse": _("sin total"),
+                "complete": _("completa")}[self.status_key]
 
 
 def ranges(numbers: list[int], limit: int = 110) -> str:

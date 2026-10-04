@@ -10,6 +10,7 @@ from dataclasses import replace
 
 from .comicinfo import CATEGORY_PREFIX as CATEGORY_LABEL
 from .comicinfo import FIELD_ORDER, category_of, with_category
+from .i18n import _
 from .naming import Values, looks_normalized
 from .umficha import NOTE_HEADINGS
 
@@ -125,16 +126,16 @@ def file_changes(series: Mapping[str, str], category: str, number: str, title: s
     return changes
 
 
-LABELS = {"Title": "Título", "Series": "Serie", "Volume": "Volumen", "Number": "Nº", "Count": "Total",
-          "AlternateSeries": "Serie alternativa", "AlternateNumber": "Nº alternativo", "AlternateCount": "Total alternativo",
-          "Summary": "Resumen", "Notes": "Notas", "Writer": "Guion", "Penciller": "Lápiz", "Inker": "Tinta",
-          "Colorist": "Color", "Letterer": "Rotulación", "CoverArtist": "Portada", "Editor": "Edición",
-          "Translator": "Traducción", "Publisher": "Editorial", "Imprint": "Sello", "Genre": "Género", "Web": "Web",
-          "PageCount": "Páginas", "LanguageISO": "Idioma", "Format": "Formato", "BlackAndWhite": "Blanco y negro",
-          "Manga": "Manga", "Characters": "Personajes", "Teams": "Equipos", "Locations": "Lugares",
-          "ScanInformation": "Escaneo", "StoryArc": "Arco", "StoryArcNumber": "Nº del arco", "SeriesGroup": "Grupo",
-          "AgeRating": "Edad", "CommunityRating": "Valoración", "MainCharacterOrTeam": "Protagonista",
-          "Review": "Reseña", "GTIN": "Código de barras"}
+LABELS = {"Title": _("Título"), "Series": _("Serie"), "Volume": _("Volumen"), "Number": _("Nº"), "Count": _("Total"),
+          "AlternateSeries": _("Serie alternativa"), "AlternateNumber": _("Nº alternativo"), "AlternateCount": _("Total alternativo"),
+          "Summary": _("Resumen"), "Notes": _("Notas"), "Writer": _("Guion"), "Penciller": _("Lápiz"), "Inker": _("Tinta"),
+          "Colorist": _("Color"), "Letterer": _("Rotulación"), "CoverArtist": _("Portada"), "Editor": _("Edición"),
+          "Translator": _("Traducción"), "Publisher": _("Editorial"), "Imprint": _("Sello"), "Genre": _("Género"), "Web": _("Web"),
+          "PageCount": _("Páginas"), "LanguageISO": _("Idioma"), "Format": _("Formato"), "BlackAndWhite": _("Blanco y negro"),
+          "Manga": _("Manga"), "Characters": _("Personajes"), "Teams": _("Equipos"), "Locations": _("Lugares"),
+          "ScanInformation": _("Escaneo"), "StoryArc": _("Arco"), "StoryArcNumber": _("Nº del arco"), "SeriesGroup": _("Grupo"),
+          "AgeRating": _("Edad"), "CommunityRating": _("Valoración"), "MainCharacterOrTeam": _("Protagonista"),
+          "Review": _("Reseña"), "GTIN": _("Código de barras")}
 
 
 def describe_info(info: Mapping[str, str]) -> list[tuple[str, str]]:
@@ -147,14 +148,14 @@ def describe_info(info: Mapping[str, str]) -> list[tuple[str, str]]:
         value = info.get(key, "").strip()
         if key in ("Year", "Month", "Day"):
             if key == "Year" and date:
-                rows.append(("Fecha", date))
+                rows.append((_("Fecha"), date))
         elif key == "Tags":
             category = category_of(value)
             rest = ", ".join(t for t in (t.strip() for t in value.split(",")) if t and not t.startswith(CATEGORY_LABEL))
             if category:
-                rows.append(("Categoría", category))
+                rows.append((_("Categoría"), category))
             if rest:
-                rows.append(("Etiquetas", rest))
+                rows.append((_("Etiquetas"), rest))
         elif value:
             rows.append((LABELS.get(key, key), value))
     rows.extend((key, value.strip()) for key, value in info.items() if key not in FIELD_ORDER and value.strip())

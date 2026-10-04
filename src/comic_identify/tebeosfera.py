@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 from . import __version__
 from .covers import thumbnail_bytes
 from .gcd import fold
+from .i18n import _
 from .tbficha import (
     BASE,
     HOST,
@@ -111,7 +112,7 @@ class Fetcher:
 
     def get(self, url: str) -> bytes:
         if urlparse(url).netloc != HOST:
-            raise TebeosferaError(f"Solo se consulta {HOST}, no «{url}».")
+            raise TebeosferaError(_("Solo se consulta {HOST}, no «{url}».").format(HOST=HOST, url=url))
         wait = self._last + self.min_interval - time.monotonic()
         if wait > 0:
             time.sleep(wait)
@@ -122,19 +123,19 @@ class Fetcher:
                 data = response.read(MAX_BYTES + 1)
                 packed = response.headers.get("Content-Encoding", "").lower() == "gzip"
         except (urllib.error.URLError, OSError) as error:
-            raise TebeosferaError(f"No se pudo descargar {url}: {error}") from error
+            raise TebeosferaError(_("No se pudo descargar {url}: {error}").format(url=url, error=error)) from error
         finally:
             self._last = time.monotonic()
         if len(data) > MAX_BYTES:
-            raise TebeosferaError(f"{url} es demasiado grande.")
+            raise TebeosferaError(_("{url} es demasiado grande.").format(url=url))
         if packed:
             try:
                 unpacker = zlib.decompressobj(16 + zlib.MAX_WBITS)
                 data = unpacker.decompress(data, MAX_UNPACKED + 1)
             except zlib.error as error:
-                raise TebeosferaError(f"{url} llegó dañado: {error}") from error
+                raise TebeosferaError(_("{url} llegó dañado: {error}").format(url=url, error=error)) from error
             if len(data) > MAX_UNPACKED:
-                raise TebeosferaError(f"{url} es demasiado grande.")
+                raise TebeosferaError(_("{url} es demasiado grande.").format(url=url))
         return data
 
 
@@ -155,7 +156,7 @@ def parse_sitemaps(pages: list[str]) -> tuple[list[str], dict[str, list[str]]]:
     numbers: list[str] = []
     for text in pages:
         for url in _LOC.findall(text):
-            kind, _, name = url.removeprefix(BASE).partition("/")
+            kind, _sep, name = url.removeprefix(BASE).partition("/")
             name = re.sub(r"\.html/?$", "", name)
             if kind == "publicaciones" and name:
                 collections.append(name)
@@ -177,12 +178,12 @@ def parse_sitemaps(pages: list[str]) -> tuple[list[str], dict[str, list[str]]]:
 
 
 def build_index(target: Path, fetch: Callable[[str], bytes] | None = None,
-                progress: Callable[[str], None] = lambda _: None) -> int:
+                progress: Callable[[str], None] = lambda _message: None) -> int:
     """Descarga los sitemaps y guarda las colecciones y sus números en `target`; devuelve cuántas colecciones. Todo se
     descarga antes de tocar la base y se sustituye en una sola transacción: si algo falla, el índice anterior sigue
     igual. Las fichas y portadas ya consultadas no se tocan."""
     fetch = Fetcher().get if fetch is None else fetch
-    progress("Buscando los sitemaps de Tebeosfera…")
+    progress(_("Buscando los sitemaps de Tebeosfera…"))
     try:
         robots = decode(fetch(BASE + "robots.txt"))
     except TebeosferaError:
@@ -190,7 +191,7 @@ def build_index(target: Path, fetch: Callable[[str], bytes] | None = None,
     pages: list[str] = []
     wanted = 0
     for number, url in enumerate(_sitemap_urls(robots)[:MAX_SITEMAPS], 1):
-        progress(f"Descargando el índice de Tebeosfera (sitemap {number})…")
+        progress(_("Descargando el índice de Tebeosfera (sitemap {number})…").format(number=number))
         text = decode(fetch(url))
         useful = "/publicaciones/" in text or "/numeros/" in text
         if useful:
@@ -200,8 +201,8 @@ def build_index(target: Path, fetch: Callable[[str], bytes] | None = None,
             break     # los sitemaps de colecciones y números van seguidos: al primero de otra cosa, se acabó
     collections, numbers = parse_sitemaps(pages)
     if not collections:
-        raise TebeosferaError("Los sitemaps de Tebeosfera no traen ninguna colección: ¿ha cambiado la web?")
-    progress(f"Guardando {len(collections)} colecciones…")
+        raise TebeosferaError(_("Los sitemaps de Tebeosfera no traen ninguna colección: ¿ha cambiado la web?"))
+    progress(_("Guardando {len} colecciones…").format(len=len(collections)))
     rows = []
     for slug in collections:
         name, year, publisher, subtitle = slug_title(slug)
@@ -265,7 +266,7 @@ class TebeosferaIndex:
         found: dict[str, tuple[int, int, Entry]] = {}
         with closing(sqlite3.connect(self.path)) as db:
             for variant in variants:
-                clause = " AND ".join("(s.folded || ' ' || IFNULL(r.folded, '')) LIKE ? ESCAPE '\\'" for _ in variant)
+                clause = " AND ".join("(s.folded || ' ' || IFNULL(r.folded, '')) LIKE ? ESCAPE '\\'" for _term in variant)
                 rows = db.execute(
                     "SELECT s.slug, IFNULL(r.title, s.title), s.year, s.publisher, s.single, s.folded, "
                     "IFNULL(r.folded, '') FROM series s LEFT JOIN real_titles r ON r.slug = s.slug "
@@ -389,7 +390,7 @@ class TebeosferaClient:
             return known
         small = thumbnail_bytes(self.fetch(image), COVER_SIDE)
         if small is None:
-            raise TebeosferaError(f"«{image}» no es una imagen válida.")
+            raise TebeosferaError(_("«{image}» no es una imagen válida.").format(image=image))
         self.index.store_cover(image, small)
         return small
 
@@ -399,7 +400,7 @@ class TebeosferaClient:
         raw = self.fetch(BASE + page)
         ficha = parse_ficha(decode(raw), BASE + page)
         if not ficha.collection_slug and not ficha.series:
-            raise TebeosferaError(f"«{page}» no parece una ficha de Tebeosfera (¿no existe ese número?).")
+            raise TebeosferaError(_("«{page}» no parece una ficha de Tebeosfera (¿no existe ese número?).").format(page=page))
         self.index.store_ficha(page, raw, ficha)
         if ficha.collection_slug and ficha.collection_title:
             self.index.set_real_title(ficha.collection_slug, smart_title(ficha.collection_title))

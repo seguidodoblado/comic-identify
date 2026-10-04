@@ -5,6 +5,8 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 
+from .i18n import _
+
 API = "https://comicvine.gamespot.com/api"
 USER_AGENT = "comic-identify/0.1 (+https://github.com/)"
 
@@ -19,9 +21,9 @@ def _fetch(url: str) -> bytes:
         with urllib.request.urlopen(request, timeout=20) as response:
             return response.read()
     except urllib.error.HTTPError as error:
-        raise ComicVineError(f"HTTP {error.code} al consultar ComicVine.") from error
+        raise ComicVineError(_("HTTP {code} al consultar ComicVine.").format(code=error.code)) from error
     except (urllib.error.URLError, TimeoutError) as error:
-        raise ComicVineError(f"No se pudo conectar con ComicVine: {error}") from error
+        raise ComicVineError(_("No se pudo conectar con ComicVine: {error}").format(error=error)) from error
 
 
 class ComicVineClient:
@@ -33,9 +35,9 @@ class ComicVineClient:
         try:
             data = json.loads(self._fetch(f"{API}/{path}/?{query}"))
         except ValueError as error:
-            raise ComicVineError("Respuesta de ComicVine no válida.") from error
+            raise ComicVineError(_("Respuesta de ComicVine no válida.")) from error
         if data.get("status_code") != 1:
-            raise ComicVineError(f"ComicVine: {data.get('error', 'error desconocido')}")
+            raise ComicVineError(_("ComicVine: {error}").format(error=data.get('error', _('error desconocido'))))
         return data.get("results", [])
 
     def search_volumes(self, text: str, limit: int = 5) -> list[dict]:
