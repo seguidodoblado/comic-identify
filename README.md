@@ -7,16 +7,16 @@
 <h1 align="center">Comic Identify</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/seguidodoblado/comic-identify" alt="release">
-  <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml/badge.svg" alt="CI">
-  <img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml/badge.svg" alt="CD">
+  <a href="https://github.com/seguidodoblado/comic-identify/releases"><img src="https://img.shields.io/github/v/release/seguidodoblado/comic-identify" alt="release"></a>
+  <a href="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml"><img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml"><img src="https://github.com/seguidodoblado/comic-identify/actions/workflows/cd.yml/badge.svg" alt="CD"></a>
   <a href="https://github.com/seguidodoblado/comic-identify/blob/main/LICENSE"><img src="https://img.shields.io/github/license/seguidodoblado/comic-identify" alt="license"></a>
   <a href="https://github.com/seguidodoblado/comic-identify/commits/main/"><img src="https://img.shields.io/github/last-commit/seguidodoblado/comic-identify" alt="last commit"></a>
   <a href="https://github.com/seguidodoblado/comic-identify/commits/main/"><img src="https://img.shields.io/github/commit-activity/t/seguidodoblado/comic-identify" alt="total commits"></a>
-  <img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads">
-  <img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars">
+  <a href="https://github.com/seguidodoblado/comic-identify/releases"><img src="https://img.shields.io/github/downloads/seguidodoblado/comic-identify/total" alt="downloads"></a>
+  <a href="https://github.com/seguidodoblado/comic-identify/stargazers"><img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars"></a>
   <a href="https://github.com/seguidodoblado/comic-identify/issues"><img src="https://img.shields.io/github/issues/seguidodoblado/comic-identify" alt="issues"></a>
-  <img src="https://img.shields.io/github/languages/top/seguidodoblado/comic-identify" alt="language">
+  <a href="https://github.com/seguidodoblado/comic-identify"><img src="https://img.shields.io/github/languages/top/seguidodoblado/comic-identify" alt="language"></a>
   <a href="https://codetime.dev"><img alt="CodeTime Badge" src="https://shields.jannchie.com/endpoint?style=flat&color=0284c7&url=https%3A%2F%2Fcodetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D36830"></a>
   <a href="https://wakatime.com/badge/github/seguidodoblado/comic-identify"><img src="https://wakatime.com/badge/github/seguidodoblado/comic-identify.svg" alt="wakatime"></a>
 </p>
