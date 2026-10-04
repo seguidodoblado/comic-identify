@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: comic-identify 0.43.1\n"
 "Report-Msgid-Bugs-To: jose.antonio.seguido@gmail.com\n"
-"POT-Creation-Date: 2026-10-04 19:04+0200\n"
+"POT-Creation-Date: 2026-10-04 20:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1297,7 +1297,7 @@ msgstr ""
 #: src/comic_identify/ui/gui.py:1226 src/comic_identify/ui/gui.py:1368
 #: src/comic_identify/ui/gui.py:1467 src/comic_identify/ui/gui.py:1647
 #: src/comic_identify/ui/gui.py:2012 src/comic_identify/ui/gui.py:2840
-#: src/comic_identify/ui/gui.py:3211
+#: src/comic_identify/ui/gui.py:3226
 msgid "Cancelar"
 msgstr ""
 
@@ -2388,8 +2388,8 @@ msgstr ""
 msgid "Clave de la API de ComicVine (gratuita):"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2913 src/comic_identify/ui/gui.py:3046
-#: src/comic_identify/ui/gui.py:3073
+#: src/comic_identify/ui/gui.py:2913 src/comic_identify/ui/gui.py:3061
+#: src/comic_identify/ui/gui.py:3088
 msgid "Guardar"
 msgstr ""
 
@@ -2431,11 +2431,18 @@ msgstr ""
 msgid "Oscuro"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2942
+#: src/comic_identify/ui/gui.py:2942 src/comic_identify/ui/gui.py:2957
+#: src/comic_identify/ui/gui.py:3307
 msgid "Sistema"
 msgstr ""
 
 #: src/comic_identify/ui/gui.py:2954
+msgid ""
+"Idioma: el del sistema o uno fijo. Cambiarlo reinicia la aplicación "
+"conservando el cómic abierto y los campos."
+msgstr ""
+
+#: src/comic_identify/ui/gui.py:2969
 msgid ""
 "Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones "
 "españolas de Marvel (Forum/Planeta, Panini, Vértice, Bruguera y otras 27 "
@@ -2445,11 +2452,11 @@ msgid ""
 "la ficha de ese ejemplar, una vez; queda guardada en la base local."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2959
+#: src/comic_identify/ui/gui.py:2974
 msgid "Descargar el índice de Universo Marvel"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2970
+#: src/comic_identify/ui/gui.py:2985
 msgid ""
 "Tebeosfera (www.tebeosfera.com): el catálogo de la historieta editada en "
 "España, de todas las editoriales (Panini, ECC, Norma, Planeta, Zinco, Forum, "
@@ -2460,11 +2467,11 @@ msgid ""
 "base local. Las imágenes son de sus titulares."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2976
+#: src/comic_identify/ui/gui.py:2991
 msgid "Descargar el índice de Tebeosfera"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2987
+#: src/comic_identify/ui/gui.py:3002
 msgid ""
 "Asistente de IA (botón «Preguntar a la IA»): comando que se abre en un "
 "terminal con tu propia sesión. {{prompt}} se sustituye por el mensaje. "
@@ -2472,46 +2479,46 @@ msgid ""
 "{{prompt}}»."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:2993
+#: src/comic_identify/ui/gui.py:3008
 msgid ""
 "Mensaje que sustituye a {{prompt}} ({{image}} es la portada que se le pasa). "
 "Se puede cambiar para pedirle otras cosas o usar otras webs:"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3001
+#: src/comic_identify/ui/gui.py:3016
 msgid "Guardar comando y mensaje"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3003
+#: src/comic_identify/ui/gui.py:3018
 msgid "Restablecer el mensaje"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3004
+#: src/comic_identify/ui/gui.py:3019
 msgid "Vuelve al mensaje que trae la aplicación"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3015
+#: src/comic_identify/ui/gui.py:3030
 msgid ""
 "Normalización de nombres: cada renombrado queda registrado y se puede "
 "deshacer, de uno en uno, del último al primero."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3017
+#: src/comic_identify/ui/gui.py:3032
 msgid "Deshacer el último renombrado"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3024
+#: src/comic_identify/ui/gui.py:3039
 msgid ""
 "Metadatos: cada escritura queda registrada con el ComicInfo.xml anterior. "
 "Deshacer revierte el último lote entero, sin pisar archivos que se hayan "
 "modificado o movido después."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3027
+#: src/comic_identify/ui/gui.py:3042
 msgid "Deshacer el último lote de metadatos"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3035
+#: src/comic_identify/ui/gui.py:3050
 msgid ""
 "Transferir a GCstar (botón «Transferir a GCstar…»): añade el cómic a una "
 "colección de GCstar sin tocar el resto de su archivo .gcs, con su portada y "
@@ -2520,19 +2527,19 @@ msgid ""
 "dónde ponerlas."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3040
+#: src/comic_identify/ui/gui.py:3055
 msgid "Archivo .gcs de tu colección"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3041
+#: src/comic_identify/ui/gui.py:3056
 msgid "Elegir archivo .gcs…"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3049
+#: src/comic_identify/ui/gui.py:3064
 msgid "Deshacer la última transferencia a GCstar"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3057
+#: src/comic_identify/ui/gui.py:3072
 msgid ""
 "Copias de seguridad: guardan tus índices (colección y GCD), los ajustes y "
 "los registros de deshacer en un .zip verificado. Se hace una automática al "
@@ -2541,221 +2548,231 @@ msgid ""
 "incluye tu clave de ComicVine."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3062
+#: src/comic_identify/ui/gui.py:3077
 msgid "Carpeta donde guardar las copias"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3063
+#: src/comic_identify/ui/gui.py:3078
 msgid "Elegir carpeta…"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3071
+#: src/comic_identify/ui/gui.py:3086
 msgid "Copias automáticas que se conservan:"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3076
+#: src/comic_identify/ui/gui.py:3091
 msgid "Copiar ahora"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3079
+#: src/comic_identify/ui/gui.py:3094
 msgid "Restaurar una copia…"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3103
+#: src/comic_identify/ui/gui.py:3118
 msgid "Elige una carpeta para activar las copias."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3107
+#: src/comic_identify/ui/gui.py:3122
 msgid "Todavía no hay copias en esa carpeta."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3110
+#: src/comic_identify/ui/gui.py:3125
 msgid ""
 "{backups_count} copia(s). La última: {last_created:%d/%m/%Y %H:%M} ({get})."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3113
+#: src/comic_identify/ui/gui.py:3128
 msgid "Carpeta de las copias de seguridad"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3132
+#: src/comic_identify/ui/gui.py:3147
 msgid "Hay una indexación en marcha: espera a que termine para copiar."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3135
+#: src/comic_identify/ui/gui.py:3150
 msgid "Copiando…"
-msgstr ""
-
-#: src/comic_identify/ui/gui.py:3149
-#, python-brace-format
-msgid "No se pudo copiar: {error}"
-msgstr ""
-
-#: src/comic_identify/ui/gui.py:3152
-#, python-brace-format
-msgid "Copia guardada: {archive_name}. {get_text}"
 msgstr ""
 
 #: src/comic_identify/ui/gui.py:3164
 #, python-brace-format
+msgid "No se pudo copiar: {error}"
+msgstr ""
+
+#: src/comic_identify/ui/gui.py:3167
+#, python-brace-format
+msgid "Copia guardada: {archive_name}. {get_text}"
+msgstr ""
+
+#: src/comic_identify/ui/gui.py:3179
+#, python-brace-format
 msgid "Copia de seguridad automática fallida: {error}"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3184
+#: src/comic_identify/ui/gui.py:3199
 msgid "Hay una indexación en marcha: espera a que termine para restaurar."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3188
+#: src/comic_identify/ui/gui.py:3203
 msgid "No hay copias que restaurar en esa carpeta."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3190
+#: src/comic_identify/ui/gui.py:3205
 msgid "Restaurar una copia"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3196
+#: src/comic_identify/ui/gui.py:3211
 msgid ""
 "Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se "
 "guarda una copia del estado actual («antes de restaurar»), por si te "
 "arrepientes."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3212
+#: src/comic_identify/ui/gui.py:3227
 msgid "Restaurar"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3227
+#: src/comic_identify/ui/gui.py:3242
 msgid "Restaurando…"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3238
+#: src/comic_identify/ui/gui.py:3253
 #, python-brace-format
 msgid "No se ha restaurado nada: {error}"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3251
+#: src/comic_identify/ui/gui.py:3266
 #, python-brace-format
 msgid "Restaurado: {result_restored}. Estado anterior guardado en «{name}»."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3251
+#: src/comic_identify/ui/gui.py:3266
 msgid "ninguna copia (no había datos)"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3261
+#: src/comic_identify/ui/gui.py:3276
 #, python-brace-format
 msgid "Comando no válido: {error}"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3267
+#: src/comic_identify/ui/gui.py:3282
 msgid "Comando y mensaje guardados."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3268
+#: src/comic_identify/ui/gui.py:3283
 msgid "Comando guardado; el mensaje estaba vacío y se usa el de la aplicación."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3274
+#: src/comic_identify/ui/gui.py:3289
 #, python-brace-format
 msgid "Índice de GCD: {series} series y {issues} números."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3275
+#: src/comic_identify/ui/gui.py:3290
 msgid ""
 " Es de una versión anterior y no trae los créditos, el género ni los "
 "personajes de cada número: vuelve a importar el volcado para tenerlos (tarda "
 "unos segundos)."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3278
+#: src/comic_identify/ui/gui.py:3293
 msgid ""
 "El índice de GCD es de una versión anterior: vuelve a importar el volcado "
 "para actualizarlo (tarda unos segundos)."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3281
+#: src/comic_identify/ui/gui.py:3296
 msgid "Todavía no has importado el volcado de GCD."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3284
+#: src/comic_identify/ui/gui.py:3299
 msgid "oscuro"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3284
+#: src/comic_identify/ui/gui.py:3299
 msgid "claro"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3285
+#: src/comic_identify/ui/gui.py:3300
 msgid "elegido"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3285
+#: src/comic_identify/ui/gui.py:3300
 msgid "el del sistema"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3286
+#: src/comic_identify/ui/gui.py:3301
 #, python-brace-format
 msgid "Tema actual: {mode} ({origin})."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3294
+#: src/comic_identify/ui/gui.py:3308
+#, python-brace-format
+msgid "Idioma actual: {language}."
+msgstr ""
+
+#: src/comic_identify/ui/gui.py:3315
+msgid ""
+"Hay una indexación en marcha: espera a que termine para cambiar el idioma."
+msgstr ""
+
+#: src/comic_identify/ui/gui.py:3325
 msgid ""
 "Hay una indexación en marcha: espera a que termine para cambiar el tema."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3321
+#: src/comic_identify/ui/gui.py:3355
 #, python-brace-format
 msgid "Índice de Universo Marvel: {sum} series ("
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3324
+#: src/comic_identify/ui/gui.py:3358
 msgid "Todavía no has descargado el índice de Universo Marvel."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3336 src/comic_identify/ui/gui.py:3368
+#: src/comic_identify/ui/gui.py:3370 src/comic_identify/ui/gui.py:3402
 #, python-brace-format
 msgid "No se pudo descargar: {error}"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3353
+#: src/comic_identify/ui/gui.py:3387
 #, python-brace-format
 msgid "Índice de Tebeosfera: {counts} colecciones y {counts_2} números."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3355
+#: src/comic_identify/ui/gui.py:3389
 msgid "Todavía no has descargado el índice de Tebeosfera."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3382
+#: src/comic_identify/ui/gui.py:3416
 msgid "Volcado SQLite de GCD"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3385
+#: src/comic_identify/ui/gui.py:3419
 msgid "Volcado de GCD"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3399
+#: src/comic_identify/ui/gui.py:3433
 #, python-brace-format
 msgid "No se pudo importar: {error}"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3407
+#: src/comic_identify/ui/gui.py:3441
 msgid "Clave guardada."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3410
+#: src/comic_identify/ui/gui.py:3444
 msgid "Colección de GCstar"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3412
+#: src/comic_identify/ui/gui.py:3446
 msgid "Archivo .gcs de GCstar"
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3425
+#: src/comic_identify/ui/gui.py:3459
 msgid "Ruta guardada."
 msgstr ""
 
-#: src/comic_identify/ui/gui.py:3426
+#: src/comic_identify/ui/gui.py:3460
 msgid ""
 "Ruta guardada (vacía): el botón «Transferir a GCstar…» queda desactivado."
 msgstr ""

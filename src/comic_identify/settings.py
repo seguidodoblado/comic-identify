@@ -22,6 +22,9 @@ GCSTAR_LOG = _xdg("XDG_DATA_HOME", ".local/share") / "gcstar.log"
 LOGO_DIR = _xdg("XDG_DATA_HOME", ".local/share") / "logos"   # logotipos que pone el propio usuario (ver logos.py)
 
 
+LANGUAGES = ("es", "en")   # idiomas que se pueden elegir en Ajustes (None: el del sistema)
+
+
 def _positive(value, default: int) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else default
 
@@ -37,6 +40,7 @@ class Settings:
     backup_dir: str = ""    # carpeta de las copias de seguridad; vacía: sin copias automáticas ni manuales
     backup_keep: int = 10   # cuántas copias automáticas se conservan (las manuales no se borran solas)
     dark_mode: bool | None = None   # tema elegido (True oscuro, False claro); None: el que tenga el sistema
+    language: str | None = None     # idioma elegido ("es", "en"); None: el del sistema o $LANGUAGE
 
     @classmethod
     def load(cls, path: Path = CONFIG_FILE) -> "Settings":
@@ -48,7 +52,8 @@ class Settings:
                    str(data.get("assistant") or cls.assistant), str(data.get("pattern") or cls.pattern),
                    str(data.get("prompt") or cls.prompt), str(data.get("gcstar_path", "")),
                    str(data.get("backup_dir", "")), _positive(data.get("backup_keep"), cls.backup_keep),
-                   data["dark_mode"] if isinstance(data.get("dark_mode"), bool) else None)
+                   data["dark_mode"] if isinstance(data.get("dark_mode"), bool) else None,
+                   data["language"] if data.get("language") in LANGUAGES else None)
 
     def save(self, path: Path = CONFIG_FILE) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -59,5 +64,6 @@ class Settings:
                        "pattern": self.pattern,
                        "prompt": "" if self.prompt.strip() == PROMPT else self.prompt,   # el de serie no se congela
                        "gcstar_path": self.gcstar_path, "backup_dir": self.backup_dir,
-                       "backup_keep": self.backup_keep, "dark_mode": self.dark_mode},
+                       "backup_keep": self.backup_keep, "dark_mode": self.dark_mode,
+                       "language": self.language},
                       handle, indent=2)

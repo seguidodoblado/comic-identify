@@ -2950,6 +2950,21 @@ def run_gui(initial_image: Path | None = None) -> None:
             self._refresh_theme_info()
 
             page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
+            page.append(Gtk.Label(xalign=0, wrap=True, label=_(
+                "Idioma: el del sistema o uno fijo. Cambiarlo reinicia la aplicación conservando el cómic abierto y los campos.")))
+            language_buttons = Gtk.Box(spacing=8, halign=Gtk.Align.START)
+            self.language_buttons = {}
+            for code, text in ((None, _("Sistema")), ("es", "Español"), ("en", "English")):
+                button = icon_button(("preferences-desktop-locale", "preferences-desktop-language"), text)
+                button.connect("clicked", lambda _b, c=code: self._set_language(c))
+                self.language_buttons[code] = button
+                language_buttons.append(button)
+            self.language_info = Gtk.Label(xalign=0, wrap=True)
+            for widget in (language_buttons, self.language_info):
+                page.append(widget)
+            self._refresh_language_info()
+
+            page.append(Gtk.Separator(margin_top=6, margin_bottom=6))
             page.append(Gtk.Label(xalign=0, wrap=True, label=(
                 _("Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones españolas de Marvel (Forum/"
                 "Planeta, Panini, Vértice, Bruguera y otras 27 editoriales). Es una web personal, así que no se rastrea: "
@@ -3287,6 +3302,22 @@ def run_gui(initial_image: Path | None = None) -> None:
             for dark, button in self.theme_buttons.items():
                 button.set_sensitive(dark != self.settings.dark_mode)
 
+        def _refresh_language_info(self):
+            names = {"es": "Español", "en": "English"}
+            current = names.get(self.settings.language, _("Sistema"))
+            self.language_info.set_text(_("Idioma actual: {language}.").format(language=current))
+            for code, button in self.language_buttons.items():
+                button.set_sensitive(code != self.settings.language)
+
+        def _set_language(self, code: str | None):
+            """Guarda el idioma y reinicia el proceso para aplicarlo, con el mismo cómic abierto y los mismos campos."""
+            if self.indexing:
+                self.language_info.set_text(_("Hay una indexación en marcha: espera a que termine para cambiar el idioma."))
+                return
+            self.settings.language = code
+            self.settings.save()
+            self._restart()
+
         def _set_theme(self, dark: bool | None):
             """Guarda el tema y reinicia el proceso para aplicarlo (Cinnamon/Mint no repinta una ventana ya presentada),
             con el mismo cómic abierto y los mismos campos."""
@@ -3295,6 +3326,9 @@ def run_gui(initial_image: Path | None = None) -> None:
                 return
             self.settings.dark_mode = dark
             self.settings.save()
+            self._restart()
+
+        def _restart(self):
             state = {"fields": list(self._fields()), "file": str(self.source_file) if self.source_file else "",
                      "page": self.notebook.get_current_page()}
             os.execve("/proc/self/exe", sys.orig_argv, {**os.environ, RESTORE_VARIABLE: json.dumps(state)})

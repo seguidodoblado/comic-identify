@@ -4,7 +4,7 @@ El idioma fuente del código es **español**: los textos de la interfaz se escri
 español dentro del código (`_("Cancelar")`), y no hace falta ningún catálogo `es.po` — si no hay
 traducción cargada, `gettext` devuelve el texto tal cual. El inglés está en `po/en.po`.
 
-El idioma sale del sistema o de la variable `$LANGUAGE` (por ejemplo, `LANGUAGE=en comic-identify`).
+El idioma se elige en **Ajustes** (Sistema, Español o English; reinicia la aplicación). Con «Sistema» sale del escritorio o de la variable `$LANGUAGE` (por ejemplo, `LANGUAGE=en comic-identify`). Un idioma nuevo se añade también a `LANGUAGES` en `settings.py` y a los botones de Ajustes.
 
 ## Qué se traduce y qué no
 

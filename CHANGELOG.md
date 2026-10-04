@@ -6,7 +6,7 @@ en este archivo.
 ## [Unreleased]
 
 ### Added
-- **Interfaz en español e inglés** (#9): toda la interfaz, los avisos y los mensajes de error pasan por `gettext`. El idioma fuente es el español y el catálogo inglés está en `po/en.po` (590 mensajes); se elige con el idioma del sistema o con `$LANGUAGE`. Los catálogos se compilan al empaquetar y en el CI, y no se versionan; ver `po/README.md`. No se traduce lo que es dato o clave (campos de `ComicInfo.xml`, variables del patrón de nombres, nombres de fuentes y tiendas, valores que se escriben en los archivos)
+- **Interfaz en español e inglés** (#9): toda la interfaz, los avisos y los mensajes de error pasan por `gettext`. El idioma fuente es el español y el catálogo inglés está en `po/en.po` (590 mensajes); se elige en **Ajustes** (Sistema, Español o English; reinicia la aplicación conservando el cómic abierto) o, con «Sistema», por el idioma del escritorio o `$LANGUAGE`. Los catálogos se compilan al empaquetar y en el CI, y no se versionan; ver `po/README.md`. No se traduce lo que es dato o clave (campos de `ComicInfo.xml`, variables del patrón de nombres, nombres de fuentes y tiendas, valores que se escriben en los archivos)
 
 ### Changed
 - **El despliegue (CD) solo corre si el CI está en verde**: `cd.yml` llama a `ci.yml` como workflow reutilizable (`workflow_call`) y la release depende de él (`needs: ci`), de modo que una etiqueta con tests, ruff o lintian en rojo no genera borrador

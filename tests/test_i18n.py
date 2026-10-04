@@ -63,3 +63,13 @@ def test_spanish_help_is_the_default_in_tests():
     env = {**os.environ, "LANGUAGE": "es", "PYTHONPATH": str(i18n.LOCALE_DIR.parents[1])}
     done = subprocess.run([sys.executable, "-m", "comic_identify", "--help"], capture_output=True, text=True, env=env, check=False)
     assert done.returncode == 0 and "abre la aplicación" in done.stdout
+
+
+def test_el_idioma_elegido_se_guarda_y_uno_desconocido_se_ignora(tmp_path):
+    from comic_identify.settings import Settings
+    path = tmp_path / "config.json"
+    assert Settings.load(path).language is None
+    Settings(language="en").save(path)
+    assert Settings.load(path).language == "en"
+    path.write_text('{"language": "klingon"}', encoding="utf-8")
+    assert Settings.load(path).language is None
