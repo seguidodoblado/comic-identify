@@ -30,7 +30,7 @@
   <img src="docs/screenshot.png" alt="Captura de Comic Identify">
 </p>
 
-Aplicación de escritorio (GTK 4 + PyGObject, interfaz en español), de uso personal: sin servidor ni cuenta,
+Aplicación de escritorio (GTK 4 + PyGObject, interfaz en español e inglés), de uso personal: sin servidor ni cuenta,
 todo vive en tu equipo.
 
 - **Identifica** un cómic a partir de su portada o de su título, con Grand Comics Database (GCD), el catálogo de

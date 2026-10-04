@@ -30,7 +30,7 @@
   <img src="docs/screenshot.png" alt="Comic Identify screenshot">
 </p>
 
-Desktop application (GTK 4 + PyGObject, Spanish-language interface), for personal use: no server, no account,
+Desktop application (GTK 4 + PyGObject, interface in Spanish and English), for personal use: no server, no account,
 everything lives on your own machine.
 
 - **Identifies** a comic from its cover or its title, with Grand Comics Database (GCD), the catalog of
