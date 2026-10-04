@@ -26,18 +26,18 @@ consideren apropiadas ante comportamientos inaceptables.
 
 ## Our commitment
 
-We hope that all the people who participate in this
-project maintain a respectful, constructive and
-collaborative.
+We expect everyone who takes part in this project to
+maintain a respectful, constructive and collaborative
+environment.
 
 ## Expected behavior
 
 Respectful and professional communication is expected.
 
-Harassment, discrimination, behavior will not be tolerated.
-insults or personal attacks.
+Harassment, discrimination, insults and personal attacks
+will not be tolerated.
 
-## Application
+## Enforcement
 
-The project maintainers may take the measures that
-consider appropriate in the face of unacceptable behavior.
+The project maintainers may take whatever measures they
+consider appropriate in response to unacceptable behavior.
