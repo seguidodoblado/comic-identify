@@ -5,6 +5,9 @@ en este archivo.
 
 ## [Unreleased]
 
+### Changed
+- El CD ya no construye el `.deb` por segunda vez: la release publica el mismo `.deb` que el CI construyó y pasó por lintian (artefacto `comic-identify-deb`)
+
 ## [0.44.1] - 2026-10-04
 
 ### Changed

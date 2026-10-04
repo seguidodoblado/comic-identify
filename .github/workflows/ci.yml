@@ -87,6 +87,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
 
+      # El CD (cd.yml) descarga este artefacto por su nombre para publicarlo: si se cambia, cambiarlo allí también
       - uses: actions/upload-artifact@v7
         with:
           name: comic-identify-deb
