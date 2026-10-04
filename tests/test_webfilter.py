@@ -1,7 +1,7 @@
 import json
 import re
 
-from comic_identify import webfilter
+from comic_identify.ui import webfilter
 
 
 def blocked(url: str) -> bool:

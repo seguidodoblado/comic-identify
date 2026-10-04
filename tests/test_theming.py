@@ -1,5 +1,5 @@
 from comic_identify.settings import Settings
-from comic_identify.theming import icon_choice, is_dark_theme, theme_variant
+from comic_identify.ui.theming import icon_choice, is_dark_theme, theme_variant
 
 
 def test_theme_variant_keeps_the_accent_for_mint_and_follows_adwaita_yaru_for_the_rest():

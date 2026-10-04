@@ -14,8 +14,8 @@ from urllib.parse import urljoin
 
 from PIL import Image
 
-from .gcd import fold
-from .universomarvel import BASE, Fetcher, UniversoMarvelError
+from ..gcd import fold
+from ..universomarvel import BASE, Fetcher, UniversoMarvelError
 
 LOGOS = {"forum": "ima_gen/logoforum.jpg", "panini": "imagen/logopanini.jpg", "vertice": "ima_gen/logover.jpg",
          "planeta": "ima_gen/logoplaneta.jpg", "ecc": "ima_gen/logoecc.jpg",

@@ -4,8 +4,8 @@ import time
 
 from PIL import Image
 
-from comic_identify import logos
-from comic_identify.logos import fetch_logo, logo_file, logo_key
+from comic_identify.ui import logos
+from comic_identify.ui.logos import fetch_logo, logo_file, logo_key
 from comic_identify.universomarvel import UniversoMarvelError
 
 
@@ -69,7 +69,7 @@ def test_every_logo_has_a_name_a_term_and_a_relative_url_on_the_fichas_site():
 
 
 def test_publisher_slug_and_short_name():
-    from comic_identify.logos import publisher_slug, short_name
+    from comic_identify.ui.logos import publisher_slug, short_name
     assert publisher_slug("Editorial Novaro") == "editorial-novaro" and publisher_slug("Ediciones B") == "ediciones-b"
     assert publisher_slug("Grupo Editorial Vid, S.A.") == "grupo-editorial-vid-s-a" and publisher_slug("") == ""
     assert publisher_slug("Editorial Zig-Zag") == "editorial-zig-zag" and publisher_slug("Cr\xe1neo \xd1a\xf1a") == "craneo-nana"
@@ -79,7 +79,7 @@ def test_publisher_slug_and_short_name():
 
 
 def test_a_logo_put_by_the_user_wins_over_the_downloaded_one_and_covers_unknown_publishers(tmp_path):
-    from comic_identify.logos import user_logo
+    from comic_identify.ui.logos import user_logo
     cache, mine = tmp_path / "cache", tmp_path / "mios"
     mine.mkdir()
     fetch_logo("forum", cache, lambda url: _png_bytes())
@@ -95,7 +95,7 @@ def test_a_logo_put_by_the_user_wins_over_the_downloaded_one_and_covers_unknown_
 def test_a_logo_saved_with_the_full_editorial_name_is_found_from_a_shorter_fragment_of_it(tmp_path):
     """Tebeosfera, antes de consultar la ficha de un número, solo sabe el trozo de editorial de la dirección de la serie
     («Surco»), no el nombre completo que dan GCD o Universo Marvel («Ediciones Surco»)."""
-    from comic_identify.logos import user_logo
+    from comic_identify.ui.logos import user_logo
     mine = tmp_path / "mios"; mine.mkdir()
     (mine / "ediciones-surco.jpg").write_bytes(_png_bytes())
     assert user_logo(("surco",), mine) == mine / "ediciones-surco.jpg"          # el fragmento encuentra el nombre completo
@@ -110,7 +110,7 @@ def test_a_logo_saved_with_the_full_editorial_name_is_found_from_a_shorter_fragm
 def test_the_word_search_is_off_for_the_automatic_publishers_so_a_shared_word_does_not_cross_match(tmp_path):
     """«Planeta DeAgostini» busca su archivo automático «planeta.png»; si no está, con la búsqueda por palabras activada
     encontraría por error el de una editorial distinta que también lleve la palabra «planeta», como Planeta Comic."""
-    from comic_identify.logos import user_logo
+    from comic_identify.ui.logos import user_logo
     mine = tmp_path / "mios"; mine.mkdir()
     (mine / "planeta-comic.png").write_bytes(_png_bytes())
     assert user_logo(("planeta",), mine, fuzzy=True) == mine / "planeta-comic.png"    # la búsqueda por palabras sí cuela

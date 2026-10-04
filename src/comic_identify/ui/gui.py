@@ -6,14 +6,14 @@ from dataclasses import asdict
 from pathlib import Path
 from threading import Event, Thread
 
-from . import __version__, webfilter
-from . import backup as backup_module
-from . import tebeosfera as tebeosfera_site
-from .assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
-from .collection import build_series, ranges
-from .comicinfo import CATEGORIES, MetadataError, build_xml, category_of, read_info
-from .comicvine import ComicVineClient, ComicVineError
-from .covers import (
+from .. import __version__
+from .. import backup as backup_module
+from .. import tebeosfera as tebeosfera_site
+from ..assistant import PROMPT, build_argv, build_prompt, prepare_workspace, shell_argv
+from ..collection import build_series, ranges
+from ..comicinfo import CATEGORIES, MetadataError, build_xml, category_of, read_info
+from ..comicvine import ComicVineClient, ComicVineError
+from ..covers import (
     COMIC_EXTENSIONS,
     IMAGE_EXTENSIONS,
     cover_to_png,
@@ -22,9 +22,9 @@ from .covers import (
     read_page,
     thumbnail_bytes,
 )
-from .gcd import GcdIndex, IssueDetails, build_index, issue_id_from_url
-from .gcd_api import GcdApiClient, GcdApiError
-from .gcstar import (
+from ..gcd import GcdIndex, IssueDetails, build_index, issue_id_from_url
+from ..gcd_api import GcdApiClient, GcdApiError
+from ..gcstar import (
     VOCABULARY_FIELDS,
     GCstarError,
     format_name,
@@ -32,10 +32,9 @@ from .gcstar import (
     suggest_type,
     vocabulary,
 )
-from .gcstar import transfer as gcstar_transfer
-from .gcstar import undo_last as undo_gcstar
-from .icons import ensure_icons, icon_file
-from .identify import (
+from ..gcstar import transfer as gcstar_transfer
+from ..gcstar import undo_last as undo_gcstar
+from ..identify import (
     CATALOG_SOURCES,
     MARVEL_METADATA,
     MARVEL_PER_ISSUE,
@@ -54,12 +53,10 @@ from .identify import (
     tebeosfera_issue_candidate,
     tebeosfera_page_candidate,
 )
-from .library import Library
-from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key, publisher_slug, short_name, user_logo
-from .logos import NAMES as LOGO_NAMES
-from .metadata import delete_info, differs, write_batch
-from .metadata import undo_last as undo_metadata
-from .metaform import (
+from ..library import Library
+from ..metadata import delete_info, differs, write_batch
+from ..metadata import undo_last as undo_metadata
+from ..metaform import (
     append_block,
     common_value,
     describe_info,
@@ -70,7 +67,7 @@ from .metaform import (
     series_changes,
     suggest_fields,
 )
-from .naming import (
+from ..naming import (
     FLAGS,
     MAX_NAME_BYTES,
     VARIABLES,
@@ -86,9 +83,9 @@ from .naming import (
     series_values,
     suggest_values,
 )
-from .originals import content_years, find_volumes
-from .renamer import rename_file, rename_series, undo_last
-from .settings import (
+from ..originals import content_years, find_volumes
+from ..renamer import rename_file, rename_series, undo_last
+from ..settings import (
     GCD_DB,
     GCSTAR_LOG,
     LIBRARY_DB,
@@ -99,19 +96,23 @@ from .settings import (
     UNIVERSOMARVEL_DB,
     Settings,
 )
-from .sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
-from .tebeosfera import TebeosferaClient, TebeosferaError, TebeosferaIndex
-from .tebeosfera import build_index as build_tebeosfera_index
-from .theming import icon_choice, is_dark_theme, theme_variant
-from .umficha import GCD_CREDITS_HEADING, compose_notes
-from .universomarvel import Entry as MarvelEntry
-from .universomarvel import (
+from ..sources import GROUPS, SHOP_GROUPS, SHOPS, SOURCES, search_url, shop_url
+from ..tebeosfera import TebeosferaClient, TebeosferaError, TebeosferaIndex
+from ..tebeosfera import build_index as build_tebeosfera_index
+from ..umficha import GCD_CREDITS_HEADING, compose_notes
+from ..universomarvel import Entry as MarvelEntry
+from ..universomarvel import (
     UniversoMarvelClient,
     UniversoMarvelError,
     UniversoMarvelIndex,
     ficha_page,
 )
-from .universomarvel import build_index as build_marvel_index
+from ..universomarvel import build_index as build_marvel_index
+from . import webfilter
+from .icons import ensure_icons, icon_file
+from .logos import LOGO_BOX, fetch_logo, logo_file, logo_key, publisher_slug, short_name, user_logo
+from .logos import NAMES as LOGO_NAMES
+from .theming import icon_choice, is_dark_theme, theme_variant
 
 COMICVINE_API_URL = "https://comicvine.gamespot.com/api/"
 GCD_DOWNLOAD_URL = "https://www.comics.org/download/"

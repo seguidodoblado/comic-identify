@@ -4,7 +4,7 @@ import time
 
 from PIL import Image
 
-from comic_identify.icons import (
+from comic_identify.ui.icons import (
     FALLBACK_URL,
     MARKER,
     RETRY_AFTER,
