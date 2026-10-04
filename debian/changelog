@@ -1,3 +1,11 @@
+comic-identify (0.44.1-1) noble; urgency=medium
+
+  * «Acerca de» con licencia GPL-3.0 o posterior y créditos de
+    traducción, debian/copyright en GPL-3+ e iconos del sistema en las
+    pestañas.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 04 Oct 2026 21:39:22 +0200
+
 comic-identify (0.44.0-1) noble; urgency=medium
 
   * Interfaz en español e inglés con gettext y selector de idioma en

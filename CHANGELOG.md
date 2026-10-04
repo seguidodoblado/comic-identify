@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.44.1] - 2026-10-04
+
 ### Changed
 - Las pestañas «Identificar», «Mi colección» y «Ajustes» llevan un icono del tema del sistema, junto al texto
 - La ventana «Acerca de» sigue el estándar de los demás proyectos: licencia GPL-3.0 o posterior (la declara también `debian/copyright`, como GPL-3+) predefinida de GTK (`GPL_3_0`) en lugar de un texto propio, correo del autor como enlace y créditos de traducción (`translator-credits`, en `po/en.po`)
