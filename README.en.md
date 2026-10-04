@@ -66,4 +66,4 @@ require linking back to its website on any page that uses its data.
 
 ## License
 
-This project is distributed under the GNU General Public License, version 3 (see `LICENSE`).
+This project is distributed under the GNU General Public License, version 3 or later (see `LICENSE`).

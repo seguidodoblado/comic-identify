@@ -129,9 +129,8 @@ TERMINAL_FONT = "Ubuntu Sans Mono, Monospace"   # tipografía del terminal del a
 TERMINAL_FONT_SIZE = 11
 VIEWER_MAX_SIDE = 3200   # lado máximo de la página en la ventana grande (letra pequeña legible sin agotar la memoria)
 AUTHOR = "Jose Antonio Seguido Doblado"
+AUTHOR_EMAIL = "jose.antonio.seguido@gmail.com"
 REPO_URL = "https://github.com/seguidodoblado/comic-identify"
-LICENSE_TEXT = (_("Este programa es software libre: se distribuye bajo la GNU General Public License, versión 3. "
-                "El texto completo está en el archivo LICENSE del repositorio y en https://www.gnu.org/licenses/gpl-3.0.html."))
 INDEX_ICON = ("view-refresh-symbolic", "emblem-synchronizing-symbolic")
 STOP_ICON = ("process-stop-symbolic", "window-close-symbolic")
 DEFAULT_PATTERN = Settings.pattern
@@ -2723,11 +2722,11 @@ def run_gui(initial_image: Path | None = None) -> None:
         def _about(self, _button):
             about = Gtk.AboutDialog(
                 transient_for=self, modal=True, program_name="Comic Identify", version=__version__,
-                logo_icon_name="comic-identify", authors=[AUTHOR], copyright=f"© 2026 {AUTHOR}",
+                logo_icon_name="comic-identify", authors=[f"{AUTHOR} <{AUTHOR_EMAIL}>"], copyright=f"© 2026 {AUTHOR}",
                 comments=(_("Identifica un cómic a partir de su portada, normaliza los nombres de archivos y carpetas y "
                           "escribe metadatos ComicInfo.xml.")),
                 website=REPO_URL, website_label=REPO_URL.removeprefix("https://"),
-                license_type=Gtk.License.CUSTOM, license=LICENSE_TEXT, wrap_license=True)
+                license_type=Gtk.License.GPL_3_0, translator_credits=_("translator-credits"))
             about.add_credit_section(_("Datos de terceros"), [
                 "Grand Comics Database (CC BY-SA 4.0) https://www.comics.org/",
                 "Comic Vine https://comicvine.gamespot.com/",

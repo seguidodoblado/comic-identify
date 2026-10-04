@@ -5,6 +5,9 @@ en este archivo.
 
 ## [Unreleased]
 
+### Changed
+- La ventana «Acerca de» sigue el estándar de los demás proyectos: licencia GPL-3.0 o posterior (la declara también `debian/copyright`, como GPL-3+) predefinida de GTK (`GPL_3_0`) en lugar de un texto propio, correo del autor como enlace y créditos de traducción (`translator-credits`, en `po/en.po`)
+
 ## [0.44.0] - 2026-10-04
 
 ### Added

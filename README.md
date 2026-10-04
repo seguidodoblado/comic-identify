@@ -66,4 +66,4 @@ uso exigen enlazar de vuelta a su web en cualquier página que use sus datos.
 
 ## Licencia
 
-Este proyecto se distribuye bajo la GNU General Public License, versión 3 (ver `LICENSE`).
+Este proyecto se distribuye bajo la GNU General Public License, versión 3 o posterior (ver `LICENSE`).
