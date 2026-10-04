@@ -64,6 +64,10 @@ local es para tu uso personal.
 Los datos de [Comic Vine](https://comicvine.gamespot.com/) se obtienen a través de su API pública; sus términos de
 uso exigen enlazar de vuelta a su web en cualquier página que use sus datos.
 
+## Privacidad
+
+Comic Identify no tiene servidor ni cuenta propios y no recoge datos. Qué se guarda, dónde y con quién se comunica está en la **[política de privacidad](PRIVACY.md)**.
+
 ## Licencia
 
 Este proyecto se distribuye bajo la GNU General Public License, versión 3 o posterior (ver `LICENSE`).

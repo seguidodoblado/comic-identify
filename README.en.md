@@ -64,6 +64,10 @@ The local database is for your personal use.
 Data from [Comic Vine](https://comicvine.gamespot.com/) is obtained through its public API; its terms of use
 require linking back to its website on any page that uses its data.
 
+## Privacy
+
+Comic Identify has no server or account of its own and does not collect data. What is stored, where, and who it talks to is in the **[privacy policy](PRIVACY.en.md)**.
+
 ## License
 
 This project is distributed under the GNU General Public License, version 3 or later (see `LICENSE`).
