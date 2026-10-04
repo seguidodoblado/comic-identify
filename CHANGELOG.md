@@ -5,6 +5,11 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-10-04
+
+### Changed
+- La interfaz gráfica pasa a vivir en el paquete `comic_identify.ui`: `gui.py`, `theming.py`, `icons.py`, `logos.py` y `webfilter.py` se mueven a `src/comic_identify/ui/`, como en Bloguero. Es una reorganización interna, sin cambios de comportamiento
+
 ## [0.43.0] - 2026-10-03
 
 ### Added
