@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/github/stars/seguidodoblado/comic-identify?style=flat" alt="stars">
   <a href="https://github.com/seguidodoblado/comic-identify/issues"><img src="https://img.shields.io/github/issues/seguidodoblado/comic-identify" alt="issues"></a>
   <img src="https://img.shields.io/github/languages/top/seguidodoblado/comic-identify" alt="language">
-  <img src="https://shields.jannchie.com/endpoint?style=flat&color=0284c7&url=https%3A%2F%2Fcodetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D37360" alt="code time">
+  <a href="https://codetime.dev"><img alt="CodeTime Badge" src="https://shields.jannchie.com/endpoint?style=flat&color=0284c7&url=https%3A%2F%2Fcodetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D36830"></a>
   <a href="https://wakatime.com/badge/github/seguidodoblado/comic-identify"><img src="https://wakatime.com/badge/github/seguidodoblado/comic-identify.svg" alt="wakatime"></a>
 </p>
 
