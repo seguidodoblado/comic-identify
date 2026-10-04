@@ -275,9 +275,14 @@ def run_gui(initial_image: Path | None = None) -> None:
             self.assistant_terminal = None
             self._panel_width = PREVIEW_WIDTH
             notebook = self.notebook = Gtk.Notebook()
-            notebook.append_page(self._identify_page(), Gtk.Label(label=_("Identificar")))
-            notebook.append_page(self._library_page(), Gtk.Label(label=_("Mi colección")))
-            notebook.append_page(self._settings_page(), Gtk.Label(label=_("Ajustes")))
+            for page, icons, title in ((self._identify_page(), ("edit-find", "system-search"), _("Identificar")),
+                                       (self._library_page(), ("folder-documents", "view-grid", "emblem-documents"),
+                                        _("Mi colección")),
+                                       (self._settings_page(), ("preferences-system",), _("Ajustes"))):
+                tab = Gtk.Box(spacing=6)
+                tab.append(Gtk.Image(icon_name=pick_icon(*icons)))
+                tab.append(Gtk.Label(label=title))
+                notebook.append_page(page, tab)
             self.set_child(notebook)
             self.connect("close-request", self._auto_backup)
             GLib.idle_add(lambda: (self._restore_session(), GLib.SOURCE_REMOVE)[1])
