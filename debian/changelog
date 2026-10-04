@@ -1,3 +1,10 @@
+comic-identify (0.44.0-1) noble; urgency=medium
+
+  * Interfaz en español e inglés con gettext y selector de idioma en
+    Ajustes; el CD solo despliega si el CI pasa.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Sun, 04 Oct 2026 20:49:33 +0200
+
 comic-identify (0.43.1-1) noble; urgency=medium
 
   * Move the graphical interface into the comic_identify.ui package

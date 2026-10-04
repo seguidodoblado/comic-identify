@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-10-04
+
 ### Added
 - **Interfaz en español e inglés** (#9): toda la interfaz, los avisos y los mensajes de error pasan por `gettext`. El idioma fuente es el español y el catálogo inglés está en `po/en.po` (590 mensajes); se elige en **Ajustes** (Sistema, Español o English; reinicia la aplicación conservando el cómic abierto) o, con «Sistema», por el idioma del escritorio o `$LANGUAGE`. Los catálogos se compilan al empaquetar y en el CI, y no se versionan; ver `po/README.md`. No se traduce lo que es dato o clave (campos de `ComicInfo.xml`, variables del patrón de nombres, nombres de fuentes y tiendas, valores que se escriben en los archivos)
 
