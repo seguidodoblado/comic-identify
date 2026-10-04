@@ -1,10 +1,13 @@
 name: CI
 
+# Se ejecuta en cada push a main, en cada pull request, a mano y, como workflow reutilizable,
+# desde cd.yml: así el CD solo despliega si este mismo CI pasa sobre el commit etiquetado.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

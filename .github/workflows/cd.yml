@@ -1,9 +1,10 @@
 name: CD
 
 # Al subir una etiqueta vX.Y.Z (solo la versión upstream, sin la revisión Debian):
-# construye el .deb, le pasa lintian y deja una release en BORRADOR con el .deb,
-# las notas de debian/changelog, las notas autogeneradas de GitHub y el SHA-256.
-# La revisas en GitHub y pulsas «Publish release».
+# 1. ejecuta el CI completo (ci.yml: tests, ruff, .deb y lintian) sobre el commit etiquetado;
+# 2. solo si el CI pasa, construye el .deb, le pasa lintian y deja una release en BORRADOR
+#    con el .deb, las notas de debian/changelog, las notas autogeneradas de GitHub y el SHA-256.
+# Si el CI falla, no se crea nada. La release la revisas en GitHub y pulsas «Publish release».
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
@@ -12,8 +13,15 @@ permissions:
   contents: write
 
 jobs:
+  ci:
+    name: CI del commit etiquetado
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
   release:
     name: Construir y crear la release en borrador
+    needs: ci
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
