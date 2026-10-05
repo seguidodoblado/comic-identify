@@ -1,3 +1,11 @@
+comic-identify (0.44.2-1) noble; urgency=medium
+
+  * Use a real application ID (io.github.seguidodoblado.ComicIdentify)
+    instead of the example one; the release workflow now publishes the
+    .deb built and checked by CI.
+
+ -- Jose Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Mon, 05 Oct 2026 02:20:39 +0200
+
 comic-identify (0.44.1-1) noble; urgency=medium
 
   * «Acerca de» con licencia GPL-3.0 o posterior y créditos de

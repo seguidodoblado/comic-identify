@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.44.2] - 2026-10-05
+
 ### Cambiado
 - El CD ya no construye el `.deb` por segunda vez: la release publica el mismo `.deb` que el CI construyó y pasó por lintian (artefacto `comic-identify-deb`)
 - El identificador de la aplicación (`Gtk.Application`) pasa de `com.example.ComicIdentify`, un valor de ejemplo, a `io.github.seguidodoblado.ComicIdentify`, un identificador real con la forma que exige Flathub; no cambia ningún dato guardado
