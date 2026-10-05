@@ -3466,7 +3466,7 @@ def run_gui(initial_image: Path | None = None) -> None:
     class App(Gtk.Application):
         def __init__(self):
             # HANDLES_OPEN: un archivo pasado a una segunda ejecución llega a la ventana ya abierta.
-            super().__init__(application_id="com.example.ComicIdentify", flags=Gio.ApplicationFlags.HANDLES_OPEN)
+            super().__init__(application_id="io.github.seguidodoblado.ComicIdentify", flags=Gio.ApplicationFlags.HANDLES_OPEN)
 
         def do_startup(self):
             Gtk.Application.do_startup(self)
