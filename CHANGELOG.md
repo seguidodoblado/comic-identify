@@ -5,6 +5,11 @@ en este archivo.
 
 ## [Unreleased]
 
+### Corregido
+
+- **Tildes flotantes** (#24): con IBus 1.5.29 y GTK4 la tilde quedaba como pre-edición en los campos de texto. Si la sesión usa `GTK_IM_MODULE=ibus`, la aplicación usa el método de entrada integrado de GTK (`simple`); dentro de la aplicación se pierden los motores de IBus que componen caracteres (japonés, chino, coreano…)
+- **Aviso `Gtk-CRITICAL` al salir resultados:** en cada fila, el título ajustado a la línea y el chip de la fuente hacían que GTK midiera 1 px menos de alto mínimo que con ancho ilimitado («Expect overlapping widgets»); el chip de la fuente gana 1 px de relleno vertical y ya no avisa
+
 ### Cambiado
 
 - **Documentos en doble idioma:** `CONTRIBUTING`, `PRIVACY`, `README`, `SECURITY` y `SUPPORT` pasan a ser un único fichero con español e inglés (como `CODE_OF_CONDUCT.md`) y desaparecen sus versiones `.en.md`. En el README, el logotipo y los badges van una sola vez.
