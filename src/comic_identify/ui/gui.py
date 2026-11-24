@@ -147,7 +147,7 @@ SOURCE_STYLES = {"GCD": (GCD_HOST, "source-gcd"), "Universo Marvel": ("fichas.un
                  "Tebeosfera": ("www.tebeosfera.com", "source-tebeosfera"),
                  "ComicVine": (COMICVINE_HOST, "source-comicvine")}
 CSS = b"""
-.source-chip { color: white; font-weight: bold; font-size: 0.85em; border-radius: 9px; padding: 2px 9px; }   /* 2px: con 1px GTK avisa (Gtk-CRITICAL) por el titulo ajustado */
+.source-chip { color: white; font-weight: bold; font-size: 0.85em; border-radius: 9px; padding: 1px 9px; }
 .source-gcd { background-color: #7e57c2; }
 .source-marvel { background-color: #d32f2f; }
 .source-tebeosfera { background-color: #ef6c00; }
