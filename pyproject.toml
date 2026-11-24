@@ -16,6 +16,9 @@ dev = ["pytest>=7", "ruff>=0.6"]
 comic-identify = "comic_identify.__main__:main"
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+comic_identify = ["assets/*.svg"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

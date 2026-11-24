@@ -12,6 +12,7 @@ en este archivo.
 ### Cambiado
 
 - **Documentos en doble idioma:** `CONTRIBUTING`, `PRIVACY`, `README`, `SECURITY` y `SUPPORT` pasan a ser un único fichero con español e inglés (como `CODE_OF_CONDUCT.md`) y desaparecen sus versiones `.en.md`. En el README, el logotipo y los badges van una sola vez.
+- El logotipo (`comic-identify.svg`) pasa de la raíz del repositorio a `src/comic_identify/assets/`, como en Bloguero y GnoMilestone: cambian las rutas del README, de `build-deb.sh` y de `pyproject.toml` (`package-data`). El «Acerca de» lo encuentra también al ejecutar desde el código fuente sin depender de la raíz.
 
 ## [0.44.2] - 2026-10-05
 

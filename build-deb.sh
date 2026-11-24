@@ -15,11 +15,10 @@ rm -rf "$stage"
 doc="$stage/usr/share/doc/comic-identify"
 mkdir -p "$stage/DEBIAN" "$stage/usr/share/comic-identify" "$stage/usr/bin" "$stage/usr/share/applications" "$stage/usr/share/icons/hicolor/scalable/apps" "$doc"
 cp -a "$base/src/comic_identify" "$stage/usr/share/comic-identify/"
-cp "$base/comic-identify.svg" "$stage/usr/share/comic-identify/"
 find "$stage/usr/share/comic-identify" -type d -name __pycache__ -prune -exec rm -rf {} +
 cp "$base/debian/comic-identify-launcher" "$stage/usr/bin/comic-identify"
 cp "$base/debian/comic-identify.desktop" "$stage/usr/share/applications/"
-cp "$base/comic-identify.svg" "$stage/usr/share/icons/hicolor/scalable/apps/"
+cp "$base/src/comic_identify/assets/comic-identify.svg" "$stage/usr/share/icons/hicolor/scalable/apps/"
 cp "$base/debian/copyright" "$doc/copyright"
 gzip -9n -c "$base/debian/changelog" > "$doc/changelog.Debian.gz"
 # Páginas de manual (inglés en man1, español en es/man1); la versión se rellena aquí

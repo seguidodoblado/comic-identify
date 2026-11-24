@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="comic-identify.svg" alt="Logotipo de Comic Identify" width="128">
+  <img src="src/comic_identify/assets/comic-identify.svg" alt="Logotipo de Comic Identify" width="128">
 </p>
 
 <h1 align="center">Comic Identify</h1>
