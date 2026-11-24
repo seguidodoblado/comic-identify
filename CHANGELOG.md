@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.44.3] - 2026-11-24
+
 ### Corregido
 
 - **Tildes flotantes** (#24): con IBus 1.5.29 y GTK4 la tilde quedaba como pre-edición en los campos de texto. Si la sesión usa `GTK_IM_MODULE=ibus`, la aplicación usa el método de entrada integrado de GTK (`simple`); dentro de la aplicación se pierden los motores de IBus que componen caracteres (japonés, chino, coreano…)

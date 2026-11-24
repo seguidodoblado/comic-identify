@@ -1,6 +1,6 @@
 import os as _os
 
-__version__ = "0.44.2"
+__version__ = "0.44.3"
 
 # IBus 1.5.29 con GTK4 no confirma la tecla muerta (tilde flotando). El método integrado
 # de GTK compone bien las teclas muertas. Debe fijarse antes de que GTK arranque.
