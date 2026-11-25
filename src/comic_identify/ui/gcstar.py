@@ -139,7 +139,7 @@ class GcstarMixin:
                 try:
                     result = gcstar_transfer(target, info, gcstar_fields, gcs_path, folders, GCSTAR_LOG,
                                              include_back)
-                except GCstarError as error:
+                except (GCstarError, OSError, ValueError) as error:   # p. ej. la portada ya existe en la carpeta
                     later(self._gcstar_transfer_failed, window, cancel, apply, problem, str(error))
                 else:
                     later(self._gcstar_transfer_done, window, result)
