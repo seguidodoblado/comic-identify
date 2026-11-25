@@ -1,3 +1,14 @@
+comic-identify (0.45.0-1) noble; urgency=medium
+
+  * Split the 3,500-line gui.py into one module per screen under
+    src/comic_identify/ui/ (#20); no behaviour change.
+  * Show file errors (e.g. the cover already exists) in the GCstar transfer
+    dialog instead of leaving it stuck.
+  * Universo Marvel: a price with two currencies ("395 ptas. - 2,37 EUR") is
+    read as the price instead of the format.
+
+ -- José Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>  Wed, 25 Nov 2026 16:10:00 +0100
+
 comic-identify (0.44.3-1) noble; urgency=medium
 
   * Fix floating dead keys (accents) with IBus 1.5.29 and GTK 4 by using

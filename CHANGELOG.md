@@ -5,6 +5,8 @@ en este archivo.
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-11-25
+
 ### Corregido
 
 - **Transferir a GCstar:** si la portada ya existía en la carpeta de imágenes (u otro error de archivo interrumpía la transferencia), el diálogo se quedaba con los botones desactivados y sin ningún mensaje. Ahora muestra el error en rojo y permite reintentar.
