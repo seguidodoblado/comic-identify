@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
-PARSER_VERSION = 2   # 2: fecha también en las fichas USA (fechas/), «Ediciones Españolas» y sinopsis por historia
+PARSER_VERSION = 3   # 3: precio con dos monedas («395 ptas. - 2,37 €»); 2: fecha también en las fichas USA (fechas/), «Ediciones Españolas» y sinopsis por historia
 PESETAS_PER_EURO = 166.386   # cambio oficial fijado en 1999
 _VOID = {"img", "br", "hr", "meta", "link", "input", "area", "base", "col", "param", "wbr"}
 _TRANSPARENT = {"font", "small", "b", "i", "u", "big", "center", "span", "strong", "em", "a", "p"}
@@ -208,6 +208,9 @@ class Ficha:
     @property
     def price(self) -> tuple[str, str]:
         """(importe, moneda): «100», «pts» o «8», «€». Sin unidad, se supone euros desde 2002 y pesetas antes."""
+        in_euros = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:€|euros?)", self.price_text, re.IGNORECASE)
+        if in_euros:   # con dos monedas («395 ptas. - 2,37 €») se toma la de euros
+            return in_euros.group(1), "€"
         match = re.match(r"(\d+(?:[.,]\d+)?)\s*(.*)", self.price_text)
         if not match:
             return "", ""
@@ -262,7 +265,8 @@ def edition_notes(ficha: Ficha, base_url: str, credit_lines: Sequence[str] = ())
     return compose_notes(usa_section(ficha, base_url), credit_lines, comments_section(ficha))
 
 
-_PRICE = re.compile(r"^\d+(?:[.,]\d+)?\s*(?:pts?\.?|ptas\.?|pesetas|€|euros?)?$", re.IGNORECASE)
+_AMOUNT = r"\d+(?:[.,]\d+)?\s*(?:pts?\.?|ptas\.?|pesetas|€|euros?)?"
+_PRICE = re.compile(rf"^{_AMOUNT}(?:\s*[-–/]\s*{_AMOUNT})?$", re.IGNORECASE)   # también «395 ptas. - 2,37 €» (época del cambio)
 _PAGES = re.compile(r"(\d+)\s*p[aá]ginas?", re.IGNORECASE)
 _SIZE = re.compile(r"\d[\d.,]*\s*x\s*\d[\d.,]*\s*cm", re.IGNORECASE)
 _COLOR = re.compile(r"^(color|b/?n|blanco y negro|bicolor|blanco/negro|tricolor)$", re.IGNORECASE)

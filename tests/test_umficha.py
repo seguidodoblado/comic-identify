@@ -537,3 +537,11 @@ def test_usa_info_summary_is_the_synopsis_of_the_matching_stories(tmp_path):
                                             ("Bicolor", ""), ("", "")])
 def test_black_and_white_follows_the_ficha_colour_word(color, expected):
     assert Ficha(color=color).black_and_white == expected
+
+
+def test_price_with_two_currencies_is_a_price_and_takes_the_euro_amount():
+    """«395 ptas. - 2,37 €» (época del cambio) no es un formato: acababa en «Formato» en lugar de en el precio."""
+    from comic_identify.umficha import _PRICE
+    assert _PRICE.match("395 ptas. - 2,37 €")
+    ficha = Ficha(price_text="395 ptas. - 2,37 €", year=2000)
+    assert ficha.price == ("2,37", "€") and ficha.price_euros == "2.37"
