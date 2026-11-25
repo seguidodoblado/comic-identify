@@ -5,6 +5,15 @@ en este archivo.
 
 ## [Unreleased]
 
+### Corregido
+
+- **Transferir a GCstar:** si la portada ya existía en la carpeta de imágenes (u otro error de archivo interrumpía la transferencia), el diálogo se quedaba con los botones desactivados y sin ningún mensaje. Ahora muestra el error en rojo y permite reintentar.
+- **Universo Marvel:** un precio con dos monedas, como «395 ptas. - 2,37 €», se guardaba como Formato en lugar de como precio. Ahora se reconoce como precio y se toma el importe en euros. Las fichas ya guardadas se releen con el lector nuevo; los archivos que ya tengan ese valor en el campo Formato hay que corregirlos a mano (borrándolo en el diálogo de metadatos).
+
+### Cambiado
+
+- **`gui.py` se reparte en módulos** (#20): el archivo de 3.495 líneas, con toda la interfaz dentro de `run_gui()`, pasa a un módulo por pantalla en `src/comic_identify/ui/` (`identify`, `viewer`, `normalizers`, `gcstar`, `metadata`, `assistant`, `preview`, `results`, `library`, `settings` y `backup`, como mixins de `Window`), más `constants.py`, `widgets.py` y `window.py`. `gui.py` conserva solo `run_gui()`. `_settings_page` e `_identify_page` se trocean en métodos por sección. Es una reorganización interna, sin cambios de comportamiento; un test nuevo comprueba que cada método que usa la ventana existe.
+
 ## [0.44.3] - 2026-11-24
 
 ### Corregido

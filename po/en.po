@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: comic-identify 0.43.1\n"
 "Report-Msgid-Bugs-To: jose.antonio.seguido@gmail.com\n"
-"POT-Creation-Date: 2026-10-04 21:37+0200\n"
+"POT-Creation-Date: 2026-11-25 15:46+0100\n"
 "PO-Revision-Date: 2026-10-04 19:02\n"
 "Last-Translator: José Antonio Seguido Doblado <jose.antonio.seguido@gmail."
 "com>\n"
@@ -489,18 +489,20 @@ msgstr "it has been modified since"
 msgid "Título"
 msgstr "Title"
 
-#: src/comic_identify/metaform.py:129 src/comic_identify/ui/gui.py:1914
+#: src/comic_identify/metaform.py:129 src/comic_identify/ui/metadata.py:218
 msgid "Serie"
 msgstr "Series"
 
-#: src/comic_identify/metaform.py:129 src/comic_identify/ui/gui.py:1323
-#: src/comic_identify/ui/gui.py:1589 src/comic_identify/ui/gui.py:1914
+#: src/comic_identify/metaform.py:129 src/comic_identify/ui/metadata.py:218
+#: src/comic_identify/ui/normalizers.py:88
+#: src/comic_identify/ui/normalizers.py:354
 msgid "Volumen"
 msgstr "Volume"
 
-#: src/comic_identify/metaform.py:129 src/comic_identify/ui/gui.py:372
-#: src/comic_identify/ui/gui.py:1327 src/comic_identify/ui/gui.py:1634
-#: src/comic_identify/ui/gui.py:1994
+#: src/comic_identify/metaform.py:129 src/comic_identify/ui/identify.py:209
+#: src/comic_identify/ui/metadata.py:298
+#: src/comic_identify/ui/normalizers.py:92
+#: src/comic_identify/ui/normalizers.py:399
 msgid "Nº"
 msgstr "No."
 
@@ -524,54 +526,56 @@ msgstr "Alternate total"
 msgid "Resumen"
 msgstr "Summary"
 
-#: src/comic_identify/metaform.py:131 src/comic_identify/ui/gui.py:1921
+#: src/comic_identify/metaform.py:131 src/comic_identify/ui/metadata.py:225
 msgid "Notas"
 msgstr "Notes"
 
-#: src/comic_identify/metaform.py:131 src/comic_identify/ui/gui.py:1951
+#: src/comic_identify/metaform.py:131 src/comic_identify/ui/metadata.py:255
 msgid "Guion"
 msgstr "Script"
 
-#: src/comic_identify/metaform.py:131 src/comic_identify/ui/gui.py:1951
+#: src/comic_identify/metaform.py:131 src/comic_identify/ui/metadata.py:255
 msgid "Lápiz"
 msgstr "Pencils"
 
-#: src/comic_identify/metaform.py:131 src/comic_identify/ui/gui.py:1952
+#: src/comic_identify/metaform.py:131 src/comic_identify/ui/metadata.py:256
 msgid "Tinta"
 msgstr "Inks"
 
-#: src/comic_identify/metaform.py:132 src/comic_identify/ui/gui.py:1952
+#: src/comic_identify/metaform.py:132 src/comic_identify/ui/metadata.py:256
 msgid "Color"
 msgstr "Colors"
 
-#: src/comic_identify/metaform.py:132 src/comic_identify/ui/gui.py:1953
+#: src/comic_identify/metaform.py:132 src/comic_identify/ui/metadata.py:257
 msgid "Rotulación"
 msgstr "Lettering"
 
-#: src/comic_identify/metaform.py:132 src/comic_identify/ui/gui.py:1953
+#: src/comic_identify/metaform.py:132 src/comic_identify/ui/metadata.py:257
 msgid "Portada"
 msgstr "Cover"
 
-#: src/comic_identify/metaform.py:132 src/comic_identify/ui/gui.py:1954
+#: src/comic_identify/metaform.py:132 src/comic_identify/ui/metadata.py:258
 msgid "Edición"
 msgstr "Editing"
 
-#: src/comic_identify/metaform.py:133 src/comic_identify/ui/gui.py:1954
+#: src/comic_identify/metaform.py:133 src/comic_identify/ui/metadata.py:258
 msgid "Traducción"
 msgstr "Translation"
 
 #: src/comic_identify/metaform.py:133 src/comic_identify/sources.py:42
-#: src/comic_identify/ui/gui.py:1326 src/comic_identify/ui/gui.py:1592
-#: src/comic_identify/ui/gui.py:1915
+#: src/comic_identify/ui/metadata.py:219
+#: src/comic_identify/ui/normalizers.py:91
+#: src/comic_identify/ui/normalizers.py:357
 msgid "Editorial"
 msgstr "Publisher"
 
-#: src/comic_identify/metaform.py:133 src/comic_identify/ui/gui.py:1327
-#: src/comic_identify/ui/gui.py:1593 src/comic_identify/ui/gui.py:1915
+#: src/comic_identify/metaform.py:133 src/comic_identify/ui/metadata.py:219
+#: src/comic_identify/ui/normalizers.py:92
+#: src/comic_identify/ui/normalizers.py:358
 msgid "Sello"
 msgstr "Imprint"
 
-#: src/comic_identify/metaform.py:133 src/comic_identify/ui/gui.py:1919
+#: src/comic_identify/metaform.py:133 src/comic_identify/ui/metadata.py:223
 msgid "Género"
 msgstr "Genre"
 
@@ -583,11 +587,11 @@ msgstr "Web"
 msgid "Páginas"
 msgstr "Pages"
 
-#: src/comic_identify/metaform.py:134 src/comic_identify/ui/gui.py:1918
+#: src/comic_identify/metaform.py:134 src/comic_identify/ui/metadata.py:222
 msgid "Idioma"
 msgstr "Language"
 
-#: src/comic_identify/metaform.py:134 src/comic_identify/ui/gui.py:1918
+#: src/comic_identify/metaform.py:134 src/comic_identify/ui/metadata.py:222
 msgid "Formato"
 msgstr "Format"
 
@@ -599,7 +603,7 @@ msgstr "Black and white"
 msgid "Manga"
 msgstr "Manga"
 
-#: src/comic_identify/metaform.py:135 src/comic_identify/ui/gui.py:1919
+#: src/comic_identify/metaform.py:135 src/comic_identify/ui/metadata.py:223
 msgid "Personajes"
 msgstr "Characters"
 
@@ -793,24 +797,162 @@ msgid "«{page}» no parece una ficha de Tebeosfera (¿no existe ese número?)."
 msgstr ""
 "\"{page}\" does not look like a Tebeosfera record (does that issue exist?)."
 
-#: src/comic_identify/ui/gui.py:124
+#: src/comic_identify/ui/assistant.py:25
+msgid "Falta el terminal embebido: instala el paquete gir1.2-vte-3.91."
+msgstr "The embedded terminal is missing: install the gir1.2-vte-3.91 package."
+
+#: src/comic_identify/ui/assistant.py:33
+#, python-brace-format
+msgid "No se pudo preparar el asistente: {error}"
+msgstr "Could not prepare the assistant: {error}"
+
+#: src/comic_identify/ui/assistant.py:43
+#, python-brace-format
+msgid ""
+"Sesión de «{argv}» con tu propia cuenta. Revisa cada permiso que te pida: "
+"esta aplicación no ve tus credenciales."
+msgstr ""
+"Session of \"{argv}\" with your own account. Check each permission it asks "
+"for: this application does not see your credentials."
+
+#: src/comic_identify/ui/assistant.py:52
+msgid "La sesión ha terminado. Pulsa × para cerrar el panel."
+msgstr "The session has ended. Press × to close the panel."
+
+#: src/comic_identify/ui/assistant.py:57 src/comic_identify/ui/preview.py:69
+msgid "Asistente de IA"
+msgstr "AI assistant"
+
+#: src/comic_identify/ui/assistant.py:65
+#, python-brace-format
+msgid "No se pudo lanzar el asistente: {error_message}"
+msgstr "Could not launch the assistant: {error_message}"
+
+#: src/comic_identify/ui/assistant.py:81
+#, python-brace-format
+msgid "Comando no válido: {error}"
+msgstr "Invalid command: {error}"
+
+#: src/comic_identify/ui/assistant.py:87
+msgid "Comando y mensaje guardados."
+msgstr "Command and message saved."
+
+#: src/comic_identify/ui/assistant.py:88
+msgid "Comando guardado; el mensaje estaba vacío y se usa el de la aplicación."
+msgstr ""
+"Command saved; the message was empty and the application's one is used."
+
+#: src/comic_identify/ui/backup.py:27
+msgid "Elige una carpeta para activar las copias."
+msgstr "Choose a folder to enable backups."
+
+#: src/comic_identify/ui/backup.py:31
+msgid "Todavía no hay copias en esa carpeta."
+msgstr "There are no backups in that folder yet."
+
+#: src/comic_identify/ui/backup.py:34
+msgid ""
+"{backups_count} copia(s). La última: {last_created:%d/%m/%Y %H:%M} ({get})."
+msgstr ""
+"{backups_count} backup(s). The latest: {last_created:%d/%m/%Y %H:%M} ({get})."
+
+#: src/comic_identify/ui/backup.py:37
+msgid "Carpeta de las copias de seguridad"
+msgstr "Backups folder"
+
+#: src/comic_identify/ui/backup.py:56
+msgid "Hay una indexación en marcha: espera a que termine para copiar."
+msgstr "An indexing is in progress: wait for it to finish before backing up."
+
+#: src/comic_identify/ui/backup.py:59
+msgid "Copiando…"
+msgstr "Backing up…"
+
+#: src/comic_identify/ui/backup.py:73
+#, python-brace-format
+msgid "No se pudo copiar: {error}"
+msgstr "Could not back up: {error}"
+
+#: src/comic_identify/ui/backup.py:76
+#, python-brace-format
+msgid "Copia guardada: {archive_name}. {get_text}"
+msgstr "Backup saved: {archive_name}. {get_text}"
+
+#: src/comic_identify/ui/backup.py:88
+#, python-brace-format
+msgid "Copia de seguridad automática fallida: {error}"
+msgstr "Automatic backup failed: {error}"
+
+#: src/comic_identify/ui/backup.py:96
+msgid "Hay una indexación en marcha: espera a que termine para restaurar."
+msgstr "An indexing is in progress: wait for it to finish before restoring."
+
+#: src/comic_identify/ui/backup.py:100
+msgid "No hay copias que restaurar en esa carpeta."
+msgstr "There are no backups to restore in that folder."
+
+#: src/comic_identify/ui/backup.py:102
+msgid "Restaurar una copia"
+msgstr "Restore a backup"
+
+#: src/comic_identify/ui/backup.py:108
+msgid ""
+"Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se "
+"guarda una copia del estado actual («antes de restaurar»), por si te "
+"arrepientes."
+msgstr ""
+"Choose the backup. Before replacing anything it is checked that it is intact "
+"and a copy of the current state is saved (\"before restoring\"), in case you "
+"change your mind."
+
+#: src/comic_identify/ui/backup.py:123 src/comic_identify/ui/gcstar.py:122
+#: src/comic_identify/ui/library.py:167 src/comic_identify/ui/metadata.py:320
+#: src/comic_identify/ui/normalizers.py:137
+#: src/comic_identify/ui/normalizers.py:236
+#: src/comic_identify/ui/normalizers.py:416
+msgid "Cancelar"
+msgstr "Cancel"
+
+#: src/comic_identify/ui/backup.py:124
+msgid "Restaurar"
+msgstr "Restore"
+
+#: src/comic_identify/ui/backup.py:139
+msgid "Restaurando…"
+msgstr "Restoring…"
+
+#: src/comic_identify/ui/backup.py:150
+#, python-brace-format
+msgid "No se ha restaurado nada: {error}"
+msgstr "Nothing was restored: {error}"
+
+#: src/comic_identify/ui/backup.py:163
+#, python-brace-format
+msgid "Restaurado: {result_restored}. Estado anterior guardado en «{name}»."
+msgstr "Restored: {result_restored}. Previous state saved in \"{name}\"."
+
+#: src/comic_identify/ui/backup.py:163
+msgid "ninguna copia (no había datos)"
+msgstr "no backup (there was no data)"
+
+#: src/comic_identify/ui/constants.py:11
 msgid "Incompletas"
 msgstr "Incomplete"
 
-#: src/comic_identify/ui/gui.py:124 src/comic_identify/ui/gui.py:414
-#: src/comic_identify/ui/gui.py:446
+#: src/comic_identify/ui/constants.py:11 src/comic_identify/ui/identify.py:258
+#: src/comic_identify/ui/identify.py:294
 msgid "Todas"
 msgstr "All"
 
-#: src/comic_identify/ui/gui.py:124
+#: src/comic_identify/ui/constants.py:11
 msgid "Sin todos sus metadatos"
 msgstr "Missing some metadata"
 
-#: src/comic_identify/ui/gui.py:124
+#: src/comic_identify/ui/constants.py:11
 msgid "Sin total indicado"
 msgstr "No total given"
 
-#: src/comic_identify/ui/gui.py:159
+#: src/comic_identify/ui/constants.py:46
 msgid ""
 "Escribe un título para buscar, o abre, pega o arrastra un cómic (CBR/CBZ/"
 "CB7) o una imagen de portada."
@@ -818,492 +960,21 @@ msgstr ""
 "Type a title to search, or open, paste or drag a comic (CBR/CBZ/CB7) or a "
 "cover image."
 
-#: src/comic_identify/ui/gui.py:170
-msgid "GTK 4/PyGObject no está instalado."
-msgstr "GTK 4/PyGObject is not installed."
-
-#: src/comic_identify/ui/gui.py:278
-msgid "Identificar"
-msgstr "Identify"
-
-#: src/comic_identify/ui/gui.py:280
-msgid "Mi colección"
-msgstr "My collection"
-
-#: src/comic_identify/ui/gui.py:281
-msgid "Ajustes"
-msgstr "Settings"
-
-#: src/comic_identify/ui/gui.py:325
-msgid "Abrir…"
-msgstr "Open…"
-
-#: src/comic_identify/ui/gui.py:326
-msgid ""
-"Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes "
-"pegarla o arrastrarla"
-msgstr ""
-"Opens a comic (CBR, CBZ, CB7) or a cover image; you can also paste or drag it"
-
-#: src/comic_identify/ui/gui.py:327
-msgid "Pegar"
-msgstr "Paste"
-
-#: src/comic_identify/ui/gui.py:328
-msgid ""
-"Pega una imagen copiada, o un cómic (CBR, CBZ, CB7) o imagen copiados en el "
-"gestor de archivos (Ctrl+V)"
-msgstr ""
-"Pastes a copied image, or a comic (CBR, CBZ, CB7) or image copied in the "
-"file manager (Ctrl+V)"
-
-#: src/comic_identify/ui/gui.py:332
-msgid "Preguntar a la IA"
-msgstr "Ask the AI"
-
-#: src/comic_identify/ui/gui.py:333
-msgid ""
-"Abre un terminal con tu propia sesión (Claude Code, OpenCode…) para que "
-"identifique la portada"
-msgstr ""
-"Opens a terminal with your own session (Claude Code, OpenCode…) to identify "
-"the cover"
-
-#: src/comic_identify/ui/gui.py:335
-msgid "Normalizar nombre…"
-msgstr "Normalize name…"
-
-#: src/comic_identify/ui/gui.py:337
-msgid ""
-"Renombra el CBR/CBZ con el patrón de Estructura.md (abre un cómic o elige "
-"una coincidencia de «Mi colección» para activarlo). Actúa sobre el archivo "
-"original, no sobre una copia."
-msgstr ""
-"Renames the CBR/CBZ with the pattern from Estructura.md (open a comic or "
-"choose a \"My collection\" match to enable it). It acts on the original "
-"file, not on a copy."
-
-#: src/comic_identify/ui/gui.py:340
-msgid "Normalizar carpeta…"
-msgstr "Normalize folder…"
-
-#: src/comic_identify/ui/gui.py:341
-msgid ""
-"Renombra una carpeta-serie y numera los archivos de dentro (elige antes una "
-"serie de GCD para rellenar sus datos)"
-msgstr ""
-"Renames a series folder and numbers the files inside (first choose a GCD "
-"series to fill in its data)"
-
-#: src/comic_identify/ui/gui.py:344
-msgid "Metadatos carpeta…"
-msgstr "Folder metadata…"
-
-#: src/comic_identify/ui/gui.py:345
-msgid ""
-"Escribe el ComicInfo.xml (serie, editorial, categoría…) en todos los cómics "
-"de una carpeta"
-msgstr ""
-"Writes the ComicInfo.xml (series, publisher, category…) into every comic in "
-"a folder"
-
-#: src/comic_identify/ui/gui.py:349
-msgid "Metadatos archivo…"
-msgstr "File metadata…"
-
-#: src/comic_identify/ui/gui.py:350
-msgid ""
-"Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi "
-"colección» elegida, en el archivo original"
-msgstr ""
-"Writes the ComicInfo.xml of the open comic, or of the chosen \"My "
-"collection\" match, into the original file"
-
-#: src/comic_identify/ui/gui.py:366
-msgid "Ningún cómic abierto"
-msgstr "No comic open"
-
-#: src/comic_identify/ui/gui.py:371
-msgid "Título a buscar"
-msgstr "Title to search"
-
-#: src/comic_identify/ui/gui.py:373
-msgid "Editorial / distribuidor (Panini, Planeta, Forum…)"
-msgstr "Publisher / distributor (Panini, Planeta, Forum…)"
-
-#: src/comic_identify/ui/gui.py:375 src/comic_identify/ui/gui.py:1916
-msgid "Año"
-msgstr "Year"
-
-#: src/comic_identify/ui/gui.py:378
-msgid "Buscar en ComicVine"
-msgstr "Search ComicVine"
-
-#: src/comic_identify/ui/gui.py:380
-msgid ""
-"Busca en ComicVine con estos datos (necesita su clave gratuita, en Ajustes)"
-msgstr "Searches ComicVine with this data (needs your free key, in Settings)"
-
-#: src/comic_identify/ui/gui.py:387
-msgid "Limpiar"
-msgstr "Clear"
-
-#: src/comic_identify/ui/gui.py:388
-msgid "Quita todos los datos: campos, resultados, portada y panel"
-msgstr "Removes all data: fields, results, cover and panel"
-
-#: src/comic_identify/ui/gui.py:401
-msgid "Incluir también la editorial y el año"
-msgstr "Also include the publisher and the year"
-
-#: src/comic_identify/ui/gui.py:402
-msgid ""
-"Añade la editorial y el año a la búsqueda de las webs y de las tiendas; si "
-"no salen resultados, desmárcalo"
-msgstr ""
-"Adds the publisher and the year to the search on the websites and stores; "
-"untick it if no results come up"
-
-#: src/comic_identify/ui/gui.py:405
-msgid "Buscar en otras webs"
-msgstr "Search other websites"
-
-#: src/comic_identify/ui/gui.py:410
-msgid "Se abre en tu navegador"
-msgstr "Opens in your browser"
-
-#: src/comic_identify/ui/gui.py:416
-#, python-brace-format
-msgid "Busca en las {SOURCES_count} webs, cada una en su pestaña"
-msgstr "Searches all {SOURCES_count} websites, each in its own tab"
-
-#: src/comic_identify/ui/gui.py:427
-#, python-brace-format
-msgid "Busca en {source_host}"
-msgstr "Search on {source_host}"
-
-#: src/comic_identify/ui/gui.py:432
-msgid "Abre en tu navegador la búsqueda del título en la web que elijas"
-msgstr "Opens the title search in your browser on the website you choose"
-
-#: src/comic_identify/ui/gui.py:437
-msgid "Comprar"
-msgstr "Buy"
-
-#: src/comic_identify/ui/gui.py:442
-msgid "Busca el ejemplar en tu navegador"
-msgstr "Search for the issue in your browser"
-
-#: src/comic_identify/ui/gui.py:448
-#, python-brace-format
-msgid "Busca en las {SHOPS_count} tiendas, cada una en su pestaña"
-msgstr "Searches all {SHOPS_count} stores, each in its own tab"
-
-#: src/comic_identify/ui/gui.py:459
-#, python-brace-format
-msgid "Busca en {shop_host}"
-msgstr "Search on {shop_host}"
-
-#: src/comic_identify/ui/gui.py:464
-msgid ""
-"Abre en tu navegador la búsqueda del ejemplar en una tienda o en una web de "
-"segunda mano (Forum y Vértice ya no publican: solo se encuentran de segunda "
-"mano)"
-msgstr ""
-"Opens the issue search in your browser on a store or a second-hand website "
-"(Forum and Vértice no longer publish: they can only be found second-hand)"
-
-#: src/comic_identify/ui/gui.py:479
-msgid "Primera página (la portada)"
-msgstr "First page (the cover)"
-
-#: src/comic_identify/ui/gui.py:480 src/comic_identify/ui/gui.py:804
-msgid "Página anterior"
-msgstr "Previous page"
-
-#: src/comic_identify/ui/gui.py:481 src/comic_identify/ui/gui.py:805
-msgid "Página siguiente"
-msgstr "Next page"
-
-#: src/comic_identify/ui/gui.py:482
-msgid "Última página (la contraportada)"
-msgstr "Last page (the back cover)"
-
-#: src/comic_identify/ui/gui.py:491
-msgid "Extraer portada…"
-msgstr "Extract cover…"
-
-#: src/comic_identify/ui/gui.py:493
-msgid ""
-"Guarda la portada como imagen junto al archivo, con su mismo nombre (para "
-"usarla, por ejemplo, de portada en GCstar); no la recodifica, así que "
-"conserva su calidad original"
-msgstr ""
-"Saves the cover as an image next to the file, with the same name (to use it, "
-"for example, as the cover in GCstar); it does not re-encode it, so it keeps "
-"its original quality"
-
-#: src/comic_identify/ui/gui.py:496
-msgid "Transferir a GCstar…"
-msgstr "Transfer to GCstar…"
-
-#: src/comic_identify/ui/gui.py:498
-msgid ""
-"Añade el cómic a tu colección de GCstar (créditos, editorial, año, páginas, "
-"portada y contraportada) sin tocar el resto de su archivo .gcs; configúralo "
-"en Ajustes"
-msgstr ""
-"Adds the comic to your GCstar collection (credits, publisher, year, pages, "
-"cover and back cover) without touching the rest of its .gcs file; set it up "
-"in Settings"
-
-#: src/comic_identify/ui/gui.py:507
-msgid "ComicInfo.xml"
-msgstr "ComicInfo.xml"
-
-#: src/comic_identify/ui/gui.py:509
-msgid "Eliminar datos"
-msgstr "Delete data"
-
-#: src/comic_identify/ui/gui.py:511
-msgid ""
-"Quita el ComicInfo.xml entero de este archivo (el propio archivo no se "
-"toca); se puede deshacer con «Deshacer» en Ajustes, como cualquier otra "
-"escritura de metadatos"
-msgstr ""
-"Removes the whole ComicInfo.xml from this file (the file itself is not "
-"touched); it can be undone with \"Undo\" in Settings, like any other "
-"metadata write"
-
-#: src/comic_identify/ui/gui.py:550
-#, python-brace-format
-msgid "Escribe un título para buscarlo en {name}."
-msgstr "Type a title to search for it on {name}."
-
-#: src/comic_identify/ui/gui.py:570
-#, python-brace-format
-msgid "Escribe un título (o elige un resultado) para buscarlo en {name}."
-msgstr "Type a title (or choose a result) to search for it on {name}."
-
-#: src/comic_identify/ui/gui.py:578
-msgid "Escribe un título (o elige un resultado) para buscarlo en las tiendas."
-msgstr "Type a title (or choose a result) to search for it in the stores."
-
-#: src/comic_identify/ui/gui.py:582
-#, python-brace-format
-msgid "Abriendo la búsqueda en {SHOPS_count} tiendas, cada una en su pestaña…"
-msgstr "Opening the search in {SHOPS_count} stores, each in its own tab…"
-
-#: src/comic_identify/ui/gui.py:587
-msgid "Escribe un título para buscarlo."
-msgstr "Type a title to search for it."
-
-#: src/comic_identify/ui/gui.py:594
-#, python-brace-format
-msgid "Abriendo la búsqueda en {SOURCES_count} webs, cada una en su pestaña…"
-msgstr "Opening the search on {SOURCES_count} websites, each in its own tab…"
-
-#: src/comic_identify/ui/gui.py:597
-msgid "Cómics (CBR/CBZ/CB7) e imágenes"
-msgstr "Comics (CBR/CBZ/CB7) and images"
-
-#: src/comic_identify/ui/gui.py:601
-msgid "Abrir cómic o imagen de portada"
-msgstr "Open a comic or cover image"
-
-#: src/comic_identify/ui/gui.py:615
-#, python-brace-format
-msgid "«{path_name}» no es un cómic (CBR, CBZ, CB7) ni una imagen."
-msgstr "\"{path_name}\" is not a comic (CBR, CBZ, CB7) or an image."
-
-#: src/comic_identify/ui/gui.py:640
-msgid "El portapapeles no contiene un archivo que se pueda abrir."
-msgstr "The clipboard does not contain a file that can be opened."
-
-#: src/comic_identify/ui/gui.py:648
-msgid "El portapapeles no contiene una imagen ni un cómic copiado."
-msgstr "The clipboard does not contain an image or a copied comic."
-
-#: src/comic_identify/ui/gui.py:663
-#, python-brace-format
-msgid "Leyendo la portada de {path_name}…"
-msgstr "Reading the cover of {path_name}…"
-
-#: src/comic_identify/ui/gui.py:678
-#, python-brace-format
-msgid "No se pudo leer la portada de {comic_name}: {error}"
-msgstr "Could not read the cover of {comic_name}: {error}"
-
-#: src/comic_identify/ui/gui.py:695
-msgid "Doble clic para verla más grande"
-msgstr "Double-click to see it larger"
-
-#: src/comic_identify/ui/gui.py:748
-#, python-brace-format
-msgid "No se pudo eliminar el ComicInfo.xml de {target_name}: {error}"
-msgstr "Could not delete the ComicInfo.xml of {target_name}: {error}"
-
-#: src/comic_identify/ui/gui.py:750
-#, python-brace-format
-msgid ""
-"ComicInfo.xml de {target_name} eliminado. «Deshacer» en Ajustes lo recupera."
-msgstr ""
-"ComicInfo.xml of {target_name} deleted. \"Undo\" in Settings restores it."
-
-#: src/comic_identify/ui/gui.py:752
-#, python-brace-format
-msgid "{target_name} ya no tenía ComicInfo.xml."
-msgstr "{target_name} no longer had a ComicInfo.xml."
-
-#: src/comic_identify/ui/gui.py:765
-#, python-brace-format
-msgid "No se pudo leer: {error}"
-msgstr "Could not read: {error}"
-
-#: src/comic_identify/ui/gui.py:765
-msgid "Este archivo no tiene ComicInfo.xml."
-msgstr "This file has no ComicInfo.xml."
-
-#: src/comic_identify/ui/gui.py:804
-msgid "Primera página"
-msgstr "First page"
-
-#: src/comic_identify/ui/gui.py:805
-msgid "Última página"
-msgstr "Last page"
-
-#: src/comic_identify/ui/gui.py:807
-msgid "Tamaño real"
-msgstr "Actual size"
-
-#: src/comic_identify/ui/gui.py:807
-msgid "Muestra la página sin reducirla (con barras de desplazamiento)"
-msgstr "Shows the page without shrinking it (with scroll bars)"
-
-#: src/comic_identify/ui/gui.py:808
-msgid "Cerrar"
-msgstr "Close"
-
-#: src/comic_identify/ui/gui.py:821
-#, python-brace-format
-msgid "Página {state} de {count}"
-msgstr "Page {state} of {count}"
-
-#: src/comic_identify/ui/gui.py:822
-#, python-brace-format
-msgid "{name} — página {state} de {count}"
-msgstr "{name} — page {state} of {count}"
-
-#: src/comic_identify/ui/gui.py:833
-#, python-brace-format
-msgid "No se pudo leer la página {index} para ampliarla."
-msgstr "Could not read page {index} to enlarge it."
-
-#: src/comic_identify/ui/gui.py:839 src/comic_identify/ui/gui.py:931
-msgid "No se pudo mostrar esta página."
-msgstr "Could not display this page."
-
-#: src/comic_identify/ui/gui.py:889
-#, python-brace-format
-msgid "Página {page_index} de {count}"
-msgstr "Page {page_index} of {count}"
-
-#: src/comic_identify/ui/gui.py:920
-#, python-brace-format
-msgid "No se pudo leer la página {index} de este archivo."
-msgstr "Could not read page {index} of this file."
-
-#: src/comic_identify/ui/gui.py:1018
-#, python-brace-format
-msgid "No se pudo procesar la imagen: {error}"
-msgstr "Could not process the image: {error}"
-
-#: src/comic_identify/ui/gui.py:1029
-#, python-brace-format
-msgid "Código de barras: {outcome_barcode}"
-msgstr "Barcode: {outcome_barcode}"
-
-#: src/comic_identify/ui/gui.py:1032
-msgid "Sin resultados; prueba a corregir el título o el número."
-msgstr "No results; try correcting the title or the number."
-
-#: src/comic_identify/ui/gui.py:1034
-#, python-brace-format
-msgid "{outcome_candidates_count} candidato(s), de más a menos parecido."
-msgstr "{outcome_candidates_count} candidate(s), from most to least similar."
-
-#: src/comic_identify/ui/gui.py:1041
-msgid "Haz clic en una sugerencia para ver su ficha a la derecha."
-msgstr "Click a suggestion to see its record on the right."
-
-#: src/comic_identify/ui/gui.py:1087
-msgid ""
-"Importa el volcado de GCD o descarga el índice de Universo Marvel o de "
-"Tebeosfera (pestaña Ajustes) para buscar mientras escribes; «Buscar en "
-"ComicVine» consulta ComicVine."
-msgstr ""
-"Import the GCD dump or download the Universo Marvel or Tebeosfera index "
-"(Settings tab) to search as you type; \"Search ComicVine\" queries ComicVine."
-
-#: src/comic_identify/ui/gui.py:1097
-#, python-brace-format
-msgid "{hits_count} de GCD"
-msgstr "{hits_count} from GCD"
-
-#: src/comic_identify/ui/gui.py:1098
-#, python-brace-format
-msgid "{marvel_hits_count} de Universo Marvel"
-msgstr "{marvel_hits_count} from Universo Marvel"
-
-#: src/comic_identify/ui/gui.py:1099
-#, python-brace-format
-msgid "{tebeosfera_hits_count} de Tebeosfera"
-msgstr "{tebeosfera_hits_count} from Tebeosfera"
-
-#: src/comic_identify/ui/gui.py:1100
-#, python-brace-format
-msgid "Sugerencias para «{query}»: {found}"
-msgstr "Suggestions for \"{query}\": {found}"
-
-#: src/comic_identify/ui/gui.py:1101
-#, python-brace-format
-msgid "Sin resultados para «{query}»"
-msgstr "No results for \"{query}\""
-
-#: src/comic_identify/ui/gui.py:1102
-msgid "«Buscar en ComicVine» lo consulta también."
-msgstr "\"Search ComicVine\" queries it as well."
-
-#: src/comic_identify/ui/gui.py:1128
-#, python-brace-format
-msgid "Extrayendo la portada de {target_name}…"
-msgstr "Extracting the cover of {target_name}…"
-
-#: src/comic_identify/ui/gui.py:1140
-#, python-brace-format
-msgid "Portada guardada como «{saved_name}», junto al archivo."
-msgstr "Cover saved as \"{saved_name}\", next to the file."
-
-#: src/comic_identify/ui/gui.py:1143
-#, python-brace-format
-msgid "No se pudo extraer la portada: {error}"
-msgstr "Could not extract the cover: {error}"
-
-#: src/comic_identify/ui/gui.py:1151
+#: src/comic_identify/ui/gcstar.py:43
 #, python-brace-format
 msgid "Leyendo {target_name} y {gcs_path_name}…"
 msgstr "Reading {target_name} and {gcs_path_name}…"
 
-#: src/comic_identify/ui/gui.py:1171
+#: src/comic_identify/ui/gcstar.py:63
 #, python-brace-format
 msgid "No se pudo preparar la transferencia a GCstar: {message}"
 msgstr "Could not prepare the transfer to GCstar: {message}"
 
-#: src/comic_identify/ui/gui.py:1175
+#: src/comic_identify/ui/gcstar.py:67
 msgid "Transferir a GCstar"
 msgstr "Transfer to GCstar"
 
-#: src/comic_identify/ui/gui.py:1180
+#: src/comic_identify/ui/gcstar.py:72
 #, python-brace-format
 msgid ""
 "<b>Archivo:</b> {markup_escape_text}\n"
@@ -1312,12 +983,12 @@ msgstr ""
 "<b>File:</b> {markup_escape_text}\n"
 "<b>Collection:</b> {markup_escape_text_2}"
 
-#: src/comic_identify/ui/gui.py:1184
+#: src/comic_identify/ui/gcstar.py:76
 #, python-brace-format
 msgid "No se pudo leer el ComicInfo.xml: {read_error}"
 msgstr "Could not read the ComicInfo.xml: {read_error}"
 
-#: src/comic_identify/ui/gui.py:1185
+#: src/comic_identify/ui/gcstar.py:77
 msgid ""
 "Este archivo no tiene ComicInfo.xml todavía: se transferirá con muy pocos "
 "datos. Si quieres los créditos, la editorial, el año…, escribe antes los "
@@ -1327,66 +998,59 @@ msgstr ""
 "data. If you want the credits, the publisher, the year…, write the metadata "
 "first."
 
-#: src/comic_identify/ui/gui.py:1194
+#: src/comic_identify/ui/gcstar.py:86
 #, python-brace-format
 msgid "{page_count} páginas"
 msgstr "{page_count} pages"
 
-#: src/comic_identify/ui/gui.py:1198
+#: src/comic_identify/ui/gcstar.py:90
 msgid "Campos propios de GCstar (se sugiere lo que ya usas en tu colección):"
 msgstr ""
 "GCstar's own fields (what you already use in your collection is suggested):"
 
-#: src/comic_identify/ui/gui.py:1224
+#: src/comic_identify/ui/gcstar.py:116
 msgid "Incluir también la contraportada (última página)"
 msgstr "Also include the back cover (last page)"
 
-#: src/comic_identify/ui/gui.py:1230 src/comic_identify/ui/gui.py:1372
-#: src/comic_identify/ui/gui.py:1471 src/comic_identify/ui/gui.py:1651
-#: src/comic_identify/ui/gui.py:2016 src/comic_identify/ui/gui.py:2844
-#: src/comic_identify/ui/gui.py:3230
-msgid "Cancelar"
-msgstr "Cancel"
-
-#: src/comic_identify/ui/gui.py:1231
+#: src/comic_identify/ui/gcstar.py:123
 msgid "Transferir"
 msgstr "Transfer"
 
-#: src/comic_identify/ui/gui.py:1268
+#: src/comic_identify/ui/gcstar.py:160
 #, python-brace-format
 msgid " Portada en «{name}»"
 msgstr " Cover in \"{name}\""
 
-#: src/comic_identify/ui/gui.py:1268
+#: src/comic_identify/ui/gcstar.py:160
 #, python-brace-format
 msgid " y contraportada en «{name}»."
 msgstr " and back cover in \"{name}\"."
 
-#: src/comic_identify/ui/gui.py:1269
+#: src/comic_identify/ui/gcstar.py:161
 msgid ""
 " Sin portada (el archivo no está bajo ninguna carpeta de «Mi colección»)."
 msgstr " No cover (the file is not under any \"My collection\" folder)."
 
-#: src/comic_identify/ui/gui.py:1271
+#: src/comic_identify/ui/gcstar.py:163
 #, python-brace-format
 msgid "Transferido a GCstar (elemento nº {result_item_id}).{where}"
 msgstr "Transferred to GCstar (item no. {result_item_id}).{where}"
 
-#: src/comic_identify/ui/gui.py:1275 src/comic_identify/ui/gui.py:2112
+#: src/comic_identify/ui/gcstar.py:167 src/comic_identify/ui/metadata.py:416
 msgid "Deshaciendo…"
 msgstr "Undoing…"
 
-#: src/comic_identify/ui/gui.py:1287 src/comic_identify/ui/gui.py:2126
-#: src/comic_identify/ui/gui.py:2138
+#: src/comic_identify/ui/gcstar.py:179 src/comic_identify/ui/metadata.py:430
+#: src/comic_identify/ui/normalizers.py:529
 #, python-brace-format
 msgid "No se pudo deshacer: {error}"
 msgstr "Could not undo: {error}"
 
-#: src/comic_identify/ui/gui.py:1289
+#: src/comic_identify/ui/gcstar.py:181
 msgid "Deshecha la última transferencia."
 msgstr "The last transfer was undone."
 
-#: src/comic_identify/ui/gui.py:1290
+#: src/comic_identify/ui/gcstar.py:182
 msgid ""
 "El elemento ya no estaba tal cual en el .gcs (se ha editado desde entonces): "
 "no se ha tocado."
@@ -1394,12 +1058,12 @@ msgstr ""
 "The item was no longer as it was in the .gcs (it has been edited since): it "
 "was not touched."
 
-#: src/comic_identify/ui/gui.py:1292
+#: src/comic_identify/ui/gcstar.py:184
 #, python-brace-format
 msgid " Se borraron {result_images_count} imagen(es)."
 msgstr " {result_images_count} image(s) deleted."
 
-#: src/comic_identify/ui/gui.py:1294
+#: src/comic_identify/ui/gcstar.py:186
 #, python-brace-format
 msgid ""
 " {result_skipped_images_count} imagen(es) habían cambiado desde entonces y "
@@ -1408,893 +1072,437 @@ msgstr ""
 " {result_skipped_images_count} image(s) had changed since then and were not "
 "touched."
 
-#: src/comic_identify/ui/gui.py:1309
-msgid "Normalizar nombre"
-msgstr "Normalize name"
+#: src/comic_identify/ui/gui.py:11
+msgid "GTK 4/PyGObject no está instalado."
+msgstr "GTK 4/PyGObject is not installed."
 
-#: src/comic_identify/ui/gui.py:1314
-#, python-brace-format
-msgid "<b>Archivo:</b> {markup_escape_text}"
-msgstr "<b>File:</b> {markup_escape_text}"
+#: src/comic_identify/ui/identify.py:84
+msgid "Abrir…"
+msgstr "Open…"
 
-#: src/comic_identify/ui/gui.py:1317
-#, python-brace-format
+#: src/comic_identify/ui/identify.py:85
 msgid ""
-"En {target_parent}. Se renombra este mismo archivo, no una copia; se puede "
-"deshacer desde Ajustes."
+"Abre un cómic (CBR, CBZ, CB7) o una imagen de portada; también puedes "
+"pegarla o arrastrarla"
 msgstr ""
-"In {target_parent}. This same file is renamed, not a copy; it can be undone "
-"from Settings."
+"Opens a comic (CBR, CBZ, CB7) or a cover image; you can also paste or drag it"
 
-#: src/comic_identify/ui/gui.py:1323
-msgid "Nombre"
-msgstr "Name"
+#: src/comic_identify/ui/identify.py:86
+msgid "Pegar"
+msgstr "Paste"
 
-#: src/comic_identify/ui/gui.py:1323
-msgid "serie u OneShot"
-msgstr "series or OneShot"
-
-#: src/comic_identify/ui/gui.py:1323 src/comic_identify/ui/gui.py:1589
-msgid "8 → «Volumen 8»"
-msgstr "8 → \"Volumen 8\""
-
-#: src/comic_identify/ui/gui.py:1324 src/comic_identify/ui/gui.py:1590
-msgid "Contenido [años]"
-msgstr "Content [years]"
-
-#: src/comic_identify/ui/gui.py:1324
-msgid "años del material original: 1991 o 1991-1993"
-msgstr "years of the original material: 1991 or 1991-1993"
-
-#: src/comic_identify/ui/gui.py:1325 src/comic_identify/ui/gui.py:1591
-msgid "Edición (años)"
-msgstr "Edition (years)"
-
-#: src/comic_identify/ui/gui.py:1325
-msgid "años de la edición que tienes"
-msgstr "years of the edition you have"
-
-#: src/comic_identify/ui/gui.py:1326 src/comic_identify/ui/gui.py:1592
-msgid "quién la publica: Planeta DeAgostini, Panini…"
-msgstr "who publishes it: Planeta DeAgostini, Panini…"
-
-#: src/comic_identify/ui/gui.py:1327
-msgid "solo el que ves impreso en el ejemplar"
-msgstr "only the one you see printed on the issue"
-
-#: src/comic_identify/ui/gui.py:1327
-msgid "opcional"
-msgstr "optional"
-
-#: src/comic_identify/ui/gui.py:1328 src/comic_identify/ui/gui.py:1586
-msgid "(ninguna)"
-msgstr "(none)"
-
-#: src/comic_identify/ui/gui.py:1330 src/comic_identify/ui/gui.py:1589
-msgid "Bandera"
-msgstr "Flag"
-
-#: src/comic_identify/ui/gui.py:1338 src/comic_identify/ui/gui.py:1602
-msgid "Buscar en ComicVine…"
-msgstr "Search ComicVine…"
-
-#: src/comic_identify/ui/gui.py:1339
+#: src/comic_identify/ui/identify.py:87
 msgid ""
-"Busca los años originales en ComicVine a partir del título original y los "
-"números"
+"Pega una imagen copiada, o un cómic (CBR, CBZ, CB7) o imagen copiados en el "
+"gestor de archivos (Ctrl+V)"
 msgstr ""
-"Looks up the original years on ComicVine from the original title and the "
-"numbers"
+"Pastes a copied image, or a comic (CBR, CBZ, CB7) or image copied in the "
+"file manager (Ctrl+V)"
 
-#: src/comic_identify/ui/gui.py:1345
+#: src/comic_identify/ui/identify.py:91
+msgid "Preguntar a la IA"
+msgstr "Ask the AI"
+
+#: src/comic_identify/ui/identify.py:92
 msgid ""
-"El sello y los años vienen de GCD, transcritos por otro colaborador: "
-"compruébalos con el ejemplar. El año real del contenido en ediciones "
-"españolas no se sabe solo: ponlo tú o búscalo con el botón de ComicVine."
+"Abre un terminal con tu propia sesión (Claude Code, OpenCode…) para que "
+"identifique la portada"
 msgstr ""
-"The imprint and the years come from GCD, transcribed by another contributor: "
-"check them against the issue. The real year of the content in Spanish "
-"editions cannot be worked out on its own: enter it yourself or look it up "
-"with the ComicVine button."
+"Opens a terminal with your own session (Claude Code, OpenCode…) to identify "
+"the cover"
 
-#: src/comic_identify/ui/gui.py:1351
-msgid "Patrón (variables: "
-msgstr "Pattern (variables: "
+#: src/comic_identify/ui/identify.py:94
+msgid "Normalizar nombre…"
+msgstr "Normalize name…"
 
-#: src/comic_identify/ui/gui.py:1355
-msgid "Restablecer"
-msgstr "Reset"
-
-#: src/comic_identify/ui/gui.py:1366
-msgid "Nombre resultante:"
-msgstr "Resulting name:"
-
-#: src/comic_identify/ui/gui.py:1373
-msgid "Renombrar"
-msgstr "Rename"
-
-#: src/comic_identify/ui/gui.py:1397
+#: src/comic_identify/ui/identify.py:96
 msgid ""
-"Sin años del contenido: el nombre llevará solo (años de la edición). Si más "
-"adelante los averiguas, se completa volviendo a normalizar."
+"Renombra el CBR/CBZ con el patrón de Estructura.md (abre un cómic o elige "
+"una coincidencia de «Mi colección» para activarlo). Actúa sobre el archivo "
+"original, no sobre una copia."
 msgstr ""
-"No content years: the name will only carry (edition years). If you find them "
-"out later, it is completed by normalizing again."
+"Renames the CBR/CBZ with the pattern from Estructura.md (open a comic or "
+"choose a \"My collection\" match to enable it). It acts on the original "
+"file, not on a copy."
 
-#: src/comic_identify/ui/gui.py:1401
-msgid "El nombre resultante está vacío."
-msgstr "The resulting name is empty."
+#: src/comic_identify/ui/identify.py:99
+msgid "Normalizar carpeta…"
+msgstr "Normalize folder…"
 
-#: src/comic_identify/ui/gui.py:1403
-msgid "Es el nombre que ya tiene."
-msgstr "That is the name it already has."
-
-#: src/comic_identify/ui/gui.py:1405
-msgid "Ya existe un archivo con ese nombre en la carpeta; no se sobrescribe."
+#: src/comic_identify/ui/identify.py:100
+msgid ""
+"Renombra una carpeta-serie y numera los archivos de dentro (elige antes una "
+"serie de GCD para rellenar sus datos)"
 msgstr ""
-"A file with that name already exists in the folder; it will not be "
-"overwritten."
+"Renames a series folder and numbers the files inside (first choose a GCD "
+"series to fill in its data)"
 
-#: src/comic_identify/ui/gui.py:1417
-#, python-brace-format
-msgid "No se pudo renombrar: {error}"
-msgstr "Could not rename: {error}"
+#: src/comic_identify/ui/identify.py:103
+msgid "Metadatos carpeta…"
+msgstr "Folder metadata…"
 
-#: src/comic_identify/ui/gui.py:1425
-#, python-brace-format
-msgid "Renombrado: {target_name} → {new_name}"
-msgstr "Renamed: {target_name} → {new_name}"
-
-#: src/comic_identify/ui/gui.py:1450
-msgid "Años del material original"
-msgstr "Years of the original material"
-
-#: src/comic_identify/ui/gui.py:1456
+#: src/comic_identify/ui/identify.py:104
 msgid ""
-"Escribe el título original (en inglés) y los números americanos que recoge "
-"la edición; los años salen de las fechas de portada de ComicVine."
+"Escribe el ComicInfo.xml (serie, editorial, categoría…) en todos los cómics "
+"de una carpeta"
 msgstr ""
-"Type the original title (in English) and the American issue numbers the "
-"edition collects; the years come from ComicVine's cover dates."
+"Writes the ComicInfo.xml (series, publisher, category…) into every comic in "
+"a folder"
 
-#: src/comic_identify/ui/gui.py:1458
-msgid "Título original, p. ej. Captain Marvel"
-msgstr "Original title, e.g. Captain Marvel"
+#: src/comic_identify/ui/identify.py:108
+msgid "Metadatos archivo…"
+msgstr "File metadata…"
 
-#: src/comic_identify/ui/gui.py:1459
-msgid "Nº inicial"
-msgstr "First no."
-
-#: src/comic_identify/ui/gui.py:1461
-msgid "Nº final (opcional)"
-msgstr "Last no. (optional)"
-
-#: src/comic_identify/ui/gui.py:1462
-msgid "Buscar series"
-msgstr "Search series"
-
-#: src/comic_identify/ui/gui.py:1472
-msgid "Usar estos años"
-msgstr "Use these years"
-
-#: src/comic_identify/ui/gui.py:1482
+#: src/comic_identify/ui/identify.py:109
 msgid ""
-"Necesitas la clave gratuita de ComicVine (pestaña Ajustes) para esta "
-"búsqueda."
-msgstr "You need the free ComicVine key (Settings tab) for this search."
-
-#: src/comic_identify/ui/gui.py:1496
-#, python-brace-format
-msgid "{found_count} serie(s). Elige la que recoge tu edición."
-msgstr "{found_count} series. Choose the one your edition collects."
-
-#: src/comic_identify/ui/gui.py:1497
-msgid ""
-"ComicVine no encuentra esa serie: prueba con el título original en inglés."
-msgstr "ComicVine cannot find that series: try the original title in English."
-
-#: src/comic_identify/ui/gui.py:1502
-msgid "Buscando en ComicVine…"
-msgstr "Searching ComicVine…"
-
-#: src/comic_identify/ui/gui.py:1519
-msgid "Consultando las fechas de portada…"
-msgstr "Looking up the cover dates…"
-
-#: src/comic_identify/ui/gui.py:1532
-#, python-brace-format
-msgid ""
-"Años del contenido: {years} (portadas de {volume_name} {volume_start_year} "
-"en ComicVine)."
+"Escribe el ComicInfo.xml del cómic abierto o de la coincidencia de «Mi "
+"colección» elegida, en el archivo original"
 msgstr ""
-"Content years: {years} (covers of {volume_name} {volume_start_year} on "
-"ComicVine)."
+"Writes the ComicInfo.xml of the open comic, or of the chosen \"My "
+"collection\" match, into the original file"
 
-#: src/comic_identify/ui/gui.py:1547
-msgid "Carpeta de la serie"
-msgstr "Series folder"
+#: src/comic_identify/ui/identify.py:129
+msgid "Ningún cómic abierto"
+msgstr "No comic open"
 
-#: src/comic_identify/ui/gui.py:1560
-#, python-brace-format
-msgid "No hay archivos CBR/CBZ directamente en {folder_name}."
-msgstr "There are no CBR/CBZ files directly in {folder_name}."
+#: src/comic_identify/ui/identify.py:138
+msgid "Primera página (la portada)"
+msgstr "First page (the cover)"
 
-#: src/comic_identify/ui/gui.py:1573
-msgid "Normalizar carpeta"
-msgstr "Normalize folder"
+#: src/comic_identify/ui/identify.py:139 src/comic_identify/ui/viewer.py:50
+msgid "Página anterior"
+msgstr "Previous page"
 
-#: src/comic_identify/ui/gui.py:1579
-#, python-brace-format
-msgid "<b>Carpeta:</b> {markup_escape_text}  ({files_count} archivos)"
-msgstr "<b>Folder:</b> {markup_escape_text}  ({files_count} files)"
+#: src/comic_identify/ui/identify.py:140 src/comic_identify/ui/viewer.py:51
+msgid "Página siguiente"
+msgstr "Next page"
 
-#: src/comic_identify/ui/gui.py:1589
-msgid "Nombre (serie)"
-msgstr "Name (series)"
+#: src/comic_identify/ui/identify.py:141
+msgid "Última página (la contraportada)"
+msgstr "Last page (the back cover)"
 
-#: src/comic_identify/ui/gui.py:1590
-msgid "años del material original: 1999-2001"
-msgstr "years of the original material: 1999-2001"
+#: src/comic_identify/ui/identify.py:150
+msgid "Extraer portada…"
+msgstr "Extract cover…"
 
-#: src/comic_identify/ui/gui.py:1591
-msgid "2000-2002; 2011- si sigue publicándose"
-msgstr "2000-2002; 2011- if it is still being published"
-
-#: src/comic_identify/ui/gui.py:1593
-msgid "solo el que ves impreso en los ejemplares"
-msgstr "only the one you see printed on the issues"
-
-#: src/comic_identify/ui/gui.py:1603
+#: src/comic_identify/ui/identify.py:152
 msgid ""
-"Averigua los años del material original a partir del título original y los "
-"números"
+"Guarda la portada como imagen junto al archivo, con su mismo nombre (para "
+"usarla, por ejemplo, de portada en GCstar); no la recodifica, así que "
+"conserva su calidad original"
 msgstr ""
-"Finds out the years of the original material from the original title and the "
-"numbers"
+"Saves the cover as an image next to the file, with the same name (to use it, "
+"for example, as the cover in GCstar); it does not re-encode it, so it keeps "
+"its original quality"
 
-#: src/comic_identify/ui/gui.py:1611
+#: src/comic_identify/ui/identify.py:155
+msgid "Transferir a GCstar…"
+msgstr "Transfer to GCstar…"
+
+#: src/comic_identify/ui/identify.py:157
 msgid ""
-"Nombre, país, años de la serie y sello vienen de GCD (transcritos por otro "
-"colaborador): compruébalos. Los años del contenido original no se saben "
-"solos: ponlos tú o búscalos en ComicVine."
+"Añade el cómic a tu colección de GCstar (créditos, editorial, año, páginas, "
+"portada y contraportada) sin tocar el resto de su archivo .gcs; configúralo "
+"en Ajustes"
 msgstr ""
-"The name, country, series years and imprint come from GCD (transcribed by "
-"another contributor): check them. The years of the original content cannot "
-"be worked out on their own: enter them yourself or look them up on ComicVine."
+"Adds the comic to your GCstar collection (credits, publisher, year, pages, "
+"cover and back cover) without touching the rest of its .gcs file; set it up "
+"in Settings"
 
-#: src/comic_identify/ui/gui.py:1616
-msgid "Patrón de la carpeta:"
-msgstr "Folder pattern:"
+#: src/comic_identify/ui/identify.py:166
+msgid "ComicInfo.xml"
+msgstr "ComicInfo.xml"
 
-#: src/comic_identify/ui/gui.py:1620
+#: src/comic_identify/ui/identify.py:168
+msgid "Eliminar datos"
+msgstr "Delete data"
+
+#: src/comic_identify/ui/identify.py:170
 msgid ""
-"Cada archivo se llamará como la carpeta resultante más « #01», « #02»… Se "
-"usa el número que ya trae cada nombre, así que los huecos se respetan."
+"Quita el ComicInfo.xml entero de este archivo (el propio archivo no se "
+"toca); se puede deshacer con «Deshacer» en Ajustes, como cualquier otra "
+"escritura de metadatos"
 msgstr ""
-"Each file will be named like the resulting folder plus \" #01\", \" #02\"… "
-"The number each name already carries is used, so gaps are respected."
+"Removes the whole ComicInfo.xml from this file (the file itself is not "
+"touched); it can be undone with \"Undo\" in Settings, like any other "
+"metadata write"
 
-#: src/comic_identify/ui/gui.py:1624
-msgid "Carpeta resultante:"
-msgstr "Resulting folder:"
+#: src/comic_identify/ui/identify.py:208
+msgid "Título a buscar"
+msgstr "Title to search"
 
-#: src/comic_identify/ui/gui.py:1631
-msgid "Renombrar este archivo"
-msgstr "Rename this file"
+#: src/comic_identify/ui/identify.py:210
+msgid "Editorial / distribuidor (Panini, Planeta, Forum…)"
+msgstr "Publisher / distributor (Panini, Planeta, Forum…)"
 
-#: src/comic_identify/ui/gui.py:1635
-msgid "Número de ejemplar de este archivo"
-msgstr "Issue number of this file"
+#: src/comic_identify/ui/identify.py:212 src/comic_identify/ui/metadata.py:220
+msgid "Año"
+msgstr "Year"
 
-#: src/comic_identify/ui/gui.py:1652
-msgid "Renombrar carpeta y archivos"
-msgstr "Rename folder and files"
+#: src/comic_identify/ui/identify.py:215
+msgid "Buscar en ComicVine"
+msgstr "Search ComicVine"
 
-#: src/comic_identify/ui/gui.py:1678
-msgid "El nombre de la carpeta resultante está vacío."
-msgstr "The resulting folder name is empty."
-
-#: src/comic_identify/ui/gui.py:1680
-#, python-brace-format
-msgid "Ya existe una carpeta llamada «{new_folder_name}»."
-msgstr "A folder named \"{new_folder_name}\" already exists."
-
-#: src/comic_identify/ui/gui.py:1691
-msgid "(no se renombra)"
-msgstr "(not renamed)"
-
-#: src/comic_identify/ui/gui.py:1694
-msgid "Sin número"
-msgstr "No number"
-
-#: src/comic_identify/ui/gui.py:1695
-#, python-brace-format
-msgid "{name}: escribe su número o exclúyelo."
-msgstr "{name}: enter its number or exclude it."
-
-#: src/comic_identify/ui/gui.py:1698
-msgid "Nombre vacío"
-msgstr "Empty name"
-
-#: src/comic_identify/ui/gui.py:1702
-msgid "Nombre demasiado largo"
-msgstr "Name too long"
-
-#: src/comic_identify/ui/gui.py:1703
+#: src/comic_identify/ui/identify.py:217
 msgid ""
-"El nombre de los archivos es demasiado largo para el sistema de archivos."
-msgstr "The file names are too long for the file system."
+"Busca en ComicVine con estos datos (necesita su clave gratuita, en Ajustes)"
+msgstr "Searches ComicVine with this data (needs your free key, in Settings)"
 
-#: src/comic_identify/ui/gui.py:1706
-msgid "revisa el número"
-msgstr "check the number"
+#: src/comic_identify/ui/identify.py:224
+msgid "Limpiar"
+msgstr "Clear"
 
-#: src/comic_identify/ui/gui.py:1713
-msgid "Repetido"
-msgstr "Duplicate"
+#: src/comic_identify/ui/identify.py:225
+msgid "Quita todos los datos: campos, resultados, portada y panel"
+msgstr "Removes all data: fields, results, cover and panel"
 
-#: src/comic_identify/ui/gui.py:1714
-#, python-brace-format
-msgid "Hay varios archivos con el número de «{r}»."
-msgstr "Several files have the number of \"{r}\"."
+#: src/comic_identify/ui/identify.py:245
+msgid "Incluir también la editorial y el año"
+msgstr "Also include the publisher and the year"
 
-#: src/comic_identify/ui/gui.py:1716
-msgid "Ya existe"
-msgstr "Already exists"
-
-#: src/comic_identify/ui/gui.py:1717
-#, python-brace-format
-msgid "«{r}» ya existe y no forma parte del lote."
-msgstr "\"{r}\" already exists and is not part of the batch."
-
-#: src/comic_identify/ui/gui.py:1719
-#, python-brace-format
+#: src/comic_identify/ui/identify.py:246
 msgid ""
-"{changes_count} archivo(s) se renombran · {sum} ya tienen ese nombre · "
-"{sum_2} sin tocar"
+"Añade la editorial y el año a la búsqueda de las webs y de las tiendas; si "
+"no salen resultados, desmárcalo"
 msgstr ""
-"{changes_count} file(s) will be renamed · {sum} already have that name · "
-"{sum_2} untouched"
+"Adds the publisher and the year to the search on the websites and stores; "
+"untick it if no results come up"
 
-#: src/comic_identify/ui/gui.py:1720
-#, python-brace-format
-msgid " (y {blocking_count} problema(s) más)"
-msgstr " (and {blocking_count} more problem(s))"
+#: src/comic_identify/ui/identify.py:249
+msgid "Buscar en otras webs"
+msgstr "Search other websites"
 
-#: src/comic_identify/ui/gui.py:1731
-#, python-brace-format
-msgid "No se pudo renombrar (no se ha cambiado nada): {error}"
-msgstr "Could not rename (nothing was changed): {error}"
+#: src/comic_identify/ui/identify.py:254
+msgid "Se abre en tu navegador"
+msgstr "Opens in your browser"
 
-#: src/comic_identify/ui/gui.py:1738
+#: src/comic_identify/ui/identify.py:260
 #, python-brace-format
+msgid "Busca en las {SOURCES_count} webs, cada una en su pestaña"
+msgstr "Searches all {SOURCES_count} websites, each in its own tab"
+
+#: src/comic_identify/ui/identify.py:271
+#, python-brace-format
+msgid "Busca en {source_host}"
+msgstr "Search on {source_host}"
+
+#: src/comic_identify/ui/identify.py:276
+msgid "Abre en tu navegador la búsqueda del título en la web que elijas"
+msgstr "Opens the title search in your browser on the website you choose"
+
+#: src/comic_identify/ui/identify.py:285
+msgid "Comprar"
+msgstr "Buy"
+
+#: src/comic_identify/ui/identify.py:290
+msgid "Busca el ejemplar en tu navegador"
+msgstr "Search for the issue in your browser"
+
+#: src/comic_identify/ui/identify.py:296
+#, python-brace-format
+msgid "Busca en las {SHOPS_count} tiendas, cada una en su pestaña"
+msgstr "Searches all {SHOPS_count} stores, each in its own tab"
+
+#: src/comic_identify/ui/identify.py:307
+#, python-brace-format
+msgid "Busca en {shop_host}"
+msgstr "Search on {shop_host}"
+
+#: src/comic_identify/ui/identify.py:312
 msgid ""
-"Carpeta renombrada a «{new_folder_name}» y {moves_count} archivo(s) "
-"renumerados."
+"Abre en tu navegador la búsqueda del ejemplar en una tienda o en una web de "
+"segunda mano (Forum y Vértice ya no publican: solo se encuentran de segunda "
+"mano)"
 msgstr ""
-"Folder renamed to \"{new_folder_name}\" and {moves_count} file(s) renumbered."
+"Opens the issue search in your browser on a store or a second-hand website "
+"(Forum and Vértice no longer publish: they can only be found second-hand)"
 
-#: src/comic_identify/ui/gui.py:1760
-msgid "Carpeta con los cómics"
-msgstr "Folder with the comics"
-
-#: src/comic_identify/ui/gui.py:1770
+#: src/comic_identify/ui/identify.py:324
 #, python-brace-format
-msgid "No hay archivos de cómic directamente en {folder_name}."
-msgstr "There are no comic files directly in {folder_name}."
+msgid "Escribe un título para buscarlo en {name}."
+msgstr "Type a title to search for it on {name}."
 
-#: src/comic_identify/ui/gui.py:1780
+#: src/comic_identify/ui/identify.py:344
 #, python-brace-format
-msgid "Leyendo los metadatos de {files_count} archivo(s)…"
-msgstr "Reading the metadata of {files_count} file(s)…"
+msgid "Escribe un título (o elige un resultado) para buscarlo en {name}."
+msgstr "Type a title (or choose a result) to search for it on {name}."
 
-#: src/comic_identify/ui/gui.py:1811
+#: src/comic_identify/ui/identify.py:352
+msgid "Escribe un título (o elige un resultado) para buscarlo en las tiendas."
+msgstr "Type a title (or choose a result) to search for it in the stores."
+
+#: src/comic_identify/ui/identify.py:356
 #, python-brace-format
-msgid "Metadatos leídos de {files_count} archivo(s)."
-msgstr "Metadata read from {files_count} file(s)."
+msgid "Abriendo la búsqueda en {SHOPS_count} tiendas, cada una en su pestaña…"
+msgstr "Opening the search in {SHOPS_count} stores, each in its own tab…"
 
-#: src/comic_identify/ui/gui.py:1842
+#: src/comic_identify/ui/identify.py:361
+msgid "Escribe un título para buscarlo."
+msgstr "Type a title to search for it."
+
+#: src/comic_identify/ui/identify.py:368
+#, python-brace-format
+msgid "Abriendo la búsqueda en {SOURCES_count} webs, cada una en su pestaña…"
+msgstr "Opening the search on {SOURCES_count} websites, each in its own tab…"
+
+#: src/comic_identify/ui/identify.py:371
+msgid "Cómics (CBR/CBZ/CB7) e imágenes"
+msgstr "Comics (CBR/CBZ/CB7) and images"
+
+#: src/comic_identify/ui/identify.py:375
+msgid "Abrir cómic o imagen de portada"
+msgstr "Open a comic or cover image"
+
+#: src/comic_identify/ui/identify.py:389
+#, python-brace-format
+msgid "«{path_name}» no es un cómic (CBR, CBZ, CB7) ni una imagen."
+msgstr "\"{path_name}\" is not a comic (CBR, CBZ, CB7) or an image."
+
+#: src/comic_identify/ui/identify.py:414
+msgid "El portapapeles no contiene un archivo que se pueda abrir."
+msgstr "The clipboard does not contain a file that can be opened."
+
+#: src/comic_identify/ui/identify.py:422
+msgid "El portapapeles no contiene una imagen ni un cómic copiado."
+msgstr "The clipboard does not contain an image or a copied comic."
+
+#: src/comic_identify/ui/identify.py:437
+#, python-brace-format
+msgid "Leyendo la portada de {path_name}…"
+msgstr "Reading the cover of {path_name}…"
+
+#: src/comic_identify/ui/identify.py:452
+#, python-brace-format
+msgid "No se pudo leer la portada de {comic_name}: {error}"
+msgstr "Could not read the cover of {comic_name}: {error}"
+
+#: src/comic_identify/ui/identify.py:469
+msgid "Doble clic para verla más grande"
+msgstr "Double-click to see it larger"
+
+#: src/comic_identify/ui/identify.py:522
+#, python-brace-format
+msgid "No se pudo eliminar el ComicInfo.xml de {target_name}: {error}"
+msgstr "Could not delete the ComicInfo.xml of {target_name}: {error}"
+
+#: src/comic_identify/ui/identify.py:524
+#, python-brace-format
 msgid ""
-"Créditos, género y personajes: de la ficha del número en GCD (los de alguna "
-"historia, de la original reimpresa)."
+"ComicInfo.xml de {target_name} eliminado. «Deshacer» en Ajustes lo recupera."
 msgstr ""
-"Credits, genre and characters: from the issue's record on GCD (those of some "
-"story, from the reprinted original)."
+"ComicInfo.xml of {target_name} deleted. \"Undo\" in Settings restores it."
 
-#: src/comic_identify/ui/gui.py:1844
-msgid "Créditos, género y personajes: de la ficha del número en GCD."
-msgstr "Credits, genre and characters: from the issue's record on GCD."
-
-#: src/comic_identify/ui/gui.py:1854
+#: src/comic_identify/ui/identify.py:526
 #, python-brace-format
+msgid "{target_name} ya no tenía ComicInfo.xml."
+msgstr "{target_name} no longer had a ComicInfo.xml."
+
+#: src/comic_identify/ui/identify.py:539
+#, python-brace-format
+msgid "No se pudo leer: {error}"
+msgstr "Could not read: {error}"
+
+#: src/comic_identify/ui/identify.py:539
+msgid "Este archivo no tiene ComicInfo.xml."
+msgstr "This file has no ComicInfo.xml."
+
+#: src/comic_identify/ui/identify.py:638
+#, python-brace-format
+msgid "No se pudo procesar la imagen: {error}"
+msgstr "Could not process the image: {error}"
+
+#: src/comic_identify/ui/identify.py:649
+#, python-brace-format
+msgid "Código de barras: {outcome_barcode}"
+msgstr "Barcode: {outcome_barcode}"
+
+#: src/comic_identify/ui/identify.py:652
+msgid "Sin resultados; prueba a corregir el título o el número."
+msgstr "No results; try correcting the title or the number."
+
+#: src/comic_identify/ui/identify.py:654
+#, python-brace-format
+msgid "{outcome_candidates_count} candidato(s), de más a menos parecido."
+msgstr "{outcome_candidates_count} candidate(s), from most to least similar."
+
+#: src/comic_identify/ui/identify.py:661
+msgid "Haz clic en una sugerencia para ver su ficha a la derecha."
+msgstr "Click a suggestion to see its record on the right."
+
+#: src/comic_identify/ui/identify.py:707
 msgid ""
-"Guion, lápiz, tinta y color: de las fichas USA de los originales que recoge "
-"este ejemplar{years}."
+"Importa el volcado de GCD o descarga el índice de Universo Marvel o de "
+"Tebeosfera (pestaña Ajustes) para buscar mientras escribes; «Buscar en "
+"ComicVine» consulta ComicVine."
 msgstr ""
-"Script, pencils, inks and colors: from the USA records of the originals this "
-"issue collects{years}."
+"Import the GCD dump or download the Universo Marvel or Tebeosfera index "
+"(Settings tab) to search as you type; \"Search ComicVine\" queries ComicVine."
 
-#: src/comic_identify/ui/gui.py:1857
+#: src/comic_identify/ui/identify.py:717
 #, python-brace-format
-msgid ""
-"Revisa: de {titles} no se pudo saber qué historias son las de este ejemplar, "
-"y se han incluido todas."
-msgstr ""
-"Check: for {titles} it could not be determined which stories are the ones in "
-"this issue, and all of them were included."
+msgid "{hits_count} de GCD"
+msgstr "{hits_count} from GCD"
 
-#: src/comic_identify/ui/gui.py:1861
+#: src/comic_identify/ui/identify.py:718
 #, python-brace-format
-msgid "No se pudo leer la ficha USA de: {titles}."
-msgstr "Could not read the USA record of: {titles}."
+msgid "{marvel_hits_count} de Universo Marvel"
+msgstr "{marvel_hits_count} from Universo Marvel"
 
-#: src/comic_identify/ui/gui.py:1865
+#: src/comic_identify/ui/identify.py:719
 #, python-brace-format
-msgid ""
-"No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): "
-"{usa_error}"
-msgstr ""
-"Could not query the USA records (script, pencils, inks and colors): "
-"{usa_error}"
+msgid "{tebeosfera_hits_count} de Tebeosfera"
+msgstr "{tebeosfera_hits_count} from Tebeosfera"
 
-#: src/comic_identify/ui/gui.py:1891
-msgid "Metadatos"
-msgstr "Metadata"
-
-#: src/comic_identify/ui/gui.py:1900
+#: src/comic_identify/ui/identify.py:720
 #, python-brace-format
-msgid "<b>{kind}:</b> {path}  ({files})"
-msgstr "<b>{kind}:</b> {path}  ({files})"
+msgid "Sugerencias para «{query}»: {found}"
+msgstr "Suggestions for \"{query}\": {found}"
 
-#: src/comic_identify/ui/gui.py:1901
-msgid "Carpeta"
-msgstr "Folder"
-
-#: src/comic_identify/ui/gui.py:1901
-msgid "Archivo"
-msgstr "File"
-
-#: src/comic_identify/ui/gui.py:1902
+#: src/comic_identify/ui/identify.py:721
 #, python-brace-format
-msgid "{count} archivo"
-msgid_plural "{count} archivos"
-msgstr[0] "{count} file"
-msgstr[1] "{count} files"
+msgid "Sin resultados para «{query}»"
+msgstr "No results for \"{query}\""
 
-#: src/comic_identify/ui/gui.py:1905
-msgid ""
-"Los metadatos se escriben en los propios archivos, no en copias (antes se "
-"verifica una copia de cada uno); cada lote se puede deshacer desde Ajustes."
-msgstr ""
-"The metadata is written into the files themselves, not into copies (a copy "
-"of each one is verified first); each batch can be undone from Settings."
+#: src/comic_identify/ui/identify.py:722
+msgid "«Buscar en ComicVine» lo consulta también."
+msgstr "\"Search ComicVine\" queries it as well."
 
-#: src/comic_identify/ui/gui.py:1914
-msgid "nombre de la serie"
-msgstr "series name"
-
-#: src/comic_identify/ui/gui.py:1915
-msgid "Panini, Planeta…"
-msgstr "Panini, Planeta…"
-
-#: src/comic_identify/ui/gui.py:1915
-msgid "el impreso en el ejemplar"
-msgstr "the one printed on the issue"
-
-#: src/comic_identify/ui/gui.py:1916
-msgid "Mes"
-msgstr "Month"
-
-#: src/comic_identify/ui/gui.py:1916
-msgid "opcional, 01-12"
-msgstr "optional, 01-12"
-
-#: src/comic_identify/ui/gui.py:1916
-msgid "Día"
-msgstr "Day"
-
-#: src/comic_identify/ui/gui.py:1916
-msgid "opcional, 01-31"
-msgstr "optional, 01-31"
-
-#: src/comic_identify/ui/gui.py:1917
-msgid "Total de números"
-msgstr "Total issues"
-
-#: src/comic_identify/ui/gui.py:1917
-msgid "los que tiene la serie"
-msgstr "the ones the series has"
-
-#: src/comic_identify/ui/gui.py:1918
-msgid "es, en…"
-msgstr "es, en…"
-
-#: src/comic_identify/ui/gui.py:1918
-msgid "Tomo tapa blanda, Grapa…"
-msgstr "Softcover, Stapled…"
-
-#: src/comic_identify/ui/gui.py:1919
-msgid "crimen, superhéroes…"
-msgstr "crime, superheroes…"
-
-#: src/comic_identify/ui/gui.py:1919
-msgid "Punisher, Micro…"
-msgstr "Punisher, Micro…"
-
-#: src/comic_identify/ui/gui.py:1920
-msgid "ficha de GCD u otra"
-msgstr "GCD record or another"
-
-#: src/comic_identify/ui/gui.py:1921
-msgid "años del contenido original…"
-msgstr "years of the original content…"
-
-#: src/comic_identify/ui/gui.py:1932 src/comic_identify/ui/gui.py:1964
-msgid "(distinto en cada archivo: se deja como está)"
-msgstr "(different in each file: left as it is)"
-
-#: src/comic_identify/ui/gui.py:1945
-msgid ""
-"Se rellena con lo que ya tienen los archivos y, en lo demás, con la serie de "
-"GCD y el nombre. Un campo vacío no se toca; si quitas un valor que todos "
-"tenían, se borra. Revisa lo que viene de GCD."
-msgstr ""
-"It is filled in with what the files already have and, for the rest, with the "
-"GCD series and the name. An empty field is not touched; if you remove a "
-"value that all of them had, it is deleted. Check what comes from GCD."
-
-#: src/comic_identify/ui/gui.py:1950
-msgid "Créditos (se aplican a todos los archivos del lote):"
-msgstr "Credits (applied to all the files in the batch):"
-
-#: src/comic_identify/ui/gui.py:1951
-msgid "quien escribe"
-msgstr "who writes"
-
-#: src/comic_identify/ui/gui.py:1951
-msgid "quien dibuja"
-msgstr "who draws"
-
-#: src/comic_identify/ui/gui.py:1952
-msgid "quien entinta"
-msgstr "who inks"
-
-#: src/comic_identify/ui/gui.py:1952
-msgid "quien colorea"
-msgstr "who colors"
-
-#: src/comic_identify/ui/gui.py:1953
-msgid "quien rotula"
-msgstr "who letters"
-
-#: src/comic_identify/ui/gui.py:1953
-msgid "quien dibuja la portada"
-msgstr "who draws the cover"
-
-#: src/comic_identify/ui/gui.py:1954
-msgid "quien traduce"
-msgstr "who translates"
-
-#: src/comic_identify/ui/gui.py:1954
-msgid "quien edita"
-msgstr "who edits"
-
-#: src/comic_identify/ui/gui.py:1970
-msgid "Categoría (la eliges tú; se guarda en las etiquetas):"
-msgstr "Category (you choose it; it is saved in the tags):"
-
-#: src/comic_identify/ui/gui.py:1976
-msgid "(no cambiar)"
-msgstr "(no change)"
-
-#: src/comic_identify/ui/gui.py:1991
-msgid "Escribir los metadatos de este archivo"
-msgstr "Write the metadata of this file"
-
-#: src/comic_identify/ui/gui.py:1995
-msgid "Número de ejemplar (se toma del nombre del archivo)"
-msgstr "Issue number (taken from the file name)"
-
-#: src/comic_identify/ui/gui.py:1998
-msgid "Título del ejemplar (opcional)"
-msgstr "Issue title (optional)"
-
-#: src/comic_identify/ui/gui.py:2001
-msgid "Resumen del ejemplar (opcional)"
-msgstr "Issue summary (optional)"
-
-#: src/comic_identify/ui/gui.py:2017
-msgid "Escribir metadatos"
-msgstr "Write metadata"
-
-#: src/comic_identify/ui/gui.py:2042
-msgid "no se puede leer"
-msgstr "cannot be read"
-
-#: src/comic_identify/ui/gui.py:2044
-msgid "sin tocar"
-msgstr "untouched"
-
-#: src/comic_identify/ui/gui.py:2053
-msgid "se modifica"
-msgstr "will be modified"
-
-#: src/comic_identify/ui/gui.py:2053
-msgid "se crea"
-msgstr "will be created"
-
-#: src/comic_identify/ui/gui.py:2056
-msgid "ya está igual"
-msgstr "already the same"
-
-#: src/comic_identify/ui/gui.py:2059
+#: src/comic_identify/ui/identify.py:732
 #, python-brace-format
-msgid ""
-"{pending} archivo(s) se modifican · {same} ya están igual · {skipped} sin "
-"tocar"
-msgstr ""
-"{pending} file(s) will be modified · {same} already the same · {skipped} "
-"untouched"
+msgid "Extrayendo la portada de {target_name}…"
+msgstr "Extracting the cover of {target_name}…"
 
-#: src/comic_identify/ui/gui.py:2069
+#: src/comic_identify/ui/identify.py:744
 #, python-brace-format
-msgid "Metadatos escritos en {result_written_count} archivo(s)"
-msgstr "Metadata written to {result_written_count} file(s)"
+msgid "Portada guardada como «{saved_name}», junto al archivo."
+msgstr "Cover saved as \"{saved_name}\", next to the file."
 
-#: src/comic_identify/ui/gui.py:2070
+#: src/comic_identify/ui/identify.py:747
 #, python-brace-format
-msgid "; {result_unchanged_count} ya estaban igual"
-msgstr "; {result_unchanged_count} were already the same"
+msgid "No se pudo extraer la portada: {error}"
+msgstr "Could not extract the cover: {error}"
 
-#: src/comic_identify/ui/gui.py:2071
-#, python-brace-format
-msgid ". {result_failed_count} fallaron: "
-msgstr ". {result_failed_count} failed: "
-
-#: src/comic_identify/ui/gui.py:2074
-msgid "No se ha escrito nada: "
-msgstr "Nothing was written: "
-
-#: src/comic_identify/ui/gui.py:2088
-#, python-brace-format
-msgid "Escribiendo… {done}/{total}"
-msgstr "Writing… {done}/{total}"
-
-#: src/comic_identify/ui/gui.py:2128
-#, python-brace-format
-msgid ""
-"Deshecho el último lote: {result_restored_count} archivo(s) restaurados."
-msgstr "Last batch undone: {result_restored_count} file(s) restored."
-
-#: src/comic_identify/ui/gui.py:2130
-#, python-brace-format
-msgid " {result_skipped_count} omitidos: "
-msgstr " {result_skipped_count} skipped: "
-
-#: src/comic_identify/ui/gui.py:2144
-#, python-brace-format
-msgid "Deshecho: {name} → {name_2}"
-msgstr "Undone: {name} → {name_2}"
-
-#: src/comic_identify/ui/gui.py:2145
-#, python-brace-format
-msgid ""
-"Deshecho un lote de {pairs_count} renombrado(s), el último: {name} → {name_2}"
-msgstr ""
-"Undone a batch of {pairs_count} rename(s), the last one: {name} → {name_2}"
-
-#: src/comic_identify/ui/gui.py:2153
-msgid "Falta el terminal embebido: instala el paquete gir1.2-vte-3.91."
-msgstr "The embedded terminal is missing: install the gir1.2-vte-3.91 package."
-
-#: src/comic_identify/ui/gui.py:2161
-#, python-brace-format
-msgid "No se pudo preparar el asistente: {error}"
-msgstr "Could not prepare the assistant: {error}"
-
-#: src/comic_identify/ui/gui.py:2171
-#, python-brace-format
-msgid ""
-"Sesión de «{argv}» con tu propia cuenta. Revisa cada permiso que te pida: "
-"esta aplicación no ve tus credenciales."
-msgstr ""
-"Session of \"{argv}\" with your own account. Check each permission it asks "
-"for: this application does not see your credentials."
-
-#: src/comic_identify/ui/gui.py:2180
-msgid "La sesión ha terminado. Pulsa × para cerrar el panel."
-msgstr "The session has ended. Press × to close the panel."
-
-#: src/comic_identify/ui/gui.py:2185 src/comic_identify/ui/gui.py:2211
-msgid "Asistente de IA"
-msgstr "AI assistant"
-
-#: src/comic_identify/ui/gui.py:2193
-#, python-brace-format
-msgid "No se pudo lanzar el asistente: {error_message}"
-msgstr "Could not launch the assistant: {error_message}"
-
-#: src/comic_identify/ui/gui.py:2209
-msgid "Volver al asistente"
-msgstr "Back to the assistant"
-
-#: src/comic_identify/ui/gui.py:2212
-msgid "Abrir en el navegador"
-msgstr "Open in browser"
-
-#: src/comic_identify/ui/gui.py:2213
-msgid "Usar esta ficha"
-msgstr "Use this record"
-
-#: src/comic_identify/ui/gui.py:2214
-msgid ""
-"Es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD: la usa para "
-"rellenar los metadatos"
-msgstr ""
-"It is the record of an issue from Universo Marvel, Tebeosfera or GCD: it "
-"uses it to fill in the metadata"
-
-#: src/comic_identify/ui/gui.py:2216
-msgid "Cerrar el panel"
-msgstr "Close the panel"
-
-#: src/comic_identify/ui/gui.py:2233
-msgid "Nombre:"
-msgstr "Name:"
-
-#: src/comic_identify/ui/gui.py:2233
-msgid "Año:"
-msgstr "Year:"
-
-#: src/comic_identify/ui/gui.py:2233
-msgid "Issue:"
-msgstr "Issue:"
-
-#: src/comic_identify/ui/gui.py:2242
-msgid "Datos e imagen de Comic Vine"
-msgstr "Data and image from Comic Vine"
-
-#: src/comic_identify/ui/gui.py:2263
-#, python-brace-format
-msgid "Ficha de {candidate_source}"
-msgstr "Record from {candidate_source}"
-
-#: src/comic_identify/ui/gui.py:2264 src/comic_identify/ui/gui.py:2396
-msgid "Ficha de Grand Comics Database"
-msgstr "Grand Comics Database record"
-
-#: src/comic_identify/ui/gui.py:2286
-#, python-brace-format
-msgid "Serie en {site}"
-msgstr "Series on {site}"
-
-#: src/comic_identify/ui/gui.py:2287
-#, python-brace-format
-msgid "Consultando la ficha en {site}…"
-msgstr "Querying the record on {site}…"
-
-#: src/comic_identify/ui/gui.py:2288
-#, python-brace-format
-msgid "Buscando el nº {number} de «{series_title}» en {site}…"
-msgstr "Looking for no. {number} of \"{series_title}\" on {site}…"
-
-#: src/comic_identify/ui/gui.py:2295
-#, python-brace-format
-msgid "No se pudo consultar {site}: {error}"
-msgstr "Could not query {site}: {error}"
-
-#: src/comic_identify/ui/gui.py:2298
-#, python-brace-format
-msgid ""
-"«{series_title}» no tiene el nº {number} en {site} (o no está catalogado "
-"todavía)."
-msgstr ""
-"\"{series_title}\" has no no. {number} on {site} (or it is not catalogued "
-"yet)."
-
-#: src/comic_identify/ui/gui.py:2298
-msgid " Elige una de sus fichas en la lista."
-msgstr " Choose one of its records from the list."
-
-#: src/comic_identify/ui/gui.py:2355
-#, python-brace-format
-msgid " · {candidate_similarity:.0%} de parecido con tu portada"
-msgstr " · {candidate_similarity:.0%} similar to your cover"
-
-#: src/comic_identify/ui/gui.py:2356
-#, python-brace-format
-msgid ""
-"Ficha de {candidate_source}: {candidate_title} · {candidate_subtitle}{match}"
-msgstr ""
-"Record from {candidate_source}: {candidate_title} · {candidate_subtitle}"
-"{match}"
-
-#: src/comic_identify/ui/gui.py:2478
-msgid "Ese número no está en tu índice de GCD: consultando su API pública…"
-msgstr "That issue is not in your GCD index: querying its public API…"
-
-#: src/comic_identify/ui/gui.py:2494
-#, python-brace-format
-msgid "No se pudo consultar la API pública de GCD: {problem}"
-msgstr "Could not query the GCD public API: {problem}"
-
-#: src/comic_identify/ui/gui.py:2504
-#, python-brace-format
-msgid "Ficha de GCD: {candidate_title} · {candidate_subtitle}"
-msgstr "GCD record: {candidate_title} · {candidate_subtitle}"
-
-#: src/comic_identify/ui/gui.py:2527
-msgid "Ficha de ComicVine"
-msgstr "ComicVine record"
-
-#: src/comic_identify/ui/gui.py:2620
-#, python-brace-format
-msgid ""
-"{name}\n"
-"Para poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}"
-msgstr ""
-"{name}\n"
-"To set its logo, save \"{slug}.png\" in {LOGO_DIR}"
-
-#: src/comic_identify/ui/gui.py:2659
-msgid "Coincidencia probable"
-msgstr "Probable match"
-
-#: src/comic_identify/ui/gui.py:2659
-msgid "Poco parecida"
-msgstr "Not very similar"
-
-#: src/comic_identify/ui/gui.py:2660
-#, python-brace-format
-msgid "{verdict} · {candidate_similarity:.0%} de parecido"
-msgstr "{verdict} · {candidate_similarity:.0%} similar"
-
-#: src/comic_identify/ui/gui.py:2665
-#, python-brace-format
-msgid "Datos de la ficha de {candidate_source}"
-msgstr "Data from the {candidate_source} record"
-
-#: src/comic_identify/ui/gui.py:2667
-msgid "Número suelto del catálogo: elígelo para ver su ficha"
-msgstr "Single issue from the catalog: choose it to see its record"
-
-#: src/comic_identify/ui/gui.py:2669
-msgid "Serie del catálogo: escribe el número y elígela para consultar su ficha"
-msgstr "Catalog series: type the number and choose it to look up its record"
-
-#: src/comic_identify/ui/gui.py:2674
-msgid "Coincide el código de barras"
-msgstr "The barcode matches"
-
-#: src/comic_identify/ui/gui.py:2674
-msgid "Por título; portada sin comparar"
-msgstr "By title; cover not compared"
-
-#: src/comic_identify/ui/gui.py:2683 src/comic_identify/ui/gui.py:2783
-msgid "Abrir carpeta"
-msgstr "Open folder"
-
-#: src/comic_identify/ui/gui.py:2693
+#: src/comic_identify/ui/library.py:31
 msgid "Añadir carpeta…"
 msgstr "Add folder…"
 
-#: src/comic_identify/ui/gui.py:2695 src/comic_identify/ui/gui.py:2868
+#: src/comic_identify/ui/library.py:33 src/comic_identify/ui/library.py:191
 msgid "Indexar / actualizar"
 msgstr "Index / update"
 
-#: src/comic_identify/ui/gui.py:2705
+#: src/comic_identify/ui/library.py:43
 msgid "Series de la colección (por carpeta y metadatos):"
 msgstr "Series in the collection (by folder and metadata):"
 
-#: src/comic_identify/ui/gui.py:2709
+#: src/comic_identify/ui/library.py:47
 msgid "Buscar una serie…"
 msgstr "Search a series…"
 
-#: src/comic_identify/ui/gui.py:2711
+#: src/comic_identify/ui/library.py:49
 msgid "Actualizar lista"
 msgstr "Refresh list"
 
-#: src/comic_identify/ui/gui.py:2712
+#: src/comic_identify/ui/library.py:50
 msgid ""
 "Vuelve a calcular la lista con lo indexado (indexa antes para leer los "
 "metadatos nuevos)"
@@ -2302,89 +1510,77 @@ msgstr ""
 "Recalculates the list from what is indexed (index first to read the new "
 "metadata)"
 
-#: src/comic_identify/ui/gui.py:2731
-msgid ""
-"Identifica un cómic a partir de su portada, normaliza los nombres de "
-"archivos y carpetas y escribe metadatos ComicInfo.xml."
-msgstr ""
-"Identifies a comic from its cover, normalizes file and folder names and "
-"writes ComicInfo.xml metadata."
-
-#: src/comic_identify/ui/gui.py:2734
-msgid "translator-credits"
-msgstr "José Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>"
-
-#: src/comic_identify/ui/gui.py:2735
-msgid "Datos de terceros"
-msgstr "Third-party data"
-
-#: src/comic_identify/ui/gui.py:2756
+#: src/comic_identify/ui/library.py:79
 #, python-brace-format
 msgid "{owned} de {total}"
 msgstr "{owned} of {total}"
 
-#: src/comic_identify/ui/gui.py:2757
+#: src/comic_identify/ui/library.py:80
 #, python-brace-format
 msgid "{report_owned_count} números (total sin indicar)"
 msgstr "{report_owned_count} issues (total not given)"
 
-#: src/comic_identify/ui/gui.py:2759
+#: src/comic_identify/ui/library.py:82
 msgid "varias series en la carpeta (números repetidos): sin comprobar"
 msgstr "several series in the folder (repeated numbers): not checked"
 
-#: src/comic_identify/ui/gui.py:2761
+#: src/comic_identify/ui/library.py:84
 #, python-brace-format
 msgid "empieza en el {report_starts_at}"
 msgstr "starts at {report_starts_at}"
 
-#: src/comic_identify/ui/gui.py:2763
+#: src/comic_identify/ui/library.py:86
 msgid "faltan "
 msgstr "missing "
 
-#: src/comic_identify/ui/gui.py:2765
+#: src/comic_identify/ui/library.py:88
 msgid "números sueltos: no se buscan huecos sin el total"
 msgstr "loose issues: gaps are not searched for without the total"
 
-#: src/comic_identify/ui/gui.py:2767
+#: src/comic_identify/ui/library.py:90
 msgid "fuera de la serie: "
 msgstr "outside the series: "
 
-#: src/comic_identify/ui/gui.py:2767
+#: src/comic_identify/ui/library.py:90
 msgid " (¿de otra serie?)"
 msgstr " (from another series?)"
 
-#: src/comic_identify/ui/gui.py:2769
+#: src/comic_identify/ui/library.py:92
 msgid "repetidos: "
 msgstr "repeated: "
 
-#: src/comic_identify/ui/gui.py:2771
+#: src/comic_identify/ui/library.py:94
 #, python-brace-format
 msgid "{report_other} sin número entero"
 msgstr "{report_other} without an integer number"
 
-#: src/comic_identify/ui/gui.py:2772
+#: src/comic_identify/ui/library.py:95
 #, python-brace-format
 msgid "metadatos {report_tagged}/{report_files}"
 msgstr "metadata {report_tagged}/{report_files}"
 
-#: src/comic_identify/ui/gui.py:2791
+#: src/comic_identify/ui/library.py:106 src/comic_identify/ui/results.py:148
+msgid "Abrir carpeta"
+msgstr "Open folder"
+
+#: src/comic_identify/ui/library.py:114
 #, python-brace-format
 msgid "{series_reports_count} serie(s) reconocidas, {incomplete} con huecos"
 msgstr "{series_reports_count} series recognized, {incomplete} with gaps"
 
-#: src/comic_identify/ui/gui.py:2792
+#: src/comic_identify/ui/library.py:115
 #, python-brace-format
 msgid ""
 " · se muestran las primeras {SERIES_SHOWN} de {shown_count}: afina el filtro"
 msgstr ""
 " · showing the first {SERIES_SHOWN} of {shown_count}: refine the filter"
 
-#: src/comic_identify/ui/gui.py:2793
+#: src/comic_identify/ui/library.py:116
 #, python-brace-format
 msgid " · {shown_count} en la lista"
 msgstr " · {shown_count} in the list"
 
-#: src/comic_identify/ui/gui.py:2794
+#: src/comic_identify/ui/library.py:117
 msgid ""
 ". Una carpeta suelta sin metadatos ni nombre normalizado no cuenta como "
 "serie."
@@ -2392,7 +1588,7 @@ msgstr ""
 ". A loose folder with no metadata or normalized name does not count as a "
 "series."
 
-#: src/comic_identify/ui/gui.py:2796
+#: src/comic_identify/ui/library.py:119
 msgid ""
 "Todavía no hay series: indexa la colección y escribe metadatos o normaliza "
 "los nombres de las carpetas."
@@ -2400,11 +1596,11 @@ msgstr ""
 "There are no series yet: index the collection and write metadata or "
 "normalize the folder names."
 
-#: src/comic_identify/ui/gui.py:2804
+#: src/comic_identify/ui/library.py:127
 msgid "Quitar"
 msgstr "Remove"
 
-#: src/comic_identify/ui/gui.py:2809
+#: src/comic_identify/ui/library.py:132
 #, python-brace-format
 msgid ""
 "{total} portada(s) indexada(s). Las carpetas se recorren con subcarpetas; "
@@ -2413,19 +1609,19 @@ msgstr ""
 "{total} cover(s) indexed. Folders are scanned with their subfolders; files "
 "that are already indexed are not read again."
 
-#: src/comic_identify/ui/gui.py:2813
+#: src/comic_identify/ui/library.py:136
 msgid "Carpeta de cómics"
 msgstr "Comics folder"
 
-#: src/comic_identify/ui/gui.py:2827
+#: src/comic_identify/ui/library.py:150
 msgid "Espera a que termine la indexación (o cancélala) para quitar carpetas."
 msgstr "Wait for the indexing to finish (or cancel it) to remove folders."
 
-#: src/comic_identify/ui/gui.py:2840
+#: src/comic_identify/ui/library.py:163
 msgid "Añade primero alguna carpeta."
 msgstr "Add a folder first."
 
-#: src/comic_identify/ui/gui.py:2853
+#: src/comic_identify/ui/library.py:176
 #, python-brace-format
 msgid ""
 "Nuevas: {stats_indexed} · sin cambios: {stats_unchanged} · ilegibles: "
@@ -2436,12 +1632,12 @@ msgstr ""
 "{stats_failed} · removed: {stats_removed} · metadata read in already indexed "
 "files: {stats_refreshed}"
 
-#: src/comic_identify/ui/gui.py:2856
+#: src/comic_identify/ui/library.py:179
 #, python-brace-format
 msgid " (y {stats_failed} más)"
 msgstr " (and {stats_failed} more)"
 
-#: src/comic_identify/ui/gui.py:2857
+#: src/comic_identify/ui/library.py:180
 msgid ""
 "\n"
 "Ilegibles: "
@@ -2449,7 +1645,7 @@ msgstr ""
 "\n"
 "Unreadable: "
 
-#: src/comic_identify/ui/gui.py:2860
+#: src/comic_identify/ui/library.py:183
 msgid ""
 "\n"
 "Sin acceso o vacías (su índice se conserva): "
@@ -2457,20 +1653,874 @@ msgstr ""
 "\n"
 "No access or empty (their index is kept): "
 
-#: src/comic_identify/ui/gui.py:2863
+#: src/comic_identify/ui/library.py:186
 #, python-brace-format
 msgid "Error al indexar: {error}"
 msgstr "Error while indexing: {error}"
 
-#: src/comic_identify/ui/gui.py:2889
+#: src/comic_identify/ui/metadata.py:64
+msgid "Carpeta con los cómics"
+msgstr "Folder with the comics"
+
+#: src/comic_identify/ui/metadata.py:74
+#, python-brace-format
+msgid "No hay archivos de cómic directamente en {folder_name}."
+msgstr "There are no comic files directly in {folder_name}."
+
+#: src/comic_identify/ui/metadata.py:84
+#, python-brace-format
+msgid "Leyendo los metadatos de {files_count} archivo(s)…"
+msgstr "Reading the metadata of {files_count} file(s)…"
+
+#: src/comic_identify/ui/metadata.py:115
+#, python-brace-format
+msgid "Metadatos leídos de {files_count} archivo(s)."
+msgstr "Metadata read from {files_count} file(s)."
+
+#: src/comic_identify/ui/metadata.py:146
+msgid ""
+"Créditos, género y personajes: de la ficha del número en GCD (los de alguna "
+"historia, de la original reimpresa)."
+msgstr ""
+"Credits, genre and characters: from the issue's record on GCD (those of some "
+"story, from the reprinted original)."
+
+#: src/comic_identify/ui/metadata.py:148
+msgid "Créditos, género y personajes: de la ficha del número en GCD."
+msgstr "Credits, genre and characters: from the issue's record on GCD."
+
+#: src/comic_identify/ui/metadata.py:158
+#, python-brace-format
+msgid ""
+"Guion, lápiz, tinta y color: de las fichas USA de los originales que recoge "
+"este ejemplar{years}."
+msgstr ""
+"Script, pencils, inks and colors: from the USA records of the originals this "
+"issue collects{years}."
+
+#: src/comic_identify/ui/metadata.py:161
+#, python-brace-format
+msgid ""
+"Revisa: de {titles} no se pudo saber qué historias son las de este ejemplar, "
+"y se han incluido todas."
+msgstr ""
+"Check: for {titles} it could not be determined which stories are the ones in "
+"this issue, and all of them were included."
+
+#: src/comic_identify/ui/metadata.py:165
+#, python-brace-format
+msgid "No se pudo leer la ficha USA de: {titles}."
+msgstr "Could not read the USA record of: {titles}."
+
+#: src/comic_identify/ui/metadata.py:169
+#, python-brace-format
+msgid ""
+"No se pudieron consultar las fichas USA (guion, lápiz, tinta y color): "
+"{usa_error}"
+msgstr ""
+"Could not query the USA records (script, pencils, inks and colors): "
+"{usa_error}"
+
+#: src/comic_identify/ui/metadata.py:195
+msgid "Metadatos"
+msgstr "Metadata"
+
+#: src/comic_identify/ui/metadata.py:204
+#, python-brace-format
+msgid "<b>{kind}:</b> {path}  ({files})"
+msgstr "<b>{kind}:</b> {path}  ({files})"
+
+#: src/comic_identify/ui/metadata.py:205
+msgid "Carpeta"
+msgstr "Folder"
+
+#: src/comic_identify/ui/metadata.py:205
+msgid "Archivo"
+msgstr "File"
+
+#: src/comic_identify/ui/metadata.py:206
+#, python-brace-format
+msgid "{count} archivo"
+msgid_plural "{count} archivos"
+msgstr[0] "{count} file"
+msgstr[1] "{count} files"
+
+#: src/comic_identify/ui/metadata.py:209
+msgid ""
+"Los metadatos se escriben en los propios archivos, no en copias (antes se "
+"verifica una copia de cada uno); cada lote se puede deshacer desde Ajustes."
+msgstr ""
+"The metadata is written into the files themselves, not into copies (a copy "
+"of each one is verified first); each batch can be undone from Settings."
+
+#: src/comic_identify/ui/metadata.py:218
+msgid "nombre de la serie"
+msgstr "series name"
+
+#: src/comic_identify/ui/metadata.py:219
+msgid "Panini, Planeta…"
+msgstr "Panini, Planeta…"
+
+#: src/comic_identify/ui/metadata.py:219
+msgid "el impreso en el ejemplar"
+msgstr "the one printed on the issue"
+
+#: src/comic_identify/ui/metadata.py:220
+msgid "Mes"
+msgstr "Month"
+
+#: src/comic_identify/ui/metadata.py:220
+msgid "opcional, 01-12"
+msgstr "optional, 01-12"
+
+#: src/comic_identify/ui/metadata.py:220
+msgid "Día"
+msgstr "Day"
+
+#: src/comic_identify/ui/metadata.py:220
+msgid "opcional, 01-31"
+msgstr "optional, 01-31"
+
+#: src/comic_identify/ui/metadata.py:221
+msgid "Total de números"
+msgstr "Total issues"
+
+#: src/comic_identify/ui/metadata.py:221
+msgid "los que tiene la serie"
+msgstr "the ones the series has"
+
+#: src/comic_identify/ui/metadata.py:222
+msgid "es, en…"
+msgstr "es, en…"
+
+#: src/comic_identify/ui/metadata.py:222
+msgid "Tomo tapa blanda, Grapa…"
+msgstr "Softcover, Stapled…"
+
+#: src/comic_identify/ui/metadata.py:223
+msgid "crimen, superhéroes…"
+msgstr "crime, superheroes…"
+
+#: src/comic_identify/ui/metadata.py:223
+msgid "Punisher, Micro…"
+msgstr "Punisher, Micro…"
+
+#: src/comic_identify/ui/metadata.py:224
+msgid "ficha de GCD u otra"
+msgstr "GCD record or another"
+
+#: src/comic_identify/ui/metadata.py:225
+msgid "años del contenido original…"
+msgstr "years of the original content…"
+
+#: src/comic_identify/ui/metadata.py:236 src/comic_identify/ui/metadata.py:268
+msgid "(distinto en cada archivo: se deja como está)"
+msgstr "(different in each file: left as it is)"
+
+#: src/comic_identify/ui/metadata.py:249
+msgid ""
+"Se rellena con lo que ya tienen los archivos y, en lo demás, con la serie de "
+"GCD y el nombre. Un campo vacío no se toca; si quitas un valor que todos "
+"tenían, se borra. Revisa lo que viene de GCD."
+msgstr ""
+"It is filled in with what the files already have and, for the rest, with the "
+"GCD series and the name. An empty field is not touched; if you remove a "
+"value that all of them had, it is deleted. Check what comes from GCD."
+
+#: src/comic_identify/ui/metadata.py:254
+msgid "Créditos (se aplican a todos los archivos del lote):"
+msgstr "Credits (applied to all the files in the batch):"
+
+#: src/comic_identify/ui/metadata.py:255
+msgid "quien escribe"
+msgstr "who writes"
+
+#: src/comic_identify/ui/metadata.py:255
+msgid "quien dibuja"
+msgstr "who draws"
+
+#: src/comic_identify/ui/metadata.py:256
+msgid "quien entinta"
+msgstr "who inks"
+
+#: src/comic_identify/ui/metadata.py:256
+msgid "quien colorea"
+msgstr "who colors"
+
+#: src/comic_identify/ui/metadata.py:257
+msgid "quien rotula"
+msgstr "who letters"
+
+#: src/comic_identify/ui/metadata.py:257
+msgid "quien dibuja la portada"
+msgstr "who draws the cover"
+
+#: src/comic_identify/ui/metadata.py:258
+msgid "quien traduce"
+msgstr "who translates"
+
+#: src/comic_identify/ui/metadata.py:258
+msgid "quien edita"
+msgstr "who edits"
+
+#: src/comic_identify/ui/metadata.py:274
+msgid "Categoría (la eliges tú; se guarda en las etiquetas):"
+msgstr "Category (you choose it; it is saved in the tags):"
+
+#: src/comic_identify/ui/metadata.py:280
+msgid "(no cambiar)"
+msgstr "(no change)"
+
+#: src/comic_identify/ui/metadata.py:295
+msgid "Escribir los metadatos de este archivo"
+msgstr "Write the metadata of this file"
+
+#: src/comic_identify/ui/metadata.py:299
+msgid "Número de ejemplar (se toma del nombre del archivo)"
+msgstr "Issue number (taken from the file name)"
+
+#: src/comic_identify/ui/metadata.py:302
+msgid "Título del ejemplar (opcional)"
+msgstr "Issue title (optional)"
+
+#: src/comic_identify/ui/metadata.py:305
+msgid "Resumen del ejemplar (opcional)"
+msgstr "Issue summary (optional)"
+
+#: src/comic_identify/ui/metadata.py:321
+msgid "Escribir metadatos"
+msgstr "Write metadata"
+
+#: src/comic_identify/ui/metadata.py:346
+msgid "no se puede leer"
+msgstr "cannot be read"
+
+#: src/comic_identify/ui/metadata.py:348
+msgid "sin tocar"
+msgstr "untouched"
+
+#: src/comic_identify/ui/metadata.py:357
+msgid "se modifica"
+msgstr "will be modified"
+
+#: src/comic_identify/ui/metadata.py:357
+msgid "se crea"
+msgstr "will be created"
+
+#: src/comic_identify/ui/metadata.py:360
+msgid "ya está igual"
+msgstr "already the same"
+
+#: src/comic_identify/ui/metadata.py:363
+#, python-brace-format
+msgid ""
+"{pending} archivo(s) se modifican · {same} ya están igual · {skipped} sin "
+"tocar"
+msgstr ""
+"{pending} file(s) will be modified · {same} already the same · {skipped} "
+"untouched"
+
+#: src/comic_identify/ui/metadata.py:373
+#, python-brace-format
+msgid "Metadatos escritos en {result_written_count} archivo(s)"
+msgstr "Metadata written to {result_written_count} file(s)"
+
+#: src/comic_identify/ui/metadata.py:374
+#, python-brace-format
+msgid "; {result_unchanged_count} ya estaban igual"
+msgstr "; {result_unchanged_count} were already the same"
+
+#: src/comic_identify/ui/metadata.py:375
+#, python-brace-format
+msgid ". {result_failed_count} fallaron: "
+msgstr ". {result_failed_count} failed: "
+
+#: src/comic_identify/ui/metadata.py:378
+msgid "No se ha escrito nada: "
+msgstr "Nothing was written: "
+
+#: src/comic_identify/ui/metadata.py:392
+#, python-brace-format
+msgid "Escribiendo… {done}/{total}"
+msgstr "Writing… {done}/{total}"
+
+#: src/comic_identify/ui/metadata.py:432
+#, python-brace-format
+msgid ""
+"Deshecho el último lote: {result_restored_count} archivo(s) restaurados."
+msgstr "Last batch undone: {result_restored_count} file(s) restored."
+
+#: src/comic_identify/ui/metadata.py:434
+#, python-brace-format
+msgid " {result_skipped_count} omitidos: "
+msgstr " {result_skipped_count} skipped: "
+
+#: src/comic_identify/ui/normalizers.py:74
+msgid "Normalizar nombre"
+msgstr "Normalize name"
+
+#: src/comic_identify/ui/normalizers.py:79
+#, python-brace-format
+msgid "<b>Archivo:</b> {markup_escape_text}"
+msgstr "<b>File:</b> {markup_escape_text}"
+
+#: src/comic_identify/ui/normalizers.py:82
+#, python-brace-format
+msgid ""
+"En {target_parent}. Se renombra este mismo archivo, no una copia; se puede "
+"deshacer desde Ajustes."
+msgstr ""
+"In {target_parent}. This same file is renamed, not a copy; it can be undone "
+"from Settings."
+
+#: src/comic_identify/ui/normalizers.py:88
+msgid "Nombre"
+msgstr "Name"
+
+#: src/comic_identify/ui/normalizers.py:88
+msgid "serie u OneShot"
+msgstr "series or OneShot"
+
+#: src/comic_identify/ui/normalizers.py:88
+#: src/comic_identify/ui/normalizers.py:354
+msgid "8 → «Volumen 8»"
+msgstr "8 → \"Volumen 8\""
+
+#: src/comic_identify/ui/normalizers.py:89
+#: src/comic_identify/ui/normalizers.py:355
+msgid "Contenido [años]"
+msgstr "Content [years]"
+
+#: src/comic_identify/ui/normalizers.py:89
+msgid "años del material original: 1991 o 1991-1993"
+msgstr "years of the original material: 1991 or 1991-1993"
+
+#: src/comic_identify/ui/normalizers.py:90
+#: src/comic_identify/ui/normalizers.py:356
+msgid "Edición (años)"
+msgstr "Edition (years)"
+
+#: src/comic_identify/ui/normalizers.py:90
+msgid "años de la edición que tienes"
+msgstr "years of the edition you have"
+
+#: src/comic_identify/ui/normalizers.py:91
+#: src/comic_identify/ui/normalizers.py:357
+msgid "quién la publica: Planeta DeAgostini, Panini…"
+msgstr "who publishes it: Planeta DeAgostini, Panini…"
+
+#: src/comic_identify/ui/normalizers.py:92
+msgid "solo el que ves impreso en el ejemplar"
+msgstr "only the one you see printed on the issue"
+
+#: src/comic_identify/ui/normalizers.py:92
+msgid "opcional"
+msgstr "optional"
+
+#: src/comic_identify/ui/normalizers.py:93
+#: src/comic_identify/ui/normalizers.py:351
+msgid "(ninguna)"
+msgstr "(none)"
+
+#: src/comic_identify/ui/normalizers.py:95
+#: src/comic_identify/ui/normalizers.py:354
+msgid "Bandera"
+msgstr "Flag"
+
+#: src/comic_identify/ui/normalizers.py:103
+#: src/comic_identify/ui/normalizers.py:367
+msgid "Buscar en ComicVine…"
+msgstr "Search ComicVine…"
+
+#: src/comic_identify/ui/normalizers.py:104
+msgid ""
+"Busca los años originales en ComicVine a partir del título original y los "
+"números"
+msgstr ""
+"Looks up the original years on ComicVine from the original title and the "
+"numbers"
+
+#: src/comic_identify/ui/normalizers.py:110
+msgid ""
+"El sello y los años vienen de GCD, transcritos por otro colaborador: "
+"compruébalos con el ejemplar. El año real del contenido en ediciones "
+"españolas no se sabe solo: ponlo tú o búscalo con el botón de ComicVine."
+msgstr ""
+"The imprint and the years come from GCD, transcribed by another contributor: "
+"check them against the issue. The real year of the content in Spanish "
+"editions cannot be worked out on its own: enter it yourself or look it up "
+"with the ComicVine button."
+
+#: src/comic_identify/ui/normalizers.py:116
+msgid "Patrón (variables: "
+msgstr "Pattern (variables: "
+
+#: src/comic_identify/ui/normalizers.py:120
+msgid "Restablecer"
+msgstr "Reset"
+
+#: src/comic_identify/ui/normalizers.py:131
+msgid "Nombre resultante:"
+msgstr "Resulting name:"
+
+#: src/comic_identify/ui/normalizers.py:138
+msgid "Renombrar"
+msgstr "Rename"
+
+#: src/comic_identify/ui/normalizers.py:162
+msgid ""
+"Sin años del contenido: el nombre llevará solo (años de la edición). Si más "
+"adelante los averiguas, se completa volviendo a normalizar."
+msgstr ""
+"No content years: the name will only carry (edition years). If you find them "
+"out later, it is completed by normalizing again."
+
+#: src/comic_identify/ui/normalizers.py:166
+msgid "El nombre resultante está vacío."
+msgstr "The resulting name is empty."
+
+#: src/comic_identify/ui/normalizers.py:168
+msgid "Es el nombre que ya tiene."
+msgstr "That is the name it already has."
+
+#: src/comic_identify/ui/normalizers.py:170
+msgid "Ya existe un archivo con ese nombre en la carpeta; no se sobrescribe."
+msgstr ""
+"A file with that name already exists in the folder; it will not be "
+"overwritten."
+
+#: src/comic_identify/ui/normalizers.py:182
+#, python-brace-format
+msgid "No se pudo renombrar: {error}"
+msgstr "Could not rename: {error}"
+
+#: src/comic_identify/ui/normalizers.py:190
+#, python-brace-format
+msgid "Renombrado: {target_name} → {new_name}"
+msgstr "Renamed: {target_name} → {new_name}"
+
+#: src/comic_identify/ui/normalizers.py:215
+msgid "Años del material original"
+msgstr "Years of the original material"
+
+#: src/comic_identify/ui/normalizers.py:221
+msgid ""
+"Escribe el título original (en inglés) y los números americanos que recoge "
+"la edición; los años salen de las fechas de portada de ComicVine."
+msgstr ""
+"Type the original title (in English) and the American issue numbers the "
+"edition collects; the years come from ComicVine's cover dates."
+
+#: src/comic_identify/ui/normalizers.py:223
+msgid "Título original, p. ej. Captain Marvel"
+msgstr "Original title, e.g. Captain Marvel"
+
+#: src/comic_identify/ui/normalizers.py:224
+msgid "Nº inicial"
+msgstr "First no."
+
+#: src/comic_identify/ui/normalizers.py:226
+msgid "Nº final (opcional)"
+msgstr "Last no. (optional)"
+
+#: src/comic_identify/ui/normalizers.py:227
+msgid "Buscar series"
+msgstr "Search series"
+
+#: src/comic_identify/ui/normalizers.py:237
+msgid "Usar estos años"
+msgstr "Use these years"
+
+#: src/comic_identify/ui/normalizers.py:247
+msgid ""
+"Necesitas la clave gratuita de ComicVine (pestaña Ajustes) para esta "
+"búsqueda."
+msgstr "You need the free ComicVine key (Settings tab) for this search."
+
+#: src/comic_identify/ui/normalizers.py:261
+#, python-brace-format
+msgid "{found_count} serie(s). Elige la que recoge tu edición."
+msgstr "{found_count} series. Choose the one your edition collects."
+
+#: src/comic_identify/ui/normalizers.py:262
+msgid ""
+"ComicVine no encuentra esa serie: prueba con el título original en inglés."
+msgstr "ComicVine cannot find that series: try the original title in English."
+
+#: src/comic_identify/ui/normalizers.py:267
+msgid "Buscando en ComicVine…"
+msgstr "Searching ComicVine…"
+
+#: src/comic_identify/ui/normalizers.py:284
+msgid "Consultando las fechas de portada…"
+msgstr "Looking up the cover dates…"
+
+#: src/comic_identify/ui/normalizers.py:297
+#, python-brace-format
+msgid ""
+"Años del contenido: {years} (portadas de {volume_name} {volume_start_year} "
+"en ComicVine)."
+msgstr ""
+"Content years: {years} (covers of {volume_name} {volume_start_year} on "
+"ComicVine)."
+
+#: src/comic_identify/ui/normalizers.py:312
+msgid "Carpeta de la serie"
+msgstr "Series folder"
+
+#: src/comic_identify/ui/normalizers.py:325
+#, python-brace-format
+msgid "No hay archivos CBR/CBZ directamente en {folder_name}."
+msgstr "There are no CBR/CBZ files directly in {folder_name}."
+
+#: src/comic_identify/ui/normalizers.py:338
+msgid "Normalizar carpeta"
+msgstr "Normalize folder"
+
+#: src/comic_identify/ui/normalizers.py:344
+#, python-brace-format
+msgid "<b>Carpeta:</b> {markup_escape_text}  ({files_count} archivos)"
+msgstr "<b>Folder:</b> {markup_escape_text}  ({files_count} files)"
+
+#: src/comic_identify/ui/normalizers.py:354
+msgid "Nombre (serie)"
+msgstr "Name (series)"
+
+#: src/comic_identify/ui/normalizers.py:355
+msgid "años del material original: 1999-2001"
+msgstr "years of the original material: 1999-2001"
+
+#: src/comic_identify/ui/normalizers.py:356
+msgid "2000-2002; 2011- si sigue publicándose"
+msgstr "2000-2002; 2011- if it is still being published"
+
+#: src/comic_identify/ui/normalizers.py:358
+msgid "solo el que ves impreso en los ejemplares"
+msgstr "only the one you see printed on the issues"
+
+#: src/comic_identify/ui/normalizers.py:368
+msgid ""
+"Averigua los años del material original a partir del título original y los "
+"números"
+msgstr ""
+"Finds out the years of the original material from the original title and the "
+"numbers"
+
+#: src/comic_identify/ui/normalizers.py:376
+msgid ""
+"Nombre, país, años de la serie y sello vienen de GCD (transcritos por otro "
+"colaborador): compruébalos. Los años del contenido original no se saben "
+"solos: ponlos tú o búscalos en ComicVine."
+msgstr ""
+"The name, country, series years and imprint come from GCD (transcribed by "
+"another contributor): check them. The years of the original content cannot "
+"be worked out on their own: enter them yourself or look them up on ComicVine."
+
+#: src/comic_identify/ui/normalizers.py:381
+msgid "Patrón de la carpeta:"
+msgstr "Folder pattern:"
+
+#: src/comic_identify/ui/normalizers.py:385
+msgid ""
+"Cada archivo se llamará como la carpeta resultante más « #01», « #02»… Se "
+"usa el número que ya trae cada nombre, así que los huecos se respetan."
+msgstr ""
+"Each file will be named like the resulting folder plus \" #01\", \" #02\"… "
+"The number each name already carries is used, so gaps are respected."
+
+#: src/comic_identify/ui/normalizers.py:389
+msgid "Carpeta resultante:"
+msgstr "Resulting folder:"
+
+#: src/comic_identify/ui/normalizers.py:396
+msgid "Renombrar este archivo"
+msgstr "Rename this file"
+
+#: src/comic_identify/ui/normalizers.py:400
+msgid "Número de ejemplar de este archivo"
+msgstr "Issue number of this file"
+
+#: src/comic_identify/ui/normalizers.py:417
+msgid "Renombrar carpeta y archivos"
+msgstr "Rename folder and files"
+
+#: src/comic_identify/ui/normalizers.py:443
+msgid "El nombre de la carpeta resultante está vacío."
+msgstr "The resulting folder name is empty."
+
+#: src/comic_identify/ui/normalizers.py:445
+#, python-brace-format
+msgid "Ya existe una carpeta llamada «{new_folder_name}»."
+msgstr "A folder named \"{new_folder_name}\" already exists."
+
+#: src/comic_identify/ui/normalizers.py:456
+msgid "(no se renombra)"
+msgstr "(not renamed)"
+
+#: src/comic_identify/ui/normalizers.py:459
+msgid "Sin número"
+msgstr "No number"
+
+#: src/comic_identify/ui/normalizers.py:460
+#, python-brace-format
+msgid "{name}: escribe su número o exclúyelo."
+msgstr "{name}: enter its number or exclude it."
+
+#: src/comic_identify/ui/normalizers.py:463
+msgid "Nombre vacío"
+msgstr "Empty name"
+
+#: src/comic_identify/ui/normalizers.py:467
+msgid "Nombre demasiado largo"
+msgstr "Name too long"
+
+#: src/comic_identify/ui/normalizers.py:468
+msgid ""
+"El nombre de los archivos es demasiado largo para el sistema de archivos."
+msgstr "The file names are too long for the file system."
+
+#: src/comic_identify/ui/normalizers.py:471
+msgid "revisa el número"
+msgstr "check the number"
+
+#: src/comic_identify/ui/normalizers.py:478
+msgid "Repetido"
+msgstr "Duplicate"
+
+#: src/comic_identify/ui/normalizers.py:479
+#, python-brace-format
+msgid "Hay varios archivos con el número de «{r}»."
+msgstr "Several files have the number of \"{r}\"."
+
+#: src/comic_identify/ui/normalizers.py:481
+msgid "Ya existe"
+msgstr "Already exists"
+
+#: src/comic_identify/ui/normalizers.py:482
+#, python-brace-format
+msgid "«{r}» ya existe y no forma parte del lote."
+msgstr "\"{r}\" already exists and is not part of the batch."
+
+#: src/comic_identify/ui/normalizers.py:484
+#, python-brace-format
+msgid ""
+"{changes_count} archivo(s) se renombran · {sum} ya tienen ese nombre · "
+"{sum_2} sin tocar"
+msgstr ""
+"{changes_count} file(s) will be renamed · {sum} already have that name · "
+"{sum_2} untouched"
+
+#: src/comic_identify/ui/normalizers.py:485
+#, python-brace-format
+msgid " (y {blocking_count} problema(s) más)"
+msgstr " (and {blocking_count} more problem(s))"
+
+#: src/comic_identify/ui/normalizers.py:496
+#, python-brace-format
+msgid "No se pudo renombrar (no se ha cambiado nada): {error}"
+msgstr "Could not rename (nothing was changed): {error}"
+
+#: src/comic_identify/ui/normalizers.py:503
+#, python-brace-format
+msgid ""
+"Carpeta renombrada a «{new_folder_name}» y {moves_count} archivo(s) "
+"renumerados."
+msgstr ""
+"Folder renamed to \"{new_folder_name}\" and {moves_count} file(s) renumbered."
+
+#: src/comic_identify/ui/normalizers.py:535
+#, python-brace-format
+msgid "Deshecho: {name} → {name_2}"
+msgstr "Undone: {name} → {name_2}"
+
+#: src/comic_identify/ui/normalizers.py:536
+#, python-brace-format
+msgid ""
+"Deshecho un lote de {pairs_count} renombrado(s), el último: {name} → {name_2}"
+msgstr ""
+"Undone a batch of {pairs_count} rename(s), the last one: {name} → {name_2}"
+
+#: src/comic_identify/ui/preview.py:67
+msgid "Volver al asistente"
+msgstr "Back to the assistant"
+
+#: src/comic_identify/ui/preview.py:70
+msgid "Abrir en el navegador"
+msgstr "Open in browser"
+
+#: src/comic_identify/ui/preview.py:71
+msgid "Usar esta ficha"
+msgstr "Use this record"
+
+#: src/comic_identify/ui/preview.py:72
+msgid ""
+"Es la ficha de un ejemplar de Universo Marvel, Tebeosfera o GCD: la usa para "
+"rellenar los metadatos"
+msgstr ""
+"It is the record of an issue from Universo Marvel, Tebeosfera or GCD: it "
+"uses it to fill in the metadata"
+
+#: src/comic_identify/ui/preview.py:74
+msgid "Cerrar el panel"
+msgstr "Close the panel"
+
+#: src/comic_identify/ui/preview.py:91
+msgid "Nombre:"
+msgstr "Name:"
+
+#: src/comic_identify/ui/preview.py:91
+msgid "Año:"
+msgstr "Year:"
+
+#: src/comic_identify/ui/preview.py:91
+msgid "Issue:"
+msgstr "Issue:"
+
+#: src/comic_identify/ui/preview.py:100
+msgid "Datos e imagen de Comic Vine"
+msgstr "Data and image from Comic Vine"
+
+#: src/comic_identify/ui/preview.py:121
+#, python-brace-format
+msgid "Ficha de {candidate_source}"
+msgstr "Record from {candidate_source}"
+
+#: src/comic_identify/ui/preview.py:122 src/comic_identify/ui/preview.py:254
+msgid "Ficha de Grand Comics Database"
+msgstr "Grand Comics Database record"
+
+#: src/comic_identify/ui/preview.py:144
+#, python-brace-format
+msgid "Serie en {site}"
+msgstr "Series on {site}"
+
+#: src/comic_identify/ui/preview.py:145
+#, python-brace-format
+msgid "Consultando la ficha en {site}…"
+msgstr "Querying the record on {site}…"
+
+#: src/comic_identify/ui/preview.py:146
+#, python-brace-format
+msgid "Buscando el nº {number} de «{series_title}» en {site}…"
+msgstr "Looking for no. {number} of \"{series_title}\" on {site}…"
+
+#: src/comic_identify/ui/preview.py:153
+#, python-brace-format
+msgid "No se pudo consultar {site}: {error}"
+msgstr "Could not query {site}: {error}"
+
+#: src/comic_identify/ui/preview.py:156
+#, python-brace-format
+msgid ""
+"«{series_title}» no tiene el nº {number} en {site} (o no está catalogado "
+"todavía)."
+msgstr ""
+"\"{series_title}\" has no no. {number} on {site} (or it is not catalogued "
+"yet)."
+
+#: src/comic_identify/ui/preview.py:156
+msgid " Elige una de sus fichas en la lista."
+msgstr " Choose one of its records from the list."
+
+#: src/comic_identify/ui/preview.py:213
+#, python-brace-format
+msgid " · {candidate_similarity:.0%} de parecido con tu portada"
+msgstr " · {candidate_similarity:.0%} similar to your cover"
+
+#: src/comic_identify/ui/preview.py:214
+#, python-brace-format
+msgid ""
+"Ficha de {candidate_source}: {candidate_title} · {candidate_subtitle}{match}"
+msgstr ""
+"Record from {candidate_source}: {candidate_title} · {candidate_subtitle}"
+"{match}"
+
+#: src/comic_identify/ui/preview.py:336
+msgid "Ese número no está en tu índice de GCD: consultando su API pública…"
+msgstr "That issue is not in your GCD index: querying its public API…"
+
+#: src/comic_identify/ui/preview.py:352
+#, python-brace-format
+msgid "No se pudo consultar la API pública de GCD: {problem}"
+msgstr "Could not query the GCD public API: {problem}"
+
+#: src/comic_identify/ui/preview.py:362
+#, python-brace-format
+msgid "Ficha de GCD: {candidate_title} · {candidate_subtitle}"
+msgstr "GCD record: {candidate_title} · {candidate_subtitle}"
+
+#: src/comic_identify/ui/preview.py:385
+msgid "Ficha de ComicVine"
+msgstr "ComicVine record"
+
+#: src/comic_identify/ui/results.py:85
+#, python-brace-format
+msgid ""
+"{name}\n"
+"Para poner su logotipo, guarda «{slug}.png» en {LOGO_DIR}"
+msgstr ""
+"{name}\n"
+"To set its logo, save \"{slug}.png\" in {LOGO_DIR}"
+
+#: src/comic_identify/ui/results.py:124
+msgid "Coincidencia probable"
+msgstr "Probable match"
+
+#: src/comic_identify/ui/results.py:124
+msgid "Poco parecida"
+msgstr "Not very similar"
+
+#: src/comic_identify/ui/results.py:125
+#, python-brace-format
+msgid "{verdict} · {candidate_similarity:.0%} de parecido"
+msgstr "{verdict} · {candidate_similarity:.0%} similar"
+
+#: src/comic_identify/ui/results.py:130
+#, python-brace-format
+msgid "Datos de la ficha de {candidate_source}"
+msgstr "Data from the {candidate_source} record"
+
+#: src/comic_identify/ui/results.py:132
+msgid "Número suelto del catálogo: elígelo para ver su ficha"
+msgstr "Single issue from the catalog: choose it to see its record"
+
+#: src/comic_identify/ui/results.py:134
+msgid "Serie del catálogo: escribe el número y elígela para consultar su ficha"
+msgstr "Catalog series: type the number and choose it to look up its record"
+
+#: src/comic_identify/ui/results.py:139
+msgid "Coincide el código de barras"
+msgstr "The barcode matches"
+
+#: src/comic_identify/ui/results.py:139
+msgid "Por título; portada sin comparar"
+msgstr "By title; cover not compared"
+
+#: src/comic_identify/ui/settings.py:50
+msgid ""
+"Identifica un cómic a partir de su portada, normaliza los nombres de "
+"archivos y carpetas y escribe metadatos ComicInfo.xml."
+msgstr ""
+"Identifies a comic from its cover, normalizes file and folder names and "
+"writes ComicInfo.xml metadata."
+
+#: src/comic_identify/ui/settings.py:53
+msgid "translator-credits"
+msgstr "José Antonio Seguido Doblado <jose.antonio.seguido@gmail.com>"
+
+#: src/comic_identify/ui/settings.py:54
+msgid "Datos de terceros"
+msgstr "Third-party data"
+
+#: src/comic_identify/ui/settings.py:94
 msgid "Acerca de…"
 msgstr "About…"
 
-#: src/comic_identify/ui/gui.py:2890
+#: src/comic_identify/ui/settings.py:95
 msgid "Versión, autor, licencia y datos de terceros"
 msgstr "Version, author, license and third-party data"
 
-#: src/comic_identify/ui/gui.py:2894
+#: src/comic_identify/ui/settings.py:99
 msgid ""
 "Esta aplicación se apoya en el trabajo de cuatro comunidades de "
 "colaboradores, que son las que han hecho el trabajo duro:"
@@ -2478,7 +2528,7 @@ msgstr ""
 "This application relies on the work of four communities of contributors, who "
 "are the ones who have done the hard work:"
 
-#: src/comic_identify/ui/gui.py:2897
+#: src/comic_identify/ui/settings.py:102
 msgid ""
 "Enciclopedia colaborativa de cómics con una API gratuita. Aporta series, "
 "números y portadas, que la aplicación compara visualmente con la tuya; es "
@@ -2488,7 +2538,7 @@ msgstr ""
 "issues and covers, which the application compares visually with yours; it is "
 "stronger on American editions."
 
-#: src/comic_identify/ui/gui.py:2901
+#: src/comic_identify/ui/settings.py:106
 msgid ""
 "Base de datos abierta y colaborativa de cómics de todo el mundo, mantenida "
 "por voluntarios. De ella sale el índice de ediciones en español (España y "
@@ -2500,7 +2550,7 @@ msgstr ""
 "America) comes from it: titles, issue numbers, publishers and imprints. Data "
 "under the CC BY-SA 4.0 license."
 
-#: src/comic_identify/ui/gui.py:2905
+#: src/comic_identify/ui/settings.py:110
 msgid ""
 "Catálogo, mantenido por sus autores, de las ediciones españolas de Marvel de "
 "31 editoriales (Forum/Planeta, Panini, Vértice, Bruguera, Zinco…): fecha, "
@@ -2514,7 +2564,7 @@ msgstr ""
 "The records you look up, one by one, and the logos of some publishers come "
 "from it."
 
-#: src/comic_identify/ui/gui.py:2910
+#: src/comic_identify/ui/settings.py:115
 msgid ""
 "El gran catálogo de la historieta editada en España, de todas las "
 "editoriales y épocas, hecho por la Asociación Cultural Tebeosfera y sus "
@@ -2528,20 +2578,20 @@ msgstr ""
 "credits, genres, ISBN and cover. Its texts are licensed under CC BY-SA 4.0 "
 "and the images belong to their owners."
 
-#: src/comic_identify/ui/gui.py:2915
+#: src/comic_identify/ui/settings.py:123
 msgid "Clave de la API de ComicVine (gratuita):"
 msgstr "ComicVine API key (free):"
 
-#: src/comic_identify/ui/gui.py:2917 src/comic_identify/ui/gui.py:3065
-#: src/comic_identify/ui/gui.py:3092
+#: src/comic_identify/ui/settings.py:125 src/comic_identify/ui/settings.py:289
+#: src/comic_identify/ui/settings.py:318
 msgid "Guardar"
 msgstr "Save"
 
-#: src/comic_identify/ui/gui.py:2920
+#: src/comic_identify/ui/settings.py:128
 msgid "Obtener una clave"
 msgstr "Get a key"
 
-#: src/comic_identify/ui/gui.py:2926
+#: src/comic_identify/ui/settings.py:136
 msgid ""
 "Grand Comics Database (ediciones en español, sin límites ni conexión). "
 "Descarga el volcado SQLite desde comics.org (requiere cuenta gratuita), "
@@ -2551,19 +2601,19 @@ msgstr ""
 "connection needed). Download the SQLite dump from comics.org (requires a "
 "free account), unzip it and import it here once."
 
-#: src/comic_identify/ui/gui.py:2929
+#: src/comic_identify/ui/settings.py:139
 msgid "Importar volcado de GCD…"
 msgstr "Import GCD dump…"
 
-#: src/comic_identify/ui/gui.py:2933
+#: src/comic_identify/ui/settings.py:143
 msgid "Datos de Grand Comics Database (CC BY-SA 4.0)"
 msgstr "Grand Comics Database data (CC BY-SA 4.0)"
 
-#: src/comic_identify/ui/gui.py:2934
+#: src/comic_identify/ui/settings.py:144
 msgid "Descargar el volcado"
 msgstr "Download the dump"
 
-#: src/comic_identify/ui/gui.py:2941
+#: src/comic_identify/ui/settings.py:153
 msgid ""
 "Tema: claro (iconos de color de tu tema), oscuro (iconos simbólicos) o el "
 "del sistema. Se recuerda al reiniciar; cambiarlo reinicia la aplicación "
@@ -2573,20 +2623,20 @@ msgstr ""
 "system's. It is remembered on restart; changing it restarts the application "
 "keeping the open comic and the fields."
 
-#: src/comic_identify/ui/gui.py:2945
+#: src/comic_identify/ui/settings.py:157
 msgid "Claro"
 msgstr "Light"
 
-#: src/comic_identify/ui/gui.py:2945
+#: src/comic_identify/ui/settings.py:157
 msgid "Oscuro"
 msgstr "Dark"
 
-#: src/comic_identify/ui/gui.py:2946 src/comic_identify/ui/gui.py:2961
-#: src/comic_identify/ui/gui.py:3311
+#: src/comic_identify/ui/settings.py:158 src/comic_identify/ui/settings.py:175
+#: src/comic_identify/ui/settings.py:371
 msgid "Sistema"
 msgstr "System"
 
-#: src/comic_identify/ui/gui.py:2958
+#: src/comic_identify/ui/settings.py:172
 msgid ""
 "Idioma: el del sistema o uno fijo. Cambiarlo reinicia la aplicación "
 "conservando el cómic abierto y los campos."
@@ -2594,7 +2644,7 @@ msgstr ""
 "Language: the system's or a fixed one. Changing it restarts the application "
 "keeping the open comic and the fields."
 
-#: src/comic_identify/ui/gui.py:2973
+#: src/comic_identify/ui/settings.py:189
 msgid ""
 "Universo Marvel (fichas.universomarvel.com): catálogo de las ediciones "
 "españolas de Marvel (Forum/Planeta, Panini, Vértice, Bruguera y otras 27 "
@@ -2610,11 +2660,11 @@ msgstr ""
 "to search as you type and, when you choose a series with its number typed, "
 "only the record of that issue, once; it is saved in the local database."
 
-#: src/comic_identify/ui/gui.py:2978
+#: src/comic_identify/ui/settings.py:194
 msgid "Descargar el índice de Universo Marvel"
 msgstr "Download the Universo Marvel index"
 
-#: src/comic_identify/ui/gui.py:2989
+#: src/comic_identify/ui/settings.py:207
 msgid ""
 "Tebeosfera (www.tebeosfera.com): el catálogo de la historieta editada en "
 "España, de todas las editoriales (Panini, ECC, Norma, Planeta, Zinco, Forum, "
@@ -2632,11 +2682,11 @@ msgstr ""
 "number typed, only the record of that issue, once; it is saved in the local "
 "database. The images belong to their owners."
 
-#: src/comic_identify/ui/gui.py:2995
+#: src/comic_identify/ui/settings.py:213
 msgid "Descargar el índice de Tebeosfera"
 msgstr "Download the Tebeosfera index"
 
-#: src/comic_identify/ui/gui.py:3006
+#: src/comic_identify/ui/settings.py:226
 msgid ""
 "Asistente de IA (botón «Preguntar a la IA»): comando que se abre en un "
 "terminal con tu propia sesión. {{prompt}} se sustituye por el mensaje. "
@@ -2647,7 +2697,7 @@ msgstr ""
 "your own session. {{prompt}} is replaced by the message. Examples: \"claude "
 "{{prompt}}\", \"codex {{prompt}}\", \"opencode --prompt {{prompt}}\"."
 
-#: src/comic_identify/ui/gui.py:3012
+#: src/comic_identify/ui/settings.py:232
 msgid ""
 "Mensaje que sustituye a {{prompt}} ({{image}} es la portada que se le pasa). "
 "Se puede cambiar para pedirle otras cosas o usar otras webs:"
@@ -2655,19 +2705,19 @@ msgstr ""
 "Message that replaces {{prompt}} ({{image}} is the cover passed to it). It "
 "can be changed to ask it for other things or to use other websites:"
 
-#: src/comic_identify/ui/gui.py:3020
+#: src/comic_identify/ui/settings.py:240
 msgid "Guardar comando y mensaje"
 msgstr "Save command and message"
 
-#: src/comic_identify/ui/gui.py:3022
+#: src/comic_identify/ui/settings.py:242
 msgid "Restablecer el mensaje"
 msgstr "Reset the message"
 
-#: src/comic_identify/ui/gui.py:3023
+#: src/comic_identify/ui/settings.py:243
 msgid "Vuelve al mensaje que trae la aplicación"
 msgstr "Goes back to the message the application ships with"
 
-#: src/comic_identify/ui/gui.py:3034
+#: src/comic_identify/ui/settings.py:256
 msgid ""
 "Normalización de nombres: cada renombrado queda registrado y se puede "
 "deshacer, de uno en uno, del último al primero."
@@ -2675,11 +2725,11 @@ msgstr ""
 "Name normalization: every rename is recorded and can be undone, one at a "
 "time, from the last to the first."
 
-#: src/comic_identify/ui/gui.py:3036
+#: src/comic_identify/ui/settings.py:258
 msgid "Deshacer el último renombrado"
 msgstr "Undo the last rename"
 
-#: src/comic_identify/ui/gui.py:3043
+#: src/comic_identify/ui/settings.py:265
 msgid ""
 "Metadatos: cada escritura queda registrada con el ComicInfo.xml anterior. "
 "Deshacer revierte el último lote entero, sin pisar archivos que se hayan "
@@ -2689,11 +2739,11 @@ msgstr ""
 "reverts the whole last batch, without overwriting files that have been "
 "modified or moved since."
 
-#: src/comic_identify/ui/gui.py:3046
+#: src/comic_identify/ui/settings.py:268
 msgid "Deshacer el último lote de metadatos"
 msgstr "Undo the last metadata batch"
 
-#: src/comic_identify/ui/gui.py:3054
+#: src/comic_identify/ui/settings.py:278
 msgid ""
 "Transferir a GCstar (botón «Transferir a GCstar…»): añade el cómic a una "
 "colección de GCstar sin tocar el resto de su archivo .gcs, con su portada y "
@@ -2707,19 +2757,19 @@ msgstr ""
 "needs the comic's folder to be under \"My collection\", above, to know where "
 "to put them."
 
-#: src/comic_identify/ui/gui.py:3059
+#: src/comic_identify/ui/settings.py:283
 msgid "Archivo .gcs de tu colección"
 msgstr ".gcs file of your collection"
 
-#: src/comic_identify/ui/gui.py:3060
+#: src/comic_identify/ui/settings.py:284
 msgid "Elegir archivo .gcs…"
 msgstr "Choose .gcs file…"
 
-#: src/comic_identify/ui/gui.py:3068
+#: src/comic_identify/ui/settings.py:292
 msgid "Deshacer la última transferencia a GCstar"
 msgstr "Undo the last transfer to GCstar"
 
-#: src/comic_identify/ui/gui.py:3076
+#: src/comic_identify/ui/settings.py:302
 msgid ""
 "Copias de seguridad: guardan tus índices (colección y GCD), los ajustes y "
 "los registros de deshacer en un .zip verificado. Se hace una automática al "
@@ -2733,131 +2783,32 @@ msgstr ""
 "oldest automatic ones are deleted; the manual ones, never. Careful: the zip "
 "includes your ComicVine key."
 
-#: src/comic_identify/ui/gui.py:3081
+#: src/comic_identify/ui/settings.py:307
 msgid "Carpeta donde guardar las copias"
 msgstr "Folder where to save the backups"
 
-#: src/comic_identify/ui/gui.py:3082
+#: src/comic_identify/ui/settings.py:308
 msgid "Elegir carpeta…"
 msgstr "Choose folder…"
 
-#: src/comic_identify/ui/gui.py:3090
+#: src/comic_identify/ui/settings.py:316
 msgid "Copias automáticas que se conservan:"
 msgstr "Automatic backups to keep:"
 
-#: src/comic_identify/ui/gui.py:3095
+#: src/comic_identify/ui/settings.py:321
 msgid "Copiar ahora"
 msgstr "Back up now"
 
-#: src/comic_identify/ui/gui.py:3098
+#: src/comic_identify/ui/settings.py:324
 msgid "Restaurar una copia…"
 msgstr "Restore a backup…"
 
-#: src/comic_identify/ui/gui.py:3122
-msgid "Elige una carpeta para activar las copias."
-msgstr "Choose a folder to enable backups."
-
-#: src/comic_identify/ui/gui.py:3126
-msgid "Todavía no hay copias en esa carpeta."
-msgstr "There are no backups in that folder yet."
-
-#: src/comic_identify/ui/gui.py:3129
-msgid ""
-"{backups_count} copia(s). La última: {last_created:%d/%m/%Y %H:%M} ({get})."
-msgstr ""
-"{backups_count} backup(s). The latest: {last_created:%d/%m/%Y %H:%M} ({get})."
-
-#: src/comic_identify/ui/gui.py:3132
-msgid "Carpeta de las copias de seguridad"
-msgstr "Backups folder"
-
-#: src/comic_identify/ui/gui.py:3151
-msgid "Hay una indexación en marcha: espera a que termine para copiar."
-msgstr "An indexing is in progress: wait for it to finish before backing up."
-
-#: src/comic_identify/ui/gui.py:3154
-msgid "Copiando…"
-msgstr "Backing up…"
-
-#: src/comic_identify/ui/gui.py:3168
-#, python-brace-format
-msgid "No se pudo copiar: {error}"
-msgstr "Could not back up: {error}"
-
-#: src/comic_identify/ui/gui.py:3171
-#, python-brace-format
-msgid "Copia guardada: {archive_name}. {get_text}"
-msgstr "Backup saved: {archive_name}. {get_text}"
-
-#: src/comic_identify/ui/gui.py:3183
-#, python-brace-format
-msgid "Copia de seguridad automática fallida: {error}"
-msgstr "Automatic backup failed: {error}"
-
-#: src/comic_identify/ui/gui.py:3203
-msgid "Hay una indexación en marcha: espera a que termine para restaurar."
-msgstr "An indexing is in progress: wait for it to finish before restoring."
-
-#: src/comic_identify/ui/gui.py:3207
-msgid "No hay copias que restaurar en esa carpeta."
-msgstr "There are no backups to restore in that folder."
-
-#: src/comic_identify/ui/gui.py:3209
-msgid "Restaurar una copia"
-msgstr "Restore a backup"
-
-#: src/comic_identify/ui/gui.py:3215
-msgid ""
-"Elige la copia. Antes de sustituir nada se comprueba que está íntegra y se "
-"guarda una copia del estado actual («antes de restaurar»), por si te "
-"arrepientes."
-msgstr ""
-"Choose the backup. Before replacing anything it is checked that it is intact "
-"and a copy of the current state is saved (\"before restoring\"), in case you "
-"change your mind."
-
-#: src/comic_identify/ui/gui.py:3231
-msgid "Restaurar"
-msgstr "Restore"
-
-#: src/comic_identify/ui/gui.py:3246
-msgid "Restaurando…"
-msgstr "Restoring…"
-
-#: src/comic_identify/ui/gui.py:3257
-#, python-brace-format
-msgid "No se ha restaurado nada: {error}"
-msgstr "Nothing was restored: {error}"
-
-#: src/comic_identify/ui/gui.py:3270
-#, python-brace-format
-msgid "Restaurado: {result_restored}. Estado anterior guardado en «{name}»."
-msgstr "Restored: {result_restored}. Previous state saved in \"{name}\"."
-
-#: src/comic_identify/ui/gui.py:3270
-msgid "ninguna copia (no había datos)"
-msgstr "no backup (there was no data)"
-
-#: src/comic_identify/ui/gui.py:3280
-#, python-brace-format
-msgid "Comando no válido: {error}"
-msgstr "Invalid command: {error}"
-
-#: src/comic_identify/ui/gui.py:3286
-msgid "Comando y mensaje guardados."
-msgstr "Command and message saved."
-
-#: src/comic_identify/ui/gui.py:3287
-msgid "Comando guardado; el mensaje estaba vacío y se usa el de la aplicación."
-msgstr ""
-"Command saved; the message was empty and the application's one is used."
-
-#: src/comic_identify/ui/gui.py:3293
+#: src/comic_identify/ui/settings.py:353
 #, python-brace-format
 msgid "Índice de GCD: {series} series y {issues} números."
 msgstr "GCD index: {series} series and {issues} issues."
 
-#: src/comic_identify/ui/gui.py:3294
+#: src/comic_identify/ui/settings.py:354
 msgid ""
 " Es de una versión anterior y no trae los créditos, el género ni los "
 "personajes de cada número: vuelve a importar el volcado para tenerlos (tarda "
@@ -2867,7 +2818,7 @@ msgstr ""
 "characters of each issue: import the dump again to have them (it takes a few "
 "seconds)."
 
-#: src/comic_identify/ui/gui.py:3297
+#: src/comic_identify/ui/settings.py:357
 msgid ""
 "El índice de GCD es de una versión anterior: vuelve a importar el volcado "
 "para actualizarlo (tarda unos segundos)."
@@ -2875,105 +2826,166 @@ msgstr ""
 "The GCD index is from an earlier version: import the dump again to update it "
 "(it takes a few seconds)."
 
-#: src/comic_identify/ui/gui.py:3300
+#: src/comic_identify/ui/settings.py:360
 msgid "Todavía no has importado el volcado de GCD."
 msgstr "You have not imported the GCD dump yet."
 
-#: src/comic_identify/ui/gui.py:3303
+#: src/comic_identify/ui/settings.py:363
 msgid "oscuro"
 msgstr "dark"
 
-#: src/comic_identify/ui/gui.py:3303
+#: src/comic_identify/ui/settings.py:363
 msgid "claro"
 msgstr "light"
 
-#: src/comic_identify/ui/gui.py:3304
+#: src/comic_identify/ui/settings.py:364
 msgid "elegido"
 msgstr "chosen"
 
-#: src/comic_identify/ui/gui.py:3304
+#: src/comic_identify/ui/settings.py:364
 msgid "el del sistema"
 msgstr "the system's"
 
-#: src/comic_identify/ui/gui.py:3305
+#: src/comic_identify/ui/settings.py:365
 #, python-brace-format
 msgid "Tema actual: {mode} ({origin})."
 msgstr "Current theme: {mode} ({origin})."
 
-#: src/comic_identify/ui/gui.py:3312
+#: src/comic_identify/ui/settings.py:372
 #, python-brace-format
 msgid "Idioma actual: {language}."
 msgstr "Current language: {language}."
 
-#: src/comic_identify/ui/gui.py:3319
+#: src/comic_identify/ui/settings.py:379
 msgid ""
 "Hay una indexación en marcha: espera a que termine para cambiar el idioma."
 msgstr ""
 "An indexing is in progress: wait for it to finish before changing the "
 "language."
 
-#: src/comic_identify/ui/gui.py:3329
+#: src/comic_identify/ui/settings.py:389
 msgid ""
 "Hay una indexación en marcha: espera a que termine para cambiar el tema."
 msgstr ""
 "An indexing is in progress: wait for it to finish before changing the theme."
 
-#: src/comic_identify/ui/gui.py:3359
+#: src/comic_identify/ui/settings.py:419
 #, python-brace-format
 msgid "Índice de Universo Marvel: {sum} series ("
 msgstr "Universo Marvel index: {sum} series ("
 
-#: src/comic_identify/ui/gui.py:3362
+#: src/comic_identify/ui/settings.py:422
 msgid "Todavía no has descargado el índice de Universo Marvel."
 msgstr "You have not downloaded the Universo Marvel index yet."
 
-#: src/comic_identify/ui/gui.py:3374 src/comic_identify/ui/gui.py:3406
+#: src/comic_identify/ui/settings.py:434 src/comic_identify/ui/settings.py:466
 #, python-brace-format
 msgid "No se pudo descargar: {error}"
 msgstr "Could not download: {error}"
 
-#: src/comic_identify/ui/gui.py:3391
+#: src/comic_identify/ui/settings.py:451
 #, python-brace-format
 msgid "Índice de Tebeosfera: {counts} colecciones y {counts_2} números."
 msgstr "Tebeosfera index: {counts} collections and {counts_2} issues."
 
-#: src/comic_identify/ui/gui.py:3393
+#: src/comic_identify/ui/settings.py:453
 msgid "Todavía no has descargado el índice de Tebeosfera."
 msgstr "You have not downloaded the Tebeosfera index yet."
 
-#: src/comic_identify/ui/gui.py:3420
+#: src/comic_identify/ui/settings.py:480
 msgid "Volcado SQLite de GCD"
 msgstr "GCD SQLite dump"
 
-#: src/comic_identify/ui/gui.py:3423
+#: src/comic_identify/ui/settings.py:483
 msgid "Volcado de GCD"
 msgstr "GCD dump"
 
-#: src/comic_identify/ui/gui.py:3437
+#: src/comic_identify/ui/settings.py:497
 #, python-brace-format
 msgid "No se pudo importar: {error}"
 msgstr "Could not import: {error}"
 
-#: src/comic_identify/ui/gui.py:3445
+#: src/comic_identify/ui/settings.py:505
 msgid "Clave guardada."
 msgstr "Key saved."
 
-#: src/comic_identify/ui/gui.py:3448
+#: src/comic_identify/ui/settings.py:508
 msgid "Colección de GCstar"
 msgstr "GCstar collection"
 
-#: src/comic_identify/ui/gui.py:3450
+#: src/comic_identify/ui/settings.py:510
 msgid "Archivo .gcs de GCstar"
 msgstr "GCstar .gcs file"
 
-#: src/comic_identify/ui/gui.py:3463
+#: src/comic_identify/ui/settings.py:523
 msgid "Ruta guardada."
 msgstr "Path saved."
 
-#: src/comic_identify/ui/gui.py:3464
+#: src/comic_identify/ui/settings.py:524
 msgid ""
 "Ruta guardada (vacía): el botón «Transferir a GCstar…» queda desactivado."
 msgstr "Path saved (empty): the \"Transfer to GCstar…\" button stays disabled."
+
+#: src/comic_identify/ui/viewer.py:50
+msgid "Primera página"
+msgstr "First page"
+
+#: src/comic_identify/ui/viewer.py:51
+msgid "Última página"
+msgstr "Last page"
+
+#: src/comic_identify/ui/viewer.py:53
+msgid "Tamaño real"
+msgstr "Actual size"
+
+#: src/comic_identify/ui/viewer.py:53
+msgid "Muestra la página sin reducirla (con barras de desplazamiento)"
+msgstr "Shows the page without shrinking it (with scroll bars)"
+
+#: src/comic_identify/ui/viewer.py:54
+msgid "Cerrar"
+msgstr "Close"
+
+#: src/comic_identify/ui/viewer.py:67
+#, python-brace-format
+msgid "Página {state} de {count}"
+msgstr "Page {state} of {count}"
+
+#: src/comic_identify/ui/viewer.py:68
+#, python-brace-format
+msgid "{name} — página {state} de {count}"
+msgstr "{name} — page {state} of {count}"
+
+#: src/comic_identify/ui/viewer.py:79
+#, python-brace-format
+msgid "No se pudo leer la página {index} para ampliarla."
+msgstr "Could not read page {index} to enlarge it."
+
+#: src/comic_identify/ui/viewer.py:85 src/comic_identify/ui/viewer.py:177
+msgid "No se pudo mostrar esta página."
+msgstr "Could not display this page."
+
+#: src/comic_identify/ui/viewer.py:135
+#, python-brace-format
+msgid "Página {page_index} de {count}"
+msgstr "Page {page_index} of {count}"
+
+#: src/comic_identify/ui/viewer.py:166
+#, python-brace-format
+msgid "No se pudo leer la página {index} de este archivo."
+msgstr "Could not read page {index} of this file."
+
+#: src/comic_identify/ui/window.py:83
+msgid "Identificar"
+msgstr "Identify"
+
+#: src/comic_identify/ui/window.py:85
+msgid "Mi colección"
+msgstr "My collection"
+
+#: src/comic_identify/ui/window.py:86
+msgid "Ajustes"
+msgstr "Settings"
 
 #: src/comic_identify/universomarvel.py:220
 #, python-brace-format
