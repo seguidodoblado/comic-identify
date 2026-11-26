@@ -13,6 +13,9 @@ from PIL import Image, ImageDraw
 
 from comic_identify.gcd import GcdIndex, build_index
 
+# tests/gui solo se recoge dentro del entorno aislado que prepara test_gui.py
+collect_ignore = [] if os.environ.get("COMIC_IDENTIFY_GUI") else ["gui"]
+
 
 def make_cover(seed: int, size=(600, 900)) -> Image.Image:
     """Portada sintética: fondo degradado con formas y bloques de color aleatorios pero fijos."""
