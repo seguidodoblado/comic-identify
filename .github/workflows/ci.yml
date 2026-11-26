@@ -47,6 +47,24 @@ jobs:
       - name: pytest
         run: pytest -q -rs
 
+  gui:
+    name: Pruebas de la interfaz
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # Con el Python del sistema: el de setup-python no ve el PyGObject de apt (en «tests» estas pruebas se omiten)
+      - name: GTK 4, servidor X virtual y bus D-Bus
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi gir1.2-gtk-4.0 python3-pytest python3-pil python3-numpy \
+            xvfb xauth dbus-daemon adwaita-icon-theme
+
+      - name: pytest (interfaz)
+        env:
+          COMIC_IDENTIFY_REQUIRE_GUI: "1"   # aquí, que falte algo es un fallo, no una omisión
+        run: /usr/bin/python3 -m pytest -q -rs tests/test_gui.py tests/test_ui_modules.py
+
   deb:
     name: Paquete .deb y lintian
     runs-on: ubuntu-24.04
